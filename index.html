@@ -30,6 +30,7 @@
     </div>
     <button type="button" id="cont" class="wide" hidden>Continue</button>
     <button type="button" id="install" class="wide" hidden>Install the app on this phone</button>
+    <button type="button" id="aboutBtn" class="wide">About – procedure and sources</button>
     <h2>Records on this phone</h2>
     <ul id="list" class="recs"></ul>
     <div id="all" class="row" hidden>
@@ -38,12 +39,20 @@
     </div>
   </section>
 
+  <section id="about" hidden>
+    <h2>About</h2>
+    <div id="aboutBody"></div>
+    <button type="button" id="aboutBack" class="wide">Back</button>
+  </section>
+
   <section id="form" hidden>
     <nav id="steps" class="steps" aria-label="Steps"></nav>
+    <div id="probs" class="probs" hidden></div>
     <h2 id="title"></h2>
-    <p id="intro" class="intro"></p>
-    <div id="live" aria-live="polite"></div>
+    <div id="accept" class="acc"></div>
+    <div id="top"></div>
     <div id="fields"></div>
+    <div id="live" aria-live="polite"></div>
     <p id="msg" class="msg" role="status" hidden></p>
   </section>
 
@@ -59,5 +68,6 @@
     <button type="button" id="share" class="p alt" hidden>Share</button>
   </div>
 </div>
+<div id="modal" class="modal" hidden></div>
 </body>
 </html>
