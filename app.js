@@ -20,11 +20,11 @@ function headScreens(i) {
   const route = () => rec[p + "route"];
   const airBox = () => {
     const c = hc(); if (!c.h) return "";
-    const v = c.air != null ? `${c.air} %` : "from the head's own manual";
+    const v = c.air != null ? `${c.air} %` : K.OWN_MANUAL;
     const ov = (rec.ovr || {})[`air${i}`];
     return `<div class="big ${c.air == null ? "amber" : ""}"><small>Air value to TYPE INTO THE ${esc(c.h.unit === "BU-M" ? "BU-M" : "basic unit")}</small><b>${esc(v)}</b>
-      <small>${esc(c.airWorking)}${ov && ov.value ? ` · OVERRIDDEN (${esc(ov.reason)}, ${esc(ov.time)})` : ""}</small><i class="src">${esc(K.T4_SRC)}</i>
-      ${c.h.t4 ? `<button type="button" class="ovr" data-ovr="air${i}">Change (reason needed)</button>` : ""}</div>`;
+      <small>${esc(c.airWorking)}${ov && ov.value ? ` · OVERRIDDEN (${esc(ov.reason)}, ${esc(ov.time)})` : ""}</small><i class="src">${esc(K.airSrc(c.h.model))}</i>
+      ${c.hasTable ? `<button type="button" class="ovr" data-ovr="air${i}">Change (reason needed)</button>` : ""}</div>`;
   };
   const S = (id, step, title, accept, fields, extra = {}) => ({ id: `h${i}-${id}`, group: `Head ${i}`, step, title: `Head ${i} · ${title}`, accept, fields, ...extra });
   return [
@@ -55,7 +55,7 @@ function headScreens(i) {
         F(p + "cal_time", "Calibration time", "time", { req: true })],
       { top: () => { const c = hc(); let t = route() === K.LMA_ROUTES[1] ? airBox() : ""; if (route() === K.LMA_ROUTES[2] && c.r3set != null) t += `<div class="calc"><b>LMA to set: ${K.r1(c.r3set, 2)} %</b><small>−(ΔS ÷ S) × 100, ΔS = ${K.r1(c.dS, 2)} mm², S = ${K.r1(K.compute(rec).Aair, 1)} mm²</small><i class="src">PRO-AIC-0608 C4 route 3</i></div>`; return t; } }),
     S("c4air", "C4", "Air value", () => `Switch off, remove and close the head, place it clear of steel, enter the maker's air value for A, re-mount and read the zero section: <b>0 ± 0.5 %</b>.|PRO-AIC-0608 C4 route 2 (manual v1.3 2.4.2.6–2.4.2.8)`,
-      [F(p + "air_auto", "Maker's automatic calibration used instead of an air value?", "radio", { ...YN, req: () => !(H() && H().t4) }),
+      [F(p + "air_auto", "Maker's automatic calibration used instead of an air value?", "radio", { ...YN, req: () => !(H() && K.AIR[H().model]) }),
         F(p + "air", "Air value you actually entered", "num", { unit: "%", req: () => rec[p + "air_auto"] !== "yes", show: () => rec[p + "air_auto"] !== "yes" }),
         F(p + "r2_zero", "Zero check on the zero section", "snum", { unit: "%", req: true })], { top: airBox, show: () => route() === K.LMA_ROUTES[1] }),
     S("c5", "C5", "LF calibration", () => `On the reference rope's fault, a known break, or two added wires each at least <b>${H() ? H().wireLen : 0.3} m</b> long with their ends <b>1 to 3 wire diameters</b> apart. Repeat test: load the base-trace configuration file first.|PRO-AIC-0608 C5, §5.2`,
@@ -112,7 +112,8 @@ const SCREENS = (r) => [
       F("runs", "How the rope runs", "radio", { opts: K.RUNS, req: true }),
       F("spool_from", "Spooling length from", "num", { unit: "m", show: () => rec.runs === K.RUNS[1] }),
       F("spool_to", "Spooling length to", "num", { unit: "m", show: () => rec.runs === K.RUNS[1] }),
-      F("asrc", "Metallic area A – source", "select", { opts: K.A_SOURCES, req: true }),
+      F("asrc", "Metallic area A – source", "select", { opts: () => { const d = K.num(rec.dnom); return d != null && (d < 2 || d > 60) ? K.A_SOURCES.filter((x) => x !== K.A_SOURCES[2]) : K.A_SOURCES; }, req: true,
+        hint: () => K.num(rec.dnom) > 60 ? "over 60 mm: certificate or maker's data, otherwise not known (ISO 2408 factors only 2–60 mm; Intron k gives an estimate for the air value only – A3)" : "" }),
       F("a", "Metallic area A", "num", { unit: "mm²", req: () => rec.asrc === K.A_SOURCES[0] || rec.asrc === K.A_SOURCES[1], show: () => rec.asrc === K.A_SOURCES[0] || rec.asrc === K.A_SOURCES[1] }),
       F("isoclass", "ISO 2408 class (for the C factor)", "select", { opts: [...K.ISO_CLASSES, K.ISO_NONE], req: () => rec.asrc === K.A_SOURCES[2], show: () => rec.asrc === K.A_SOURCES[2] }),
       F("dmaxsrc", "Largest wire δmax – source", "select", { opts: K.DMAX_SOURCES, req: true }),
@@ -147,12 +148,14 @@ const stepDone = (i) => missing(screens[i]).length === 0 && openRed(screens[i]).
 function input(f) {
   const v = rec[f.id] ?? "";
   const unit = f.unit ? `<span class="unit">${esc(f.unit)}</span>` : "";
-  const hint = f.hint ? `<small>${esc(f.hint)}</small>` : "";
+  const ht = typeof f.hint === "function" ? f.hint() : f.hint;
+  const hint = ht ? `<small>${esc(ht)}</small>` : "";
   const star = required(f) ? ' <i class="req">required</i>' : "";
   if (f.kind === "radio") return `<fieldset class="radio fw" data-f="${f.id}"><legend>${esc(f.label)}${star}</legend>${f.opts.map((o, k) =>
     `<label class="opt"><input type="radio" name="${f.id}" value="${esc(o)}" ${v === o ? "checked" : ""}><span>${esc(f.labels ? f.labels[k] : o)}</span></label>`).join("")}</fieldset>`;
   const lab = `<span class="lab">${esc(f.label)}${star}</span>${hint}`;
-  if (f.kind === "select") return `<label class="f fw" data-f="${f.id}">${lab}<select id="${f.id}"><option value="">– choose –</option>${f.opts.map((o) => `<option ${v === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
+  const opts = typeof f.opts === "function" ? f.opts() : f.opts;
+  if (f.kind === "select") return `<label class="f fw" data-f="${f.id}">${lab}<select id="${f.id}"><option value="">– choose –</option>${opts.map((o) => `<option ${v === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
   if (f.kind === "textarea") return `<label class="f fw" data-f="${f.id}">${lab}<textarea id="${f.id}" rows="4">${esc(v)}</textarea></label>`;
   const attrs = { num: 'type="text" inputmode="decimal" autocomplete="off"', snum: 'type="text" inputmode="decimal" autocomplete="off"', int: 'type="text" inputmode="numeric" autocomplete="off"', date: 'type="date"', time: 'type="time"', text: 'type="text" autocomplete="off"' }[f.kind];
   return `<label class="f fw" data-f="${f.id}">${lab}<span class="in">${f.kind === "snum" ? `<button type="button" class="neg" data-neg="${f.id}" aria-label="plus or minus">±</button>` : ""}<input id="${f.id}" ${attrs} value="${esc(v)}">${unit}</span></label>`;
@@ -305,7 +308,7 @@ function overrideDialog(key) {
 
 // ---------------- events ----------------
 $("#fields").addEventListener("input", (e) => { const t = e.target; if (t.matches("input[type=radio]") || !t.id) return; rec[t.id] = t.value; saveDraft(); drawLive(); });
-$("#fields").addEventListener("focusout", (e) => { const t = e.target; if (t.matches("input:not([type=radio]), textarea") && t.id) liveCheck(t.id); });
+$("#fields").addEventListener("focusout", (e) => { const t = e.target; if (t.matches("input:not([type=radio]), textarea") && t.id) { if (t.id === "dnom") { const f = screens[cur].fields.find((x) => x.id === "asrc"), el = document.querySelector('[data-f="asrc"]'); if (f && el) el.outerHTML = input(f); } liveCheck(t.id); } });
 $("#fields").addEventListener("change", (e) => {
   const t = e.target;
   if (t.matches("input[type=radio]")) rec[t.name] = t.value; else if (t.id) rec[t.id] = t.value;

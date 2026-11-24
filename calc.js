@@ -18,7 +18,8 @@ export const SOURCES = [
   ["Site sheet", "AIC-0608 MRT Site Sheet Rev 00 (22-Nov-2026 set)"],
   ["Report guide", "AIC-0608-G Rev 00 (22-Nov-2026 set)"],
   ["Equipment register", "AIC-0608-E – NOT LOADED: head and basic-unit serials typed by the engineer; liner and verification checked by hand"],
-  ["Air values", "INTROS MH 6-26 / 22-45 / 40-70 operating manual v1.3, Table 4 (p. 27). Other heads: from the head's own manual (not in the app)"],
+  ["Air values", "MH 6-26 / 22-45 / 40-70: INTROS manual v1.3, Table 4 (p. 27). MH 40-64: INTROS MH40-64 with BU-M manual v1.1, Table 4 (p. 21). MH 20-40, MH 80-120: no table in sources/ – air value from the head's own manual, check it"],
+  ["Head rope ranges", "MH 6-26 / 22-45 / 40-70: manual v1.3 p. 4 and Table 1 (p. 12). MH 40-64: manual v1.1 p. 3. MH 20-40, MH 80-120: PRO-AIC-0608 §5.2 (manuals not in sources/)"],
   ["ISO 4309 tables", "Tables 3 and 4 as copied in PRO-AIC-0608 §9.2.2; Annex H examples checked against ISO 4309:2017 pp. 51–56"],
   ["ISO 2408 C factors", "ISO 2408:2017 Annex C, Tables C.1 and C.2 (p. 18)"],
 ];
@@ -49,29 +50,35 @@ export const lfRule = (h) => (h ? LF_RULESETS[LF_RULESET][h.lfRule] : null);
 // ---------------------------------------------------------------------------------------------
 // Heads - PRO-AIC-0608 §5.2 head limits (p. 4). Serials are typed by the engineer until the register is loaded.
 // sens: LF sensitivity, one wire as % of A (a function of D for the BU-16 heads).
-// t4: the air value is in Intron manual v1.3 Table 4 (p. 27); false = the head's own manual, not in this app.
+// rangeSrc: where the rope range comes from. The air value comes from AIR below (a table from a manual in sources/),
+// or, where no table is held, "from the head's own manual – check it" (amber), never a guessed figure.
 // ---------------------------------------------------------------------------------------------
 const S52 = "PRO-AIC-0608 §5.2 head limits";
 export const HEADS = [
-  { model: "MH 6-26", unit: "BU-M", d: [6, 26], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", t4: true },
-  { model: "MH 22-45", unit: "BU-M", d: [22, 45], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", t4: true },
-  { model: "MH 40-70", unit: "BU-M", d: [40, 70], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", t4: true },
-  { model: "MH 20-40", unit: "BU-16", d: [20, 40], speed: "up to 2 m/s", temp: [-10, 50], settle: 2, sound: 0.5, wireLen: 0.3, sens: (D) => 20 / D, sensText: "20/D %", lfRule: "BU-16", t4: false },
-  { model: "MH 40-64", unit: "BU-16", d: [40, 64], speed: "up to 2 m/s", temp: [-10, 50], settle: 2, sound: 0.5, wireLen: 0.3, sens: (D) => 32 / D, sensText: "32/D %", lfRule: "BU-16", t4: false },
-  { model: "MH 80-120", unit: "analogue unit + basic unit", d: [80, 120], speed: "0.2–1.5 m/s", temp: [-10, 50], settle: 2, sound: 2, wireLen: 0.6, sens: () => 0.12, sensText: "0.12 %", lfRule: "MH 80-120", t4: false },
+  { model: "MH 6-26", unit: "BU-M", d: [6, 26], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", rangeSrc: "Intron manual v1.3 p. 4 (MH notation), Table 1 p. 12; PRO-AIC-0608 §5.2" },
+  { model: "MH 22-45", unit: "BU-M", d: [22, 45], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", rangeSrc: "Intron manual v1.3 p. 4 (MH notation), Table 1 p. 12; PRO-AIC-0608 §5.2" },
+  { model: "MH 40-70", unit: "BU-M", d: [40, 70], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", rangeSrc: "Intron manual v1.3 p. 4 (MH notation), Table 1 p. 12; PRO-AIC-0608 §5.2" },
+  { model: "MH 20-40", unit: "BU-16", d: [20, 40], speed: "up to 2 m/s", temp: [-10, 50], settle: 2, sound: 0.5, wireLen: 0.3, sens: (D) => 20 / D, sensText: "20/D %", lfRule: "BU-16", rangeSrc: "PRO-AIC-0608 §5.2 (head manual not in sources)" },
+  { model: "MH 40-64", unit: "BU-16", d: [40, 64], speed: "up to 2 m/s", temp: [-10, 50], settle: 2, sound: 0.5, wireLen: 0.3, sens: (D) => 32 / D, sensText: "32/D %", lfRule: "BU-16", rangeSrc: "INTROS MH40-64 manual v1.1 p. 3; PRO-AIC-0608 §5.2" },
+  { model: "MH 80-120", unit: "analogue unit + basic unit", d: [80, 120], speed: "0.2–1.5 m/s", temp: [-10, 50], settle: 2, sound: 2, wireLen: 0.6, sens: () => 0.12, sensText: "0.12 %", lfRule: "MH 80-120", rangeSrc: "PRO-AIC-0608 §5.2 (head manual not in sources)" },
 ];
 export const HEAD_CHOICES = HEADS.map((h) => h.model);
 export const headOf = (m) => HEADS.find((h) => h.model === m) || null;
 // Basic unit stated to have no verification certificate on file (Acumen, 24-Nov-2026), until the register is loaded.
 export const BU_NO_CERT = ["505134"];
 
-// Intron manual v1.3, Table 4 "LMA values for calibration without WRRS" (p. 27): [A from, A to, air value %].
-export const T4 = {
-  "MH 6-26": [[19, 70, 105], [70, 180, 106], [180, 450, 107]],
-  "MH 22-45": [[215, 360, 101], [360, 600, 102], [600, 820, 104], [820, 1050, 106], [1050, 1350, 109]],
-  "MH 40-70": [[520, 870, 102], [870, 1450, 104], [1450, 2000, 109], [2000, 2500, 113], [2500, 3000, 120]],
+// Air value tables ("LMA value without rope", %) read from the manuals in sources/: [A from mm², A to mm², air value %].
+const V13 = "INTROS MH 6-26 / 22-45 / 40-70 operating manual v1.3, Table 4 (p. 27)";
+export const AIR = {
+  "MH 6-26": { src: V13, rows: [[19, 70, 105], [70, 180, 106], [180, 450, 107]] },
+  "MH 22-45": { src: V13, rows: [[215, 360, 101], [360, 600, 102], [600, 820, 104], [820, 1050, 106], [1050, 1350, 109]] },
+  "MH 40-70": { src: V13, rows: [[520, 870, 102], [870, 1450, 104], [1450, 2000, 109], [2000, 2500, 113], [2500, 3000, 120]] },
+  "MH 40-64": { src: "INTROS MH40-64 with BU-M operating manual v1.1, Table 4 (p. 21)", rows: [[215, 820, 92], [820, 1300, 84], [1300, 1550, 78], [1550, 2500, 72]] },
 };
-export const T4_SRC = "Intron manual v1.3 Table 4 (p. 27); PRO-AIC-0608 C4 route 2";
+export const T4 = Object.fromEntries(Object.entries(AIR).map(([k, v]) => [k, v.rows]));
+export const T4_SRC = "PRO-AIC-0608 C4 route 2";
+export const airSrc = (model) => (AIR[model] ? `${AIR[model].src}; ${T4_SRC}` : `no air value table in sources/ for ${model}; ${T4_SRC}`);
+export const OWN_MANUAL = "air value from the head's own manual – check it";
 
 // Rope density factor K (A3; manual v1.3 2.4.2): only to choose the air value or S of route 3 when A is not known.
 export const CORES = ["fibre core (FC)", "steel core (IWRC)", "wire strand core (WSC)", "locked coil"];
@@ -270,14 +277,15 @@ export function compute(rec) {
     if (!h) return out;
     out.rule = lfRule(h);
     out.sens = D ? h.sens(D) : null;
-    if (h.t4) {
+    out.hasTable = !!AIR[h.model];
+    if (out.hasTable) {
       const t = airFromT4(h.model, Aair);
       out.t4 = t;
       out.airAuto = t && t.value != null ? t.value : null;
       out.airWorking = Aair == null ? "A not known yet" : t && t.value != null
-        ? `Table 4, ${h.model}: ${A != null ? "A" : "S = K × π × d² ÷ 4"} = ${r1(Aair)} mm² is in ${t.from}–${t.to} mm² → ${t.value} %`
-        : `A ${r1(Aair)} mm² is outside ${h.model}'s Table 4 rows (${t.lo}–${t.hi} mm²)`;
-    } else out.airWorking = `${h.model}: air value from the head's own manual (not in this app)`;
+        ? `${h.model} table: ${A != null ? "A" : "A estimate (Intron k)"} = ${r1(Aair)} mm² is in ${t.from}–${t.to} mm² → ${t.value} %`
+        : `A ${r1(Aair)} mm² is outside the ${h.model} table (${t.lo}–${t.hi} mm²) – ${OWN_MANUAL}`;
+    } else out.airWorking = `${h.model}: no air value table in sources/ – ${OWN_MANUAL}`;
     out.air = ovr(rec, `air${i}`) ?? out.airAuto ?? null;
     const route3 = rec[`h${i}_route`] === LMA_ROUTES[2];
     if (route3) {
@@ -289,7 +297,7 @@ export function compute(rec) {
   c.working = [
     ["Measured diameter (largest of the positions)", D ? `${r1(D, 2)} mm` : "–", have.length ? `position averages ${posAv.map((x) => r1(x, 2)).join(" / ")} mm; each = average of two at right angles` : "", "PRO-AIC-0608 B2, C2"],
     ["Metallic area A used", A != null ? `${r1(A)} mm²${ovr(rec, "A") != null ? " (overridden)" : ""}` : "not known", A != null ? `source: ${Asrc}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
-    ["Rope area S (K)", S ? `${r1(S, 0)} mm²` : "–", S ? `K × π × d² ÷ 4 = ${k} × π × ${dn}² ÷ 4 – only to choose the air value / route 3 S when A is not known; not reported` : "", "PRO-AIC-0608 A3; manual v1.3 2.4.2"],
+    ["Metallic area – Intron k estimate", S ? `${r1(S, 0)} mm² (estimate)` : "–", S ? `k × π × d² ÷ 4 = ${k} × π × ${dn}² ÷ 4 (k: ${rec.core}). Estimate – used only to choose the air value / route 3 S when A is not known; not reported and no limit is calculated from it` : "needs nominal d and core", "PRO-AIC-0608 A3; manual v1.3 2.4.2 (p. 27)"],
     ["One-wire area", wireArea ? `${r1(wireArea, 2)} mm²` : "–", wireArea ? `π × δmax² ÷ 4 = π × ${dmax}² ÷ 4` : "δmax not available", "PRO-AIC-0608 A3"],
     ["Single-wire share", c.share ? `${r1(c.share, 2)} % of A` : "–", c.share ? "(π × δmax² ÷ 4) ÷ A × 100, compared with the head's LF sensitivity" : "needs A and δmax", "PRO-AIC-0608 A3"],
     ["D ÷ δmax", dn && dmax ? r1(dn / dmax, 1) : "–", dn && dmax ? `${dn} ÷ ${dmax}` : "", "nominal d"],
@@ -299,7 +307,7 @@ export function compute(rec) {
     ["LF limit 6d / 30d", c.lf.ok ? `${c.lf.l6} / ${c.lf.l30} wires${c.lf.drum6 != null ? ` (multi-layer drum ${c.lf.drum6} / ${c.lf.drum30})` : ""}${ovr(rec, "lf6") != null || ovr(rec, "lf30") != null ? " (overridden)" : ""}` : "not calculated", c.lf.ok ? `${c.lf.route}. ${c.lf.working}` : c.lf.why, c.lf.src],
   ];
   for (const hc of c.heads) if (hc.h) {
-    c.working.push([`Air value to type into the BU-M – ${hc.h.model}`, hc.air != null ? `${hc.air} %` : "from the head's own manual", hc.airWorking, T4_SRC]);
+    c.working.push([`Air value to type into the BU-M – ${hc.h.model}`, hc.air != null ? `${hc.air} %` : OWN_MANUAL, hc.airWorking, airSrc(hc.h.model)]);
     c.working.push([`LF rule – ${hc.h.model}`, hc.rule.words, `rule set: ${LF_RULESETS[LF_RULESET].name}`, hc.rule.src]);
   }
   return c;
@@ -352,7 +360,7 @@ export function checks(rec, c = compute(rec)) {
     if (BU_NO_CERT.includes(raw(p + "bu_sn"))) A2("red", "bucert", "bu_sn", `basic unit S/N ${raw(p + "bu_sn")} has no verification certificate on file.`, "Basic unit verified within the last 12 months; otherwise not used.", "PRO-AIC-0608 C1, §5.4");
     if (!h) continue;
     // C2 head range, liner, temperature
-    if (c.D && (c.D < h.d[0] || c.D > h.d[1])) A2("red", "range", "head", `measured diameter ${r1(c.D, 2)} mm is outside the head range.`, `${h.model} takes ${h.d[0]}–${h.d[1]} mm including coating; choose a head that covers the rope.`, `${S52}; C2`);
+    if (c.D && (c.D < h.d[0] || c.D > h.d[1])) A2("red", "range", "head", `rope ${r1(c.D, 2)} mm (measured) is outside the head's range.`, `${h.model} takes ${h.d[0]}–${h.d[1]} mm including coating; choose a head that covers the rope: ${HEADS.filter((x) => c.D >= x.d[0] && c.D <= x.d[1]).map((x) => x.model).join(", ") || "none – rope not tested (C2, §1.5)"}.`, `${h.rangeSrc}; C2`);
     if (raw(p + "liner")) A2("amber", "liner", "liner", `liner ${raw(p + "liner")} – ${REGISTER_TEXT}.`, `Liner range must cover ${c.D ? r1(c.D, 2) + " mm" : "the measured diameter"} (maker's liner table).`, "PRO-AIC-0608 C2 (AIC-0608-E §3)");
     const t = num(rec[p + "temp"]);
     if (t != null && (t < h.temp[0] || t > h.temp[1])) A2("red", "temp", "temp", `air temperature ${t} °C is outside the head's range.`, `${h.temp[0]} to +${h.temp[1]} °C; not tested until it is inside.`, `${S52}; C2`);
@@ -381,11 +389,9 @@ export function checks(rec, c = compute(rec)) {
     if (route === LMA_ROUTES[1]) {
       zchk("r2_zero", "zero check reads");
       const air = num(rec[p + "air"]);
-      if (!h.t4) A2("amber", "airman", "air", "air value from the head's own manual – not in this app.", "Use the head's own manual; Table 4 covers MH 6-26 / 22-45 / 40-70 only.", "PRO-AIC-0608 C4 route 2");
-      else if (air != null && air !== 0 && rec[p + "air_auto"] !== "yes") {
-        if (hc.t4 && hc.t4.out) A2("red", "airout", "air", `A ${r1(c.Aair)} mm² is outside the head's Table 4 rows.`, `${h.model} Table 4 covers ${hc.t4.lo}–${hc.t4.hi} mm²; check the head and A.`, T4_SRC);
-        else if (hc.air != null && air !== hc.air) A2("red", "air", "air", `air value entered ${air} %.`, `Must be ${hc.air} % – ${hc.airWorking}.`, T4_SRC);
-      }
+      if (!hc.hasTable) A2("amber", "airman", "air", `${OWN_MANUAL}.`, `No air value table for ${h.model} in sources/ – the app gives no figure.`, airSrc(h.model));
+      else if (hc.t4 && hc.t4.out) A2("amber", "airout", "air", `A ${r1(c.Aair)} mm² is outside the ${h.model} table (${hc.t4.lo}–${hc.t4.hi} mm²): ${OWN_MANUAL}.`, "The app gives no figure outside the table.", airSrc(h.model));
+      else if (air != null && air !== 0 && rec[p + "air_auto"] !== "yes" && hc.air != null && air !== hc.air) A2("red", "air", "air", `air value entered ${air} %.`, `Must be ${hc.air} % – ${hc.airWorking}.`, airSrc(h.model));
     }
     if (route === LMA_ROUTES[2]) {
       zchk("r3_zero", "zero check reads");

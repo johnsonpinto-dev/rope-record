@@ -11,6 +11,22 @@ Open: https://johnsonpinto-dev.github.io/rope-record/
 2. Tap **Install app** on the app's home screen, or Chrome menu **⋮** → **Add to home screen** → **Install**.
 3. Open **Rope Record** from the home screen. From then on it works with no signal (airplane mode).
 
+## Install on an iPhone
+
+1. Open the address above in **Safari** (with signal, once).
+2. Tap **Share** (square with arrow) → **Add to Home Screen** → **Add**.
+3. Open **Rope Record** from the home screen; it works with no signal.
+
+## Air value tables used
+
+| Head | Table | Source |
+|---|---|---|
+| MH 6-26, MH 22-45, MH 40-70 | Table 4 "LMA values for calibration without WRRS" | INTROS manual v1.3, p. 27 |
+| MH 40-64 | Table 4 | INTROS MH40-64 with BU-M manual v1.1, p. 21 |
+| MH 20-40, MH 80-120 | none held | "air value from the head's own manual – check it" (amber, no figure) |
+
+A outside a table also gives the amber "own manual" message, never a guessed figure.
+
 ## What it does
 
 Follows **PRO-AIC-0608 as filed** and fills in what it can, so the engineer enters only what he measures.
