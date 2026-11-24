@@ -37,34 +37,54 @@ Folder base: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/MRTre
 - `node dev/cdp-check.mjs <url> <outdir>` – headless Chrome at Android size: service worker, installability, airplane mode, full 22 mm record, mistakes caught. Passed on the live 1.2.0.
 - iPhone / Safari: NOT tested. 24-Nov-2026: safaridriver refuses – "You must enable 'Allow remote automation' in the Developer section of Safari Settings". No Xcode on the Mac, so no iOS Simulator.
 
-## schema-v1 gaps
-Compared 24-Nov-2026: `Downloads/rope-record-schema-v1.json` (SHA-256 starts bfe8654107c57535; same file in MRTreview; no schema v2 found) against `FIELDS`, `CSV_HEAD` and `CALC_COLS` in calc.js 1.2.0. Export and QR NOT built – waiting for the owner's answers.
+## schema-v1 gaps (redone 24-Nov-2026: Kuzo is the master)
+Rule (owner, 24-Nov-2026): Kuzo is finished and is the master; there is no schema v2; Rope Record adapts to Kuzo.
+Read: vault note "Kuzo – status and handover (24-Nov-2026)"; Kuzo code in acumen-mrt-review – `app/src/jobs/siterecord.js` (`validate`, `targets`, `notFilled`, `crossCheck`), `app/src/index.html` rope form, `app/src/jobs/details.js`, `app/src/jobs/calroute.js`, `engine/checks.py` (`c5_check`), `engine/limits.py`, `engine/lftable.py`; `Downloads/rope-record-schema-v1.json` (SHA-256 starts bfe8654107c57535). Export and QR NOT built.
 
-### App fields with no schema field
-1. Diameter: 3 positions (`p1`–`p3`, m from the datum), each with 2 readings at right angles (`d1a`…`d3b`) – PRO-AIC-0608 B2. Schema `rope.measured_diameter_mm` holds at most 2 readings and no position.
-2. `csrc` construction source (rope certificate / client / counted on the rope – A3).
-3. `spool_from`, `spool_to` – length that spools on a multi-layer drum (§9.2.2; site sheet).
-4. C3: `settled`, `selftest`, `counter` (per head).
-5. C4: `route` (1 / 2 / 3); route 1 `r1_id`, `r1_zero`, `r1_known`, `r1_seg2`; route 2 `r2_passes`, `air_auto`; route 3 `r3_n`, `r3_dw`, `r3_set`, `r3_zero`; `cal_time` (per head).
-6. C5: `lf_at` (known break position, m), `lflen` (added wire length, m), `speedcomp`, `config` (configuration file name) (per head).
-7. C6: `c6_done`, `c6_zero`, `c6_len`, `c6_known` (per head).
-8. Checks: the correct value or range (`want`) and the clause (`src`); the time of each reason. Schema `checks[]` has `id`, `level`, `text`, `reason` only.
-9. Overrides of automatic values (A, LF 6d / 30d, air value to type) with value, reason and time.
-10. Calculated values and provenance (CSV only): measured D used, A used and source text, Intron k estimate, one-wire area, single-wire share, n, RCN, 6d / 30d, LF route / limits / drum limits / working, LF rule per head, LF rule set, procedure copy and SHA-256. Schema has only `air_value_proposed_pct`.
+### What Kuzo takes from a rope record (schema v1 → Kuzo box, from `siterecord.js targets()`)
+Required by the schema: format "rope-record"; schema_version 1; record_id; saved_at; app.name "Rope Record", app.version; job.type ("site" | "reference"), job.date (YYYY-MM-DD), job.engineer; rope.nominal_diameter_mm, rope.construction, rope.core, rope.metallic_area_source, rope.dmax_source; heads (1–2) each with head_model, head_serial, basic_unit_serial, air_value_entered_pct (number); checks (array). Not available = null, never 0 or "".
+Filled into Kuzo (engineer confirms each; a value that differs from the scan is red and not filled):
+- job.job_order → job_order · job.client → customer · job.location → intro_location · job.position → application · job.rope_length_m (m) → length_installed · job.engineer → d-name
+- rope.nominal_diameter_mm (mm) → d_mm · mean of rope.measured_diameter_mm, or measured_diameter_mean_mm (mm) → ref_measured_dia ("Reference diameter (after running-in) / measured diameter")
+- rope.annex_h_construction (one of the 30 ISO 4309 Annex H names – same strings as Kuzo's list from engine/iso4309_broken_wires.json) → iso_construction; when null: rope.construction → construction_text, outer_strands / wires_per_strand → other_strands / other_wires
+- rope.core → core ("fibre core" / "independent wire rope core (IWRC)" / "wire strand core / centre"; "locked coil" not filled) · rope.lay → lay ("not known" not filled) · rope.runs_on → runs_on ("steel sheaves" and "single-layer drum" both → "steel sheaves / single-layer drum")
+- rope.metallic_area_source → A_source ("rope certificate" → certificate, "maker's data", "ISO 2408 (2–60 mm only)" → calculated (ISO 2408), "not known" → blank) · rope.metallic_area_mm2 (mm²) → A_mm2
+- rope.dmax_source → dmax_source ("wire taken from the rope" → measured on a wire taken from the rope; "rope certificate" → certificate, rope maker's data or written confirmation for that rope; "not available") · rope.dmax_mm (mm, > 0) → dmax_mm
+- heads[].head_model (§5.2 names) → head · head_serial → head_serial_full (cross-checked against the scan's device serial) · liner → liner_set · air_temperature_c (°C) → air_temp · sound_section_from_m / to_m (m) → r2_section · one_wire_lf_mv (mV) → one_wire_mv · lf_threshold_mv (mV) → lf_threshold_mv
+- heads[].air_value_entered_pct (%) → cross-checked against the scan's stored calibration; when equal, Kuzo ticks LMA route "air value" (cal_lma = air)
+- heads[].lf_calibrated_on → cal_lf ("known broken wire" → broken_wire, "two added wires" → two_wires; others not filled)
+- job.reference_rope (reference job) → wrrs_id
+Kept in Kuzo's log only (no box filled): basic_unit_serial (cross-checked), air_value_proposed_pct, lma_check_pct, lma_most_negative_pct, lf_calibrated_on, lf_wire_diameter_mm, lf_gap_mm, lf_alarm_mv, every checks[] item with its reason. scan_step_mm (optional) is cross-checked against the scan when given. Not used by the importer: rope_type, seale_19_or_fewer, iso2408_class, liner_proposed, reference_sections, sign_off (validated and shown in the preview only).
+Kuzo calculates itself (engine): A from ISO 2408 when the engineer asks; RCN from the Annex H construction or the counts; LF limits (Annex C formula or ISO 4309 Table 3 / 4); 6d / 30d; single-wire share against the head's LF sensitivity (A3); head range (C2); C5 threshold check; LMA and LF evaluation.
 
-### Required schema fields the app does not always collect
-11. `heads[].air_value_entered_pct` – required number; null and 0 are not allowed. The app has no air value on C4 route 1, route 3, route 2 with the maker's automatic calibration, or (often) a head with no air table.
-12. `heads[].head_serial` – titled "full, from the equipment register"; the app's serials are typed by the engineer (register not loaded).
+### The 21 gaps, decided
+(a) Kuzo has a field – Rope Record maps to it · (b) Kuzo takes no such field – stays on the phone and in the CSV, not exported · (c) Kuzo calculates it – not exported · (d) conflict – owner's ruling needed.
+1. Diameter – ruled by the owner (24-Nov-2026): export the certificate's nominal diameter, the certificate's measured diameter, and the engineer's two readings at 90°. (a) nominal → rope.nominal_diameter_mm; (a) two readings → rope.measured_diameter_mm [r1, r2] and their mean → measured_diameter_mean_mm (Kuzo fills ref_measured_dia with it); (b) positions and the other reading pairs. (d) D1: schema v1 has no field for the certificate's measured diameter (and Rope Record does not yet ask for it). (d) D2: Rope Record records three pairs (B2); which pair is exported.
+2. Construction source – (b): Kuzo has a construction_source box (choices "rope certificate", "client advice", "counted on the rope") but schema v1 has no field; the engineer picks it in Kuzo. Rope Record will use Kuzo's words ("client advice" for "client") in the CSV.
+3. Spooling length – (b): Kuzo has drum_from_m / drum_to_m but schema v1 has no field; entered in Kuzo.
+4. C3 settled / self-test / counter – (b): no Kuzo box.
+5. C4 route and details – route: see D3. Route 1 zero / known / reading and reference rope ID – (b): Kuzo has wrrs_id, r1_zero, r1_span, r1_known but schema v1 has no fields. Route 3 LMA set – (b): Kuzo has cal_lma_value, no schema field. Passes, automatic calibration flag, calibration time – (b).
+6. C5 known-break position, wire length, speed compensation – (b): no Kuzo box. Configuration file – (b): Kuzo has config_file, no schema field.
+7. C6 closing check – (b): Kuzo has closing_c6 (valid Y / N), no schema field.
+8. Checks – (a): checks[].id = Rope Record check id; level red / amber; text = "<what is wrong> Correct: <value or range> [<clause>]"; reason = "<reason> (<date time>)". Kuzo keeps them in its log.
+9. Overrides – (a) through checks: each override is already an amber check ("… overridden to <value> (reason …)") with its time in the text. LF 6d / 30d overrides: (c) Kuzo calculates its own limits. Air value override: the Table value goes to air_value_proposed_pct, the override stays in checks. Overridden A: see D4.
+10. Calculated values (A used text, Intron k estimate, one-wire area, share, n, RCN, 6d / 30d, LF limits, LF rule) – (c). Procedure copy SHA-256 and LF rule set name – (b). air_value_proposed_pct – (a) from the head's table value (null when no table).
+11. air_value_entered_pct required – (d) D3.
+12. head_serial – (a): the typed serial goes to head_serial; Kuzo cross-checks its last digits against the scan; the "register not loaded" amber goes in checks.
+13. runs_on – (a): "steel sheaves / single-layer drum" → "steel sheaves" (Kuzo turns both schema values back into its own "steel sheaves / single-layer drum"); "multi-layer drum" → "multi-layer drum".
+14. metallic_area_source – (a): certificate → "rope certificate", maker's data → "maker's data", calculated (ISO 2408, 2–60 mm only) → "ISO 2408 (2–60 mm only)", not known → "not known" with metallic_area_mm2 null. Overridden A: D4.
+15. dmax_source – (a): "measured on a wire taken from the rope" → "wire taken from the rope"; "certificate, maker's data or written confirmation" → "rope certificate" (Kuzo writes it back as "certificate, rope maker's data or written confirmation for that rope"); "not available" → "not available", dmax_mm null.
+16. lf_calibrated_on – (a): "known break in the rope" → "known broken wire", "two added wires" → "two added wires". (b): "base-trace configuration file loaded" and "reference rope fault" → null (Kuzo has the ticks base_trace / local_fault, schema v1 has no value; ticked in Kuzo). Schema "no known break" is not used.
+17. lma_check_pct – (a): the zero reading of the route used (route 1 zero segment, route 2 zero check after the air value, route 3 zero check). Kuzo log only.
+18. measured_diameter_mean_mm – (a): mean of the two exported readings (gap 1).
+19. saved_at – (a): local time with offset, e.g. 2026-11-24T14:32:00+04:00 (the CSV keeps its own column).
+20. "Other (not in Annex H)" → annex_h_construction null; "not in ISO 2408 Table C.1 / C.2" → iso2408_class null – (a).
+21. QR – the schema's "x-qr" rules (zlib, base45, CRC-32, "RR1 PART n/N CRC piece", ≤ 1000 characters, ECC M); needs one QR encoder file in the app. Build item, not a schema gap.
+Also found: scan_step_mm is an optional schema field that Kuzo cross-checks against the scan; Rope Record has no scan-step box yet (can be added with the export).
 
-### Unit, enum or format mismatches
-13. `rope.runs_on`: schema "steel sheaves" | "single-layer drum" | "multi-layer drum"; app "steel sheaves / single-layer drum" (one choice, as the site sheet) | "multi-layer drum". The combined app value has no schema value.
-14. `rope.metallic_area_source`: app "certificate" / "calculated (ISO 2408, 2–60 mm only)" ↔ schema "rope certificate" / "ISO 2408 (2–60 mm only)" (one-to-one wording); app "maker's data", "not known" match. An overridden A has no source value.
-15. `rope.dmax_source`: app "measured on a wire taken from the rope" ↔ "wire taken from the rope" (one-to-one); app "certificate, maker's data or written confirmation" (A3 source b) ↔ schema "rope certificate" only (narrower).
-16. `heads[].lf_calibrated_on`: app "known break in the rope" ↔ "known broken wire"; "two added wires" matches; app "base-trace configuration file loaded (repeat test)" and "reference rope fault" have no schema value; schema "no known break" is not an app choice (C5 has none).
-17. `heads[].lma_check_pct` ("LMA check on the sound section"): the app records a zero reading per route (`r1_zero`, `r2_zero` after the air value, `r3_zero`); which one goes here is not defined.
-18. `rope.measured_diameter_mean_mm` ("mean"): the app's measured D is the largest position average (selects head and liners, B2 / C2), not a mean.
-19. `saved_at`: schema "local date and time, ISO 8601 with offset"; the app stores UTC (`toISOString()`, ending Z).
-20. `rope.annex_h_construction` null = not in Annex H; app value "Other (not in Annex H) – use the counts" → null. `rope.iso2408_class`: app "not in ISO 2408 Table C.1 / C.2" → null. (One-to-one; listed for confirmation.)
-
-### Build note (not a schema field)
-21. QR screen needs a QR encoder in the app (offline) – none is in the repo; one library file would be added. zlib deflate via the browser's CompressionStream (support on the engineers' phones to be checked in the Safari / Chrome tests).
+### (d) – waiting for the owner's ruling
+- D1 Certificate's measured diameter: no field in schema v1.
+- D2 Which of the three caliper pairs is exported.
+- D3 Records without an air value (C4 route 1, route 3, automatic calibration): schema v1 requires air_value_entered_pct, and Kuzo's importer then ticks the "air value" route.
+- D4 Overridden A: which source to export.
+- D5 LF threshold: Kuzo's C5 check (engine/checks.py c5_check) wants the threshold at most one-wire − 2 mV on BU-M and BU-16 heads (= one-wire on MH 80-120), a higher one only with a reason in its lf_threshold_reason box (no schema field). Rope Record's locked "filed" rule checks the BU-M alarm (2–3 mV below), not the threshold, and wants the BU-16 threshold exactly 2 mV below.
