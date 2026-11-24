@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rope Record</title>
+<meta name="description" content="Site record of rope data and MRT calibration, with mistake checks. Works offline.">
+<meta name="theme-color" content="#002050">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+<script src="version.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<div class="banner" role="note">Site record – not a report</div>
+<header>
+  <button type="button" id="menu" class="menu" aria-label="Records">☰</button>
+  <div><h1>Rope Record</h1><p id="where">Acumen MRT</p></div>
+</header>
+
+<main>
+  <section id="home">
+    <h2>New record</h2>
+    <p>Choose the job type.</p>
+    <div class="big2">
+      <button type="button" id="newsite" class="p">Site rope</button>
+      <button type="button" id="newref" class="p alt">Reference rope</button>
+    </div>
+    <button type="button" id="cont" class="wide" hidden>Continue</button>
+    <button type="button" id="install" class="wide" hidden>Install the app on this phone</button>
+    <h2>Records on this phone</h2>
+    <ul id="list" class="recs"></ul>
+    <div id="all" class="row" hidden>
+      <button type="button" id="allcsv">Download all as CSV</button>
+      <button type="button" id="allshare">Share all</button>
+    </div>
+  </section>
+
+  <section id="form" hidden>
+    <nav id="steps" class="steps" aria-label="Steps"></nav>
+    <h2 id="title"></h2>
+    <p id="intro" class="intro"></p>
+    <div id="live" aria-live="polite"></div>
+    <div id="fields"></div>
+    <p id="msg" class="msg" role="status" hidden></p>
+  </section>
+
+  <footer><span id="ver"></span><br>Records stay on this phone. Calculations are a site aid – the report is made in the office.</footer>
+</main>
+
+<div id="bar" class="bar" hidden>
+  <p id="need" class="need"></p>
+  <div class="btns">
+    <button type="button" id="back">Back</button>
+    <button type="button" id="next" class="p">Next</button>
+    <button type="button" id="save" class="p" hidden>Save record</button>
+    <button type="button" id="share" class="p alt" hidden>Share</button>
+  </div>
+</div>
+</body>
+</html>
