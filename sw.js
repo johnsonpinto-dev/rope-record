@@ -3,7 +3,7 @@
 importScripts("./version.js");
 const CACHE = "rope-record-" + self.RR_VERSION.version;
 const FILES = ["./", "./index.html", "./styles.css", "./version.js", "./calc.js", "./app.js", "./manifest.webmanifest",
-  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png"];
+  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/acumen-logo.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: "reload" })))).then(() => self.skipWaiting()));
