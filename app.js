@@ -66,14 +66,14 @@ function headScreens(i) {
         F(p + "lfgap", "Gap between the wire ends", "num", { unit: "mm", req: true, show: () => rec[p + "lfm"] === K.LF_METHODS[3] })]),
     S("c5sig", "C5", "One-wire LF signal", () => "The local fault gives a clear pulse above the noise. Record the one-wire LF signal.|PRO-AIC-0608 C5",
       [F(p + "sig", "One-wire LF signal", "num", { unit: "mV", req: true })]),
-    S("c5thr", "C5", "LF threshold and alarm", () => { const c = hc(); return c.rule ? `${esc(c.rule.words)}. Raised for rope noise only with the reason recorded; alarm optional.|${c.rule.src}; C5` : "Pick the head first.|PRO-AIC-0608 C5"; },
+    S("c5thr", "C5", "LF threshold and alarm", () => "Record the LF threshold and the alarm as set on the basic unit. Rope Record does not check them – Kuzo checks the threshold.|PRO-AIC-0608 C5; owner's ruling D5 (24-Nov-2026)",
       [F(p + "thr", "LF threshold set", "num", { unit: "mV", req: true }),
         F(p + "alarm", "LF alarm (blank = not set)", "num", { unit: "mV" }),
         F(p + "speedcomp", "Speed compensation mode", "text", { hint: "where the instrument has one" }),
         F(p + "config", "Configuration file name", "text", { req: true }),
+        F(p + "scanstep", "Scan step set on the basic unit (if read)", "num", { unit: "mm", hint: "optional – Kuzo compares it with the scan" }),
         ...(i === 1 ? [F("h2on", "Calibrate a second head on this rope?", "radio", { ...YN, req: true })] : [])],
-      { top: () => { const c = hc(), sig = K.num(rec[p + "sig"]); if (!c.rule || !sig) return ""; const lo = sig - c.rule.below[1], hi = sig - c.rule.below[0];
-        return `<div class="big"><small>${esc(c.rule.kind === "alarm" ? "LF alarm" : "LF threshold")} to set (one-wire signal ${sig} mV)</small><b>${lo === hi ? lo : `${lo}–${hi}`} mV</b><i class="src">${esc(c.rule.src)}</i></div>`; } }),
+      ),
     S("c6", "C6", "Closing check (after the recording)", () => "Read the LMA again on the zero section: <b>0 ± 0.5 %</b>. Recorded length within <b>1 %</b> of a known length. Negative LMA not more than <b>1 %</b> (E1).|PRO-AIC-0608 C6, E1",
       [F(p + "c6_done", "Closing check done?", "radio", { opts: ["yes", "no"], labels: ["Yes", "Not yet – after the recording"], req: true }),
         F(p + "c6_zero", "Closing zero reads", "snum", { unit: "%", req: true, show: () => rec[p + "c6_done"] === "yes" }),
@@ -96,10 +96,12 @@ const SCREENS = (r) => [
       F("location", "Location", "text"),
       F("length", "Rope length", "num", { unit: "m", hint: blank }),
     ] },
-  { id: "rope", group: "Rope", title: "Rope data", accept: () => "Diameter at three or more positions, each the average of two at right angles; A and δmax with their source, or the RCN.|PRO-AIC-0608 B2, A3",
+  { id: "rope", group: "Rope", title: "Rope data", accept: () => "Nominal and measured diameter from the certificate; two caliper readings at 90° to each other at the widest point; A and δmax with their source, or the RCN.|Owner's ruling D2 (24-Nov-2026); PRO-AIC-0608 B2, A3",
     fields: [
-      F("dnom", "Nominal diameter d", "num", { unit: "mm", req: true }),
-      ...[1, 2, 3].flatMap((i) => [F(`p${i}`, `Position ${i} from the datum`, "num", { unit: "m", req: true, group: `Diameter – position ${i}` }), F(`d${i}a`, `Reading ${i}a`, "num", { unit: "mm", req: true, group: `Diameter – position ${i}` }), F(`d${i}b`, `Reading ${i}b (at 90°)`, "num", { unit: "mm", req: true, group: `Diameter – position ${i}` })]),
+      F("dnom", "Nominal diameter d (certificate)", "num", { unit: "mm", req: true }),
+      F("d_cert", "Measured diameter on the certificate", "num", { unit: "mm", hint: "blank if the certificate gives none – kept on the phone and in the CSV" }),
+      F("da", "Reading 1 at the widest point", "num", { unit: "mm", req: true, group: "Caliper readings" }),
+      F("db", "Reading 2 at 90° to reading 1", "num", { unit: "mm", req: true, group: "Caliper readings" }),
       F("construction", "Construction (as on the certificate)", "text", { req: true, hint: "e.g. 6x36 IWRC, 35(W)x7" }),
       F("csrc", "Construction from", "radio", { opts: K.CONSTR_SOURCES, req: true }),
       F("annexh", "ISO 4309 Annex H construction (for the RCN)", "select", { opts: [...K.ANNEX_H_CHOICES, K.ANNEX_OTHER], req: true }),
@@ -112,14 +114,14 @@ const SCREENS = (r) => [
       F("runs", "How the rope runs", "radio", { opts: K.RUNS, req: true }),
       F("spool_from", "Spooling length from", "num", { unit: "m", show: () => rec.runs === K.RUNS[1] }),
       F("spool_to", "Spooling length to", "num", { unit: "m", show: () => rec.runs === K.RUNS[1] }),
-      F("asrc", "Metallic area A – source", "select", { opts: () => { const d = K.num(rec.dnom); return d != null && (d < 2 || d > 60) ? K.A_SOURCES.filter((x) => x !== K.A_SOURCES[2]) : K.A_SOURCES; }, req: true,
-        hint: () => K.num(rec.dnom) > 60 ? "over 60 mm: certificate or maker's data, otherwise not known (ISO 2408 factors only 2–60 mm; Intron k gives an estimate for the air value only – A3)" : "" }),
-      F("a", "Metallic area A", "num", { unit: "mm²", req: () => rec.asrc === K.A_SOURCES[0] || rec.asrc === K.A_SOURCES[1], show: () => rec.asrc === K.A_SOURCES[0] || rec.asrc === K.A_SOURCES[1] }),
-      F("isoclass", "ISO 2408 class (for the C factor)", "select", { opts: [...K.ISO_CLASSES, K.ISO_NONE], req: () => rec.asrc === K.A_SOURCES[2], show: () => rec.asrc === K.A_SOURCES[2] }),
+      F("asrc", "Source of A", "select", { opts: () => { const d = K.num(rec.dnom); return d != null && (d < 2 || d > 60) ? K.A_SOURCES.filter((x) => x !== K.A_ISO) : K.A_SOURCES; },
+        hint: () => `Kuzo's choices; leave blank when A is not known.${K.num(rec.dnom) > 60 ? " Over 60 mm: no ISO 2408 factor (2–60 mm only); Intron k gives an estimate for the air value only (A3)." : ""}` }),
+      F("a", "Metallic area A", "num", { unit: "mm²", req: () => K.A_TYPED.includes(rec.asrc), show: () => K.A_TYPED.includes(rec.asrc) }),
+      F("isoclass", "ISO 2408 class (for the C factor)", "select", { opts: [...K.ISO_CLASSES, K.ISO_NONE], req: () => rec.asrc === K.A_ISO, show: () => rec.asrc === K.A_ISO }),
       F("dmaxsrc", "Largest wire δmax – source", "select", { opts: K.DMAX_SOURCES, req: true }),
       F("dmax", "Largest wire δmax", "num", { unit: "mm", req: () => rec.dmaxsrc && rec.dmaxsrc !== K.DMAX_SOURCES[2], show: () => rec.dmaxsrc && rec.dmaxsrc !== K.DMAX_SOURCES[2] }),
     ],
-    top: () => { const c = K.compute(rec); return c.D ? `<div class="calc"><b>Measured diameter ${K.r1(c.D, 2)} mm</b><small>largest position average (${c.posAv.map((x) => K.r1(x, 2)).join(" / ")} mm) – selects the head and liners</small><i class="src">PRO-AIC-0608 B2, C2</i></div>` : ""; } },
+    top: () => { const c = K.compute(rec); return c.D ? `<div class="calc"><b>Measured diameter ${K.r1(c.D, 2)} mm</b><small>mean of ${c.da} and ${c.db} mm at the widest point – selects the head and liners</small><i class="src">PRO-AIC-0608 C2; owner's ruling D2</i></div>` : ""; } },
   { id: "results", group: "Results", title: "Filled in for this rope", accept: () => "Check the working. An automatic value can be changed only with a reason, saved with the time.|Rope Record", results: true, fields: [] },
   ...headScreens(1).filter((s) => !s.show || s.show()),
   ...(r.h2on === "yes" ? headScreens(2).filter((s) => !s.show || s.show()) : []),
@@ -163,9 +165,8 @@ function input(f) {
 const srcLine = (t) => { const [a, b] = t.split("|"); return `<p class="accept">${a}</p>${b ? `<i class="src">${esc(b)}</i>` : ""}`; };
 
 function resultsHTML(c) {
-  const ovBtn = { "Metallic area A used": "A", "LF limit 6d / 30d": "lf" };
+  const ovBtn = { "LF limit 6d / 30d": "lf" };
   return `<table class="work">${c.working.map(([a, b, w, src]) => `<tr><th>${esc(a)}</th><td><b>${esc(b)}</b>${w ? `<small>${esc(w)}</small>` : ""}<i class="src">${esc(src)}</i>
-    ${ovBtn[a] === "A" ? `<button type="button" class="ovr" data-ovr="A">Change A (reason needed)</button>` : ""}
     ${ovBtn[a] === "lf" && c.lf.ok ? `<button type="button" class="ovr" data-ovr="lf6">Change 6d</button> <button type="button" class="ovr" data-ovr="lf30">Change 30d</button>` : ""}</td></tr>`).join("")}</table>`;
 }
 
@@ -330,24 +331,27 @@ $("#next").addEventListener("click", () => { if ($("#next").disabled) return; cu
 $("#menu").addEventListener("click", () => { saveDraft(); home(); });
 
 // ---------------- save, download, share ----------------
-function download(name, text) {
-  const blob = new Blob([text], { type: "text/csv;charset=utf-8" }), u = URL.createObjectURL(blob), a = document.createElement("a");
+function download(name, text, type = "text/csv") {
+  const blob = new Blob([text], { type: `${type};charset=utf-8` }), u = URL.createObjectURL(blob), a = document.createElement("a");
   a.href = u; a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(u); a.remove(); }, 1500);
 }
-async function share(name, text, title) {
-  const file = new File([text], name, { type: "text/csv" });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title, text: title }); return "shared"; } catch (e) { if (e && e.name === "AbortError") return "cancelled"; }
+// files: [{ name, text, type }]. One share sheet with every file; where sharing files is not possible, each is downloaded.
+async function shareFiles(files, title) {
+  const fs = files.map((f) => new File([f.text], f.name, { type: f.type }));
+  if (navigator.canShare && navigator.canShare({ files: fs })) {
+    try { await navigator.share({ files: fs, title, text: title }); return "shared"; } catch (e) { if (e && e.name === "AbortError") return "cancelled"; }
   }
-  download(name, text); return "downloaded";
+  files.forEach((f) => download(f.name, f.text, f.type)); return "downloaded";
 }
+const share = (name, text, title) => shareFiles([{ name, text, type: "text/csv" }], title);
+const recFiles = (r, when) => [{ name: K.fileName(r, when), text: K.csvOf([r]), type: "text/csv" }, { name: K.kuzoFileName(r, when), text: JSON.stringify(K.kuzoRecord(r, `${V.version}`), null, 1), type: "application/json" }];
 function store(r) {
   const now = new Date();
   r.savedAt = now.toISOString(); r.appVersion = `${V.version} (${V.date})`;
   if (!r.id) r.id = K.fileName(r, now).replace(/\.csv$/, "") + "-" + now.getTime();
   const i = records.findIndex((x) => x.id === r.id);
   if (i >= 0) records[i] = structuredClone(r); else records.unshift(structuredClone(r));
-  return { name: K.fileName(r, now), replaced: i >= 0, ok: keep(STORE, records) };
+  return { name: K.fileName(r, now), kname: K.kuzoFileName(r, now), when: now, replaced: i >= 0, ok: keep(STORE, records) };
 }
 function finishMsg(t) { $("#msg").textContent = t; $("#msg").hidden = false; $("#msg").scrollIntoView({ block: "center" }); }
 function beforeSave(go) {
@@ -361,18 +365,50 @@ function beforeSave(go) {
   });
 }
 $("#save").addEventListener("click", () => beforeSave(() => {
-  const s = store(rec); download(s.name, K.csvOf([rec])); saveDraft();
-  finishMsg(`Saved on this phone${s.replaced ? " (the earlier copy was replaced)" : ""} and ${s.name} downloaded.${s.ok ? "" : " WARNING: the phone refused to keep a copy – keep the CSV."}`);
+  const s = store(rec); recFiles(rec, s.when).forEach((f) => download(f.name, f.text, f.type)); saveDraft();
+  finishMsg(`Saved on this phone${s.replaced ? " (the earlier copy was replaced)" : ""}; ${s.name} and ${s.kname} downloaded.${s.ok ? "" : " WARNING: the phone refused to keep a copy – keep the files."}`);
 }));
 $("#share").addEventListener("click", () => beforeSave(async () => {
   const s = store(rec); saveDraft();
-  const how = await share(s.name, K.csvOf([rec]), `Rope record ${s.name}`);
-  finishMsg(`Saved on this phone${s.replaced ? " (the earlier copy was replaced)" : ""}. ${how === "shared" ? "CSV sent to the share sheet." : how === "cancelled" ? "Sharing cancelled." : "Sharing is not available here – the CSV was downloaded instead."}`);
+  const how = await shareFiles(recFiles(rec, s.when), `Rope record ${s.name}`);
+  finishMsg(`Saved on this phone${s.replaced ? " (the earlier copy was replaced)" : ""}. ${how === "shared" ? "CSV and Kuzo file sent to the share sheet." : how === "cancelled" ? "Sharing cancelled." : "Sharing is not available here – the CSV and the Kuzo file were downloaded instead."}`);
 }));
+
+// ---------------- QR for Kuzo (schema "x-qr") ----------------
+let qrState = null;
+async function showQr(r) {
+  const parts = await K.qrParts(K.kuzoText(r, V.version));
+  qrState = { parts, i: 0, auto: true, timer: null, lock: null, title: r.type === "reference" ? r.ref : [r.jobno, r.position].filter(Boolean).join(" – ") };
+  $("#home").hidden = true; $("#about").hidden = true; $("#form").hidden = true; $("#bar").hidden = true; $("#qr").hidden = false;
+  $("#where").textContent = "QR for Kuzo";
+  try { if (navigator.wakeLock) qrState.lock = await navigator.wakeLock.request("screen"); } catch {}
+  drawQr(); qrTimer();
+}
+function qrSvg(text) {
+  const q = qrcode(0, "M"); q.addData(text, "Alphanumeric"); q.make();
+  const n = q.getModuleCount(), m = 4, W = n + 2 * m; let d = "";
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c + m} ${r + m}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${W} ${W}" shape-rendering="crispEdges" role="img" aria-label="QR code"><rect width="${W}" height="${W}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+function drawQr() {
+  const q = qrState; if (!q) return;
+  $("#qrTitle").textContent = q.title || "Rope record";
+  $("#qrPart").textContent = `Code ${q.i + 1} of ${q.parts.length}`;
+  $("#qrCode").innerHTML = qrSvg(q.parts[q.i]);
+  $("#qrAuto").textContent = q.auto ? "Stop auto (every 2 s)" : "Auto every 2 s";
+}
+function qrTimer() { const q = qrState; if (!q) return; clearInterval(q.timer); if (q.auto && q.parts.length > 1) q.timer = setInterval(() => { q.i = (q.i + 1) % q.parts.length; drawQr(); }, 2000); }
+function closeQr() { if (qrState) { clearInterval(qrState.timer); try { qrState.lock && qrState.lock.release(); } catch {} } qrState = null; $("#qr").hidden = true; home(); }
+$("#qrNext").addEventListener("click", () => { const q = qrState; if (!q) return; q.i = (q.i + 1) % q.parts.length; drawQr(); qrTimer(); });
+$("#qrPrev").addEventListener("click", () => { const q = qrState; if (!q) return; q.i = (q.i - 1 + q.parts.length) % q.parts.length; drawQr(); qrTimer(); });
+$("#qrAuto").addEventListener("click", () => { const q = qrState; if (!q) return; q.auto = !q.auto; drawQr(); qrTimer(); });
+$("#qrClose").addEventListener("click", closeQr);
+document.addEventListener("visibilitychange", async () => { if (qrState && document.visibilityState === "visible" && navigator.wakeLock) { try { qrState.lock = await navigator.wakeLock.request("screen"); } catch {} } });
 
 // ---------------- home and About ----------------
 function newRecord(type) { rec = { type, date: today(), reasons: {}, ovr: {}, reach: 0 }; cur = 0; popped.clear(); $("#msg").hidden = true; draw(); scrollTo(0, 0); }
 function home() {
+  $("#qr").hidden = true;
   $("#home").hidden = false; $("#about").hidden = true; $("#form").hidden = true; $("#bar").hidden = true; $("#msg").hidden = true; $("#probs").hidden = true;
   $("#where").textContent = "Acumen MRT – site record";
   let d = load(DRAFT, null);
@@ -382,7 +418,7 @@ function home() {
   if (d && d.rec) $("#cont").textContent = `Continue: ${d.rec.type === "reference" ? d.rec.ref || "reference rope" : [d.rec.jobno, d.rec.position].filter(Boolean).join(" – ") || "site rope"}`;
   $("#list").innerHTML = records.length ? records.map((r, i) => `<li><div><b>${esc(r.type === "reference" ? r.ref : [r.jobno, r.position].filter(Boolean).join(" – "))}</b>
     <small>${esc(r.type === "reference" ? "Reference rope" : "Site rope")} · ${esc(r.date)} · ${esc(r.engineer)} · ${esc(r.dnom)} mm</small></div>
-    <span class="rb"><button type="button" data-edit="${i}">Edit</button><button type="button" data-csv="${i}">CSV</button><button type="button" data-share="${i}">Share</button></span></li>`).join("")
+    <span class="rb"><button type="button" data-edit="${i}">Edit</button><button type="button" data-csv="${i}">Files</button><button type="button" data-share="${i}">Share</button><button type="button" data-qr="${i}">QR for Kuzo</button></span></li>`).join("")
     : "<li class='none'>No records on this phone yet.</li>";
   $("#all").hidden = !records.length;
   scrollTo(0, 0);
@@ -394,7 +430,8 @@ function about() {
   $("#aboutBody").innerHTML = `<p><b>Rope Record ${esc(V.version)}</b> · ${esc(V.date)}</p>
     ${P.confirmedFiled ? "" : `<p class="stop">Procedure copy not confirmed as filed.</p>`}
     <dl class="about"><dt>Procedure followed</dt><dd>${esc(P.doc)}<br><small>${esc(P.file)}<br>SHA-256 ${esc(P.sha256)}</small></dd>
-    <dt>LF threshold rule</dt><dd>${esc(K.LF_RULESETS[K.LF_RULESET].name)}</dd>
+    <dt>LF threshold</dt><dd>Recorded as entered, not checked by Rope Record; Kuzo checks it (owner's ruling D5, 24-Nov-2026). Rule set held for reference: ${esc(K.LF_RULESETS[K.LF_RULESET].name)}</dd>
+    <dt>Kuzo link</dt><dd>Save and Share give the CSV and a .kuzo.json file (rope-record-schema-v1); "QR for Kuzo" shows the same record as QR codes.</dd>
     ${K.SOURCES.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl>
     <p class="note">Records stay on this phone. This is a site record, not a report.</p>`;
   scrollTo(0, 0);
@@ -403,13 +440,14 @@ $("#newsite").addEventListener("click", () => newRecord("site"));
 $("#newref").addEventListener("click", () => newRecord("reference"));
 $("#aboutBtn").addEventListener("click", about);
 $("#aboutBack").addEventListener("click", home);
-$("#cont").addEventListener("click", () => { const d = load(DRAFT, null); if (!d) return; rec = d.rec; rec.reasons = rec.reasons || {}; rec.ovr = rec.ovr || {}; cur = d.cur || 0; draw(); });
+$("#cont").addEventListener("click", () => { const d = load(DRAFT, null); if (!d) return; rec = K.migrate(d.rec); rec.reasons = rec.reasons || {}; rec.ovr = rec.ovr || {}; cur = d.cur || 0; draw(); });
 $("#list").addEventListener("click", async (e) => {
   const b = e.target.closest("button"); if (!b) return;
-  const r = records[+(b.dataset.edit ?? b.dataset.csv ?? b.dataset.share)];
+  const r = K.migrate(records[+(b.dataset.edit ?? b.dataset.csv ?? b.dataset.share ?? b.dataset.qr)]);
   if (b.dataset.edit != null) { rec = structuredClone(r); screens = SCREENS(rec); rec.reach = screens.length - 1; cur = 0; popped.clear(); draw(); finishMsg(`Editing ${b.closest("li").querySelector("b").textContent}. Save again to replace the stored copy.`); }
-  if (b.dataset.csv != null) download(K.fileName(r, new Date(r.savedAt)), K.csvOf([r]));
-  if (b.dataset.share != null) await share(K.fileName(r, new Date(r.savedAt)), K.csvOf([r]), "Rope record");
+  if (b.dataset.csv != null) recFiles(r, new Date(r.savedAt)).forEach((f) => download(f.name, f.text, f.type));
+  if (b.dataset.share != null) await shareFiles(recFiles(r, new Date(r.savedAt)), "Rope record");
+  if (b.dataset.qr != null) showQr(r);
 });
 const allName = () => `rope-records_${today()}.csv`;
 $("#allcsv").addEventListener("click", () => download(allName(), K.csvOf(records)));
@@ -421,6 +459,6 @@ $("#install").addEventListener("click", async () => { if (!deferred) return; def
 addEventListener("appinstalled", () => { $("#install").hidden = true; });
 
 $("#ver").textContent = `Rope Record version ${V.version} · ${V.date}${K.PROCEDURE.confirmedFiled ? "" : " · procedure copy not confirmed as filed"}`;
-records = load(STORE, []); if (!Array.isArray(records)) records = [];
+records = load(STORE, []); if (!Array.isArray(records)) records = []; records = records.map(K.migrate);
 home();
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));

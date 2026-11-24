@@ -130,9 +130,13 @@ export const ANNEX_H_CHOICES = ANNEX_H.map((x) => x.c);
 export const ANNEX_OTHER = "Other (not in Annex H) – use the counts";
 export const ROPE_TYPES = ["single-layer / parallel-closed (Table 3)", "rotation-resistant (Table 4)"];
 
-export const CONSTR_SOURCES = ["rope certificate", "client", "counted on the rope"];               // A3
-export const A_SOURCES = ["certificate", "maker's data", "calculated (ISO 2408, 2–60 mm only)", "not known"]; // site sheet
-export const DMAX_SOURCES = ["measured on a wire taken from the rope", "certificate, maker's data or written confirmation", "not available"]; // A3
+// Choice lists use exactly Kuzo's words (Kuzo is the master, 24-Nov-2026): Kuzo app/src/index.html rope form,
+// engine/lftable.py SOURCES. A source blank = A not known (Kuzo "— not chosen —"); nothing extra (ruling D4).
+export const CONSTR_SOURCES = ["rope certificate", "client advice", "counted on the rope"];
+export const A_CERT = "certificate", A_MAKER = "maker's data", A_WRITTEN = "client or maker written confirmation", A_ISO = "calculated (ISO 2408)";
+export const A_SOURCES = [A_CERT, A_MAKER, A_WRITTEN, A_ISO];
+export const A_TYPED = [A_CERT, A_MAKER, A_WRITTEN];
+export const DMAX_SOURCES = ["measured on a wire taken from the rope", "certificate, rope maker's data or written confirmation for that rope", "not available"];
 export const LAYS = ["ordinary", "Lang", "not known"];
 export const RUNS = ["steel sheaves / single-layer drum", "multi-layer drum"];
 export const LMA_ROUTES = ["Route 1 – reference rope", "Route 2 – on the rope", "Route 3 – added wires"];
@@ -146,12 +150,12 @@ export const ACUMEN = "Acumen criterion, derived from ISO 4309 (R08)";
 const HEAD_FIELDS = ["head", "head_sn", "bu_sn", "liner", "temp", "settled", "selftest", "counter",
   "route", "r1_id", "r1_zero", "r1_known", "r1_seg2", "r2_from", "r2_to", "r2_passes", "air", "air_auto", "r2_zero",
   "r3_n", "r3_dw", "r3_set", "r3_zero", "cal_time",
-  "lfm", "lf_at", "lfwd", "lflen", "lfgap", "sig", "thr", "alarm", "speedcomp", "config",
+  "lfm", "lf_at", "lfwd", "lflen", "lfgap", "sig", "thr", "alarm", "speedcomp", "config", "scanstep",
   "c6_done", "c6_zero", "c6_len", "c6_known", "lmaneg"];
 export const HEAD_KEYS = HEAD_FIELDS;
 export const FIELDS = [
   "type", "ref", "jobno", "client", "position", "date", "engineer", "location", "length",
-  "dnom", "p1", "d1a", "d1b", "p2", "d2a", "d2b", "p3", "d3a", "d3b",
+  "dnom", "d_cert", "da", "db",
   "construction", "csrc", "annexh", "ropetype", "seale", "core", "outer", "wires", "lay", "runs", "spool_from", "spool_to",
   "isoclass", "asrc", "a", "dmaxsrc", "dmax",
   ...HEAD_FIELDS.map((f) => "h1_" + f), "h2on", ...HEAD_FIELDS.map((f) => "h2_" + f),
@@ -160,7 +164,7 @@ export const FIELDS = [
 ];
 export const SECTIONS = ["A", "B", "C"];
 // Automatic values the engineer may override (only with a reason; saved with the time).
-export const OVERRIDABLE = { A: "Metallic area A used", air: "Air value to type into the BU-M", lf6: "LF limit over 6d", lf30: "LF limit over 30d" };
+export const OVERRIDABLE = { air: "Air value to type into the BU-M", lf6: "LF limit over 6d", lf30: "LF limit over 30d" };
 
 export const num = (v) => { if (v == null) return null; const t = String(v).trim().replace(",", "."); if (t === "") return null; const x = Number(t); return isFinite(x) ? x : null; };
 const pos = (x) => (x != null && x > 0 ? x : null);
@@ -252,22 +256,21 @@ function lfLimit(rec, c) {
 export function compute(rec) {
   const g = (k) => pos(num(rec[k]));
   const dn = g("dnom");
-  const posAv = [1, 2, 3].map((i) => { const a = g(`d${i}a`), b = g(`d${i}b`); return a && b ? (a + b) / 2 : null; });
-  const have = posAv.filter((x) => x != null);
-  const D = have.length ? Math.max(...have) : null;            // largest measured, incl. coating, selects head and liners (B2, C2)
+  const da = g("da"), db = g("db");
+  const D = da && db ? (da + db) / 2 : (da || db || null);     // two readings at 90° at the widest point (ruling D2); selects head and liners
   const k = K[rec.core] ?? null;
   const S = dn && k ? k * PI * dn * dn / 4 : null;               // A3: S = K × π × d² ÷ 4, d nominal - air value / route 3 only
   const iso = isoFactor(rec, dn);
   let Aauto = null, Asrc = rec.asrc || "", Aestimate = false;
-  if (rec.asrc === A_SOURCES[2]) { Aauto = iso.ok ? iso.A : null; Aestimate = true; }
-  else if (rec.asrc === A_SOURCES[0] || rec.asrc === A_SOURCES[1]) Aauto = g("a");
-  const A = ovr(rec, "A") ?? Aauto;
+  if (rec.asrc === A_ISO) { Aauto = iso.ok ? iso.A : null; Aestimate = true; }
+  else if (A_TYPED.includes(rec.asrc)) Aauto = g("a");
+  const A = Aauto;
   const Aair = A ?? S;
   const dmax = rec.dmaxsrc === DMAX_SOURCES[2] ? null : g("dmax");
   const wireArea = dmax ? PI * dmax * dmax / 4 : null;
   const outer = g("outer"), wires = g("wires");
   const n = outer && wires ? outer * wires : null;
-  const c = { dn, posAv, D, k, S, iso, Aauto, A, Asrc, Aestimate, Aair, dmax, wireArea, n,
+  const c = { dn, da, db, D, dcert: g("d_cert"), k, S, iso, Aauto, A, Asrc, Aestimate, Aair, dmax, wireArea, n,
     share: wireArea && A ? wireArea / A * 100 : null,
     l6: dn ? 6 * dn / 1000 : null, l30: dn ? 30 * dn / 1000 : null };
   c.lf = lfLimit(rec, c);
@@ -295,8 +298,8 @@ export function compute(rec) {
     return out;
   });
   c.working = [
-    ["Measured diameter (largest of the positions)", D ? `${r1(D, 2)} mm` : "–", have.length ? `position averages ${posAv.map((x) => r1(x, 2)).join(" / ")} mm; each = average of two at right angles` : "", "PRO-AIC-0608 B2, C2"],
-    ["Metallic area A used", A != null ? `${r1(A)} mm²${ovr(rec, "A") != null ? " (overridden)" : ""}` : "not known", A != null ? `source: ${Asrc}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
+    ["Measured diameter (mean of the two readings)", D ? `${r1(D, 2)} mm` : "–", da && db ? `(${da} + ${db}) ÷ 2, two readings at 90° at the widest point${c.dcert ? `; certificate: ${c.dcert} mm` : ""}` : "", "PRO-AIC-0608 B2, C2; owner's ruling D2 (24-Nov-2026)"],
+    ["Metallic area A used", A != null ? `${r1(A)} mm²` : "not known", A != null ? `source: ${Asrc}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
     ["Metallic area – Intron k estimate", S ? `${r1(S, 0)} mm² (estimate)` : "–", S ? `k × π × d² ÷ 4 = ${k} × π × ${dn}² ÷ 4 (k: ${rec.core}). Estimate – used only to choose the air value / route 3 S when A is not known; not reported and no limit is calculated from it` : "needs nominal d and core", "PRO-AIC-0608 A3; manual v1.3 2.4.2 (p. 27)"],
     ["One-wire area", wireArea ? `${r1(wireArea, 2)} mm²` : "–", wireArea ? `π × δmax² ÷ 4 = π × ${dmax}² ÷ 4` : "δmax not available", "PRO-AIC-0608 A3"],
     ["Single-wire share", c.share ? `${r1(c.share, 2)} % of A` : "–", c.share ? "(π × δmax² ÷ 4) ÷ A × 100, compared with the head's LF sensitivity" : "needs A and δmax", "PRO-AIC-0608 A3"],
@@ -308,7 +311,6 @@ export function compute(rec) {
   ];
   for (const hc of c.heads) if (hc.h) {
     c.working.push([`Air value to type into the BU-M – ${hc.h.model}`, hc.air != null ? `${hc.air} %` : OWN_MANUAL, hc.airWorking, airSrc(hc.h.model)]);
-    c.working.push([`LF rule – ${hc.h.model}`, hc.rule.words, `rule set: ${LF_RULESETS[LF_RULESET].name}`, hc.rule.src]);
   }
   return c;
 }
@@ -317,9 +319,10 @@ export function compute(rec) {
 // checks(rec, c): every rule broken, with what is wrong, the correct value or range, and the clause.
 // level red = fix, or give a reason (saved with the time); amber = warning, can continue.
 // ---------------------------------------------------------------------------------------------
-const ZERO_FIELDS = { length: "Rope length", dnom: "Nominal diameter", d1a: "Diameter 1a", d1b: "Diameter 1b", d2a: "Diameter 2a", d2b: "Diameter 2b", d3a: "Diameter 3a", d3b: "Diameter 3b",
+const ZERO_FIELDS = { length: "Rope length", dnom: "Nominal diameter", d_cert: "Measured diameter (certificate)", da: "Diameter reading 1", db: "Diameter reading 2",
   outer: "Outer strands", wires: "Wires per strand", a: "Metallic area A", dmax: "δmax", A_gap: "Section A gap", B_gap: "Section B gap", C_gap: "Section C gap" };
-const HEAD_ZERO = { air: "Air value", lfwd: "Wire diameter", lflen: "Wire length", lfgap: "Gap", sig: "One-wire LF signal", thr: "LF threshold", alarm: "LF alarm", r3_dw: "Added wire diameter", r1_known: "Known LMA of segment 2" };
+// LF threshold and alarm are recorded with no check of Rope Record's own; Kuzo checks them (ruling D5, 24-Nov-2026).
+const HEAD_ZERO = { air: "Air value", lfwd: "Wire diameter", lflen: "Wire length", lfgap: "Gap", sig: "One-wire LF signal", r3_dw: "Added wire diameter", r1_known: "Known LMA of segment 2", scanstep: "Scan step" };
 const SCREEN_OF = { length: "job", A_gap: "sections", B_gap: "sections", C_gap: "sections" };
 const HSCREEN = { head: "c1", head_sn: "c1", bu_sn: "c1", liner: "c2", temp: "c2", settled: "c3", selftest: "c3", counter: "c3",
   route: "c4", r1_zero: "c4", r1_known: "c4", r1_seg2: "c4", r2_from: "c4", r2_to: "c4", r2_passes: "c4", air: "c4air", r2_zero: "c4air", r3_n: "c4", r3_dw: "c4", r3_set: "c4", r3_zero: "c4",
@@ -338,13 +341,13 @@ export function checks(rec, c = compute(rec)) {
   if (c.D && dn) {
     const p = (c.D - dn) / dn * 100;
     const lim = rec.core === CORES[0] ? 10 : 5;
-    if (p >= lim) add("amber", "dia-up", "d1a", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${r1(p, 1)} % above the nominal ${dn} mm.`, `An increase of ${lim} % or more (${rec.core === CORES[0] ? "fibre" : "steel"} core) is investigated and discard considered; check the nominal size.`, "PRO-AIC-0608 B2, §9.3 (ISO 4309 6.7.6)");
-    if (p < 0) add("amber", "dia-down", "d1a", "rope", `Measured diameter ${r1(c.D, 2)} mm is below the nominal ${dn} mm.`, "Decrease is evaluated against the reference diameter, never the nominal – record the reference diameter if known.", "PRO-AIC-0608 B2, §9.3 (ISO 4309 Table 5)");
+    if (p >= lim) add("amber", "dia-up", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${r1(p, 1)} % above the nominal ${dn} mm.`, `An increase of ${lim} % or more (${rec.core === CORES[0] ? "fibre" : "steel"} core) is investigated and discard considered; check the nominal size.`, "PRO-AIC-0608 B2, §9.3 (ISO 4309 6.7.6)");
+    if (p < 0) add("amber", "dia-down", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is below the nominal ${dn} mm.`, "Decrease is evaluated against the reference diameter, never the nominal – record the reference diameter if known.", "PRO-AIC-0608 B2, §9.3 (ISO 4309 Table 5)");
   }
   if (dn && dn > 63.5) add("amber", "over635", "dnom", "rope", `Rope ${dn} mm is over 63.5 mm.`, "Tested only by client agreement recorded on the Job Order.", "PRO-AIC-0608 §1.2, A1 (ASTM E1571-21 1.1.1)");
   // A and δmax (A3)
-  if (rec.asrc === A_SOURCES[2] && !c.iso.ok) add("red", "iso", "isoclass", "rope", `A cannot be calculated from ISO 2408: ${c.iso.why}.`, "Use the certificate or maker's A, or choose 'not known'.", "PRO-AIC-0608 A3; ISO 2408 Annex C (2–60 mm only)");
-  if ((rec.asrc === A_SOURCES[0] || rec.asrc === A_SOURCES[1]) && c.Aauto == null && !isZero("a")) add("red", "a-missing", "a", "rope", `A source is "${rec.asrc}" but no A is entered.`, "Type A from the document, or choose 'not known'.", "PRO-AIC-0608 A3");
+  if (rec.asrc === A_ISO && !c.iso.ok) add("red", "iso", "isoclass", "rope", `A cannot be calculated from ISO 2408: ${c.iso.why}.`, "Use the certificate, maker's data or written confirmation, or leave the source blank (A not known).", "PRO-AIC-0608 A3; ISO 2408 Annex C (2–60 mm only)");
+  if (A_TYPED.includes(rec.asrc) && c.Aauto == null && !isZero("a")) add("red", "a-missing", "a", "rope", `A source is "${rec.asrc}" but no A is entered.`, "Type A from the document, or leave the source blank (A not known).", "PRO-AIC-0608 A3");
   if (c.A != null && dn && c.A >= PI * dn * dn / 4) add("red", "a-circle", "a", "rope", `A ${r1(c.A)} mm² is not less than the circle area π × d² ÷ 4 = ${r1(PI * dn * dn / 4)} mm².`, "A is the metallic area (always less than the circle area); the circle area is never entered as A.", "PRO-AIC-0608 A3, §9.2.1");
   if (rec.dmaxsrc && rec.dmaxsrc !== DMAX_SOURCES[2] && !pos(num(rec.dmax)) && !isZero("dmax")) add("red", "dmax-missing", "dmax", "rope", `δmax source is "${rec.dmaxsrc}" but no δmax is entered.`, "Type δmax, or choose 'not available' (then the ISO 4309 table limit is used).", "PRO-AIC-0608 A3");
   if (rec.runs === RUNS[1] && (raw("spool_from") === "" || raw("spool_to") === "")) add("amber", "spool", "spool_to", "rope", "Multi-layer drum: the spooling length is not entered.", "Enter the length that spools on the drum; the drum column applies only there.", "PRO-AIC-0608 §9.2.2; site sheet");
@@ -407,18 +410,6 @@ export function checks(rec, c = compute(rec)) {
       if (len && len < h.wireLen) A2("red", "wlen", "lflen", `added wires ${len} m long.`, `Each at least ${h.wireLen} m for ${h.model}.`, "PRO-AIC-0608 C5, §5.2");
     }
     if ((c.dmax == null || c.A == null) && m && m !== LF_METHODS[3] && m !== LF_METHODS[0]) A2("amber", "lfadd", "lfm", "δmax or A not available.", "LF is calibrated with added wires of known diameter; record the wire diameter and the one-wire signal.", "PRO-AIC-0608 A3, §9.2.2");
-    const rule = hc.rule;
-    if (rule && sig) {
-      const [lo, hi] = [sig - rule.below[1], sig - rule.below[0]];
-      const want = lo === hi ? `${r1(lo, 1).replace(/\.0$/, "")} mV` : `${r1(lo, 1).replace(/\.0$/, "")}–${r1(hi, 1).replace(/\.0$/, "")} mV`;
-      const val = rule.kind === "alarm" ? alarm : thr;
-      const fld = rule.kind === "alarm" ? "alarm" : "thr";
-      if (val != null && val < lo) A2("red", "lfrule", fld, `LF ${rule.kind} ${val} mV is too low.`, `${rule.words}: ${want} (one-wire signal ${sig} mV).`, rule.src);
-      if (val != null && val > hi) {
-        if (rule.kind === "threshold") A2("red", "lfrule", fld, `LF threshold ${val} mV is above ${want}.`, `${rule.words}: ${want} (one-wire signal ${sig} mV). Raised for rope noise only with the reason recorded.`, `${rule.src}; C5 (raised threshold – Acumen criterion)`);
-        else A2("red", "lfrule", fld, `LF alarm ${val} mV is not ${want}.`, `${rule.words}: ${want} (one-wire signal ${sig} mV).`, rule.src);
-      }
-    }
     // C6 closing check, E1
     if (rec[p + "c6_done"] === "no") A2("amber", "c6", "c6_done", "closing check not recorded yet.", "After the recording: zero 0 ± 0.5 %, recorded length within 1 % of a known length.", "PRO-AIC-0608 C6");
     const cz = num(rec[p + "c6_zero"]);
@@ -454,7 +445,7 @@ export const unresolved = (list, rec) => list.filter((x) => x.level === "red" &&
 // ---------------------------------------------------------------------------------------------
 const CALC_COLS = ["D_measured_mm", "A_used_mm2", "A_source", "S_K_mm2", "wire_area_mm2", "single_wire_share_pct", "n_outer_wires", "RCN",
   "len_6d_m", "len_30d_m", "lf_route", "lf_6d", "lf_30d", "lf_drum_6d", "lf_drum_30d", "lf_working",
-  "h1_air_to_type", "h1_lf_rule", "h2_air_to_type", "h2_lf_rule", "lf_ruleset", "procedure_copy"];
+  "h1_air_to_type", "h2_air_to_type", "procedure_copy"];
 export const CSV_HEAD = ["record_id", "saved_at", "app_version", ...FIELDS, ...CALC_COLS, "problems_red", "problems_amber", "reasons_with_time", "overrides_with_time"];
 const q = (x) => { const t = String(x ?? ""); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
 const fx = (x, d) => (x == null || !isFinite(x) ? "" : Number(x.toFixed(d)));
@@ -463,8 +454,8 @@ export function csvLine(rec) {
   const rc = rcnFor(rec);
   const calc = [fx(c.D, 2), fx(c.A, 1), c.A != null ? c.Asrc : "", fx(c.S, 1), fx(c.wireArea, 3), fx(c.share, 3), c.n ?? "", rc.ok ? rc.rcn ?? "> 300" : "",
     fx(c.l6, 3), fx(c.l30, 3), c.lf.ok ? c.lf.route : "not calculated", c.lf.ok ? c.lf.l6 : "", c.lf.ok ? c.lf.l30 : "", c.lf.drum6 ?? "", c.lf.drum30 ?? "",
-    c.lf.ok ? c.lf.working : c.lf.why, H(1).air ?? (H(1).h ? "own manual" : ""), H(1).rule ? H(1).rule.words : "", H(2).air ?? (H(2).h ? "own manual" : ""), H(2).rule ? H(2).rule.words : "",
-    LF_RULESETS[LF_RULESET].name, `${PROCEDURE.file} SHA-256 ${PROCEDURE.sha256}${PROCEDURE.confirmedFiled ? "" : " (copy not confirmed as filed)"}`];
+    c.lf.ok ? c.lf.working : c.lf.why, H(1).air ?? (H(1).h ? "own manual" : ""), H(2).air ?? (H(2).h ? "own manual" : ""),
+    `${PROCEDURE.file} SHA-256 ${PROCEDURE.sha256}${PROCEDURE.confirmedFiled ? "" : " (copy not confirmed as filed)"}`];
   const fmt = (x) => `${x.text} ${x.want} [${x.src}]`;
   return [rec.id, rec.savedAt, rec.appVersion, ...FIELDS.map((f) => rec[f] ?? ""), ...calc,
     ch.filter((x) => x.level === "red").map(fmt).join(" | "),
@@ -479,3 +470,120 @@ export const fileName = (rec, when = new Date()) => {
   const base = (rec.type === "reference" ? rec.ref : [rec.jobno, rec.position].filter((x) => String(x || "").trim()).join("_")) || "rope-record";
   return `${String(base).trim().replace(/[^A-Za-z0-9_\-.]+/g, "-")}_${when.getFullYear()}-${p(when.getMonth() + 1)}-${p(when.getDate())}_${p(when.getHours())}${p(when.getMinutes())}.csv`;
 };
+
+// ---------------------------------------------------------------------------------------------
+// Records saved by 1.2 and earlier -> today's fields (nothing guessed): first diameter pair -> da / db,
+// source words -> Kuzo's words. Applied when a record or draft is opened.
+// ---------------------------------------------------------------------------------------------
+export function migrate(r) {
+  if (!r) return r;
+  const x = { ...r };
+  if (x.da == null && x.d1a != null) { x.da = x.d1a; x.db = x.d1b; }
+  const A_OLD = { "calculated (ISO 2408, 2–60 mm only)": A_ISO, "not known": "" };
+  if (x.asrc in A_OLD) x.asrc = A_OLD[x.asrc];
+  if (x.dmaxsrc === "certificate, maker's data or written confirmation") x.dmaxsrc = DMAX_SOURCES[1];
+  if (x.csrc === "client") x.csrc = "client advice";
+  if (x.ovr && x.ovr.A) { const o = x.ovr.A; delete x.ovr.A; x.notes = [x.notes, `A override from an older version: ${o.value} (${o.reason}, ${o.time})`].filter(Boolean).join("\n"); }
+  return x;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Site record for Kuzo: <ref>_<YYYY-MM-DD>_<HHMM>.kuzo.json to rope-record-schema-v1.json (Kuzo is the master).
+// Numbers in the key's unit; not available = null (never 0, never ""); choices exactly as the schema's enums.
+// heads[].lma_calibration_route carries the C4 route with Kuzo's own route ids (app/src/jobs/calroute.js):
+// "ref_rope" | "air" | "auto" | "added". Only "air" has an air value; the others export air_value_entered_pct null
+// (ruling D3, 24-Nov-2026) - schema v1 requires a number there, so Kuzo's importer must accept null (Kuzo-side change).
+// ---------------------------------------------------------------------------------------------
+export const SCHEMA_VERSION = 1;
+const KZ_NUM = (v) => { const x = num(v); return x == null || x === 0 ? null : x; };
+const KZ_INT = (v) => { const x = KZ_NUM(v); return x != null && Number.isInteger(x) ? x : null; };
+const KZ_TXT = (v) => { const t = String(v ?? "").trim(); return t === "" ? null : t; };
+const KZ_ROUTE = { [LMA_ROUTES[0]]: "ref_rope", [LMA_ROUTES[2]]: "added" };
+const KZ_A_SRC = { [A_CERT]: "rope certificate", [A_MAKER]: "maker's data", [A_ISO]: "ISO 2408 (2–60 mm only)" };
+const KZ_DMAX_SRC = { [DMAX_SOURCES[0]]: "wire taken from the rope", [DMAX_SOURCES[1]]: "rope certificate", [DMAX_SOURCES[2]]: "not available" };
+const KZ_LF = { [LF_METHODS[2]]: "known broken wire", [LF_METHODS[3]]: "two added wires" };
+export function localIso(d) {
+  const t = d instanceof Date ? d : new Date(d);
+  const off = -t.getTimezoneOffset(), sg = off >= 0 ? "+" : "-", a = Math.abs(off), p = (n) => String(n).padStart(2, "0");
+  return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}T${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}${sg}${p(Math.floor(a / 60))}:${p(a % 60)}`;
+}
+export function kuzoRecord(rec, appVersion) {
+  const c = compute(rec), ch = checks(rec, c), isRef = rec.type === "reference";
+  const heads = activeHeads(rec).map((i) => {
+    const p = `h${i}_`, hc = c.heads.find((x) => x.i === i) || {}, route = rec[p + "route"];
+    const lmaRoute = route === LMA_ROUTES[1] ? (rec[p + "air_auto"] === "yes" ? "auto" : "air") : KZ_ROUTE[route] || null;
+    const zero = route === LMA_ROUTES[0] ? rec[p + "r1_zero"] : route === LMA_ROUTES[1] ? rec[p + "r2_zero"] : route === LMA_ROUTES[2] ? rec[p + "r3_zero"] : null;
+    const onRope = route === LMA_ROUTES[1] || route === LMA_ROUTES[2];
+    return {
+      head_model: String(rec[p + "head"] || ""), head_serial: String(rec[p + "head_sn"] || "").trim(), basic_unit_serial: String(rec[p + "bu_sn"] || "").trim(),
+      liner: KZ_TXT(rec[p + "liner"]), liner_proposed: null, scan_step_mm: KZ_NUM(rec[p + "scanstep"]),
+      air_temperature_c: num(rec[p + "temp"]),
+      sound_section_from_m: onRope ? num(rec[p + "r2_from"]) : null, sound_section_to_m: onRope ? num(rec[p + "r2_to"]) : null,
+      air_value_proposed_pct: hc.airAuto ?? null,
+      air_value_entered_pct: lmaRoute === "air" ? KZ_NUM(rec[p + "air"]) : null,
+      lma_calibration_route: lmaRoute,
+      lma_check_pct: num(zero), lma_most_negative_pct: num(rec[p + "lmaneg"]),
+      lf_calibrated_on: KZ_LF[rec[p + "lfm"]] || null,
+      lf_wire_diameter_mm: rec[p + "lfm"] === LF_METHODS[3] ? KZ_NUM(rec[p + "lfwd"]) : null,
+      lf_gap_mm: rec[p + "lfm"] === LF_METHODS[3] ? KZ_NUM(rec[p + "lfgap"]) : null,
+      one_wire_lf_mv: KZ_NUM(rec[p + "sig"]), lf_threshold_mv: KZ_NUM(rec[p + "thr"]), lf_alarm_mv: KZ_NUM(rec[p + "alarm"]),
+    };
+  });
+  const out = ch.map((x) => { const rs = reasonOf(rec, x.id); return { id: x.id, level: x.level, text: `${x.text} Correct: ${x.want} [${x.src}]`, reason: rs ? `${rs.text} (${rs.time})` : null }; });
+  if (rec.asrc === A_WRITTEN) out.push({ id: "a-src-written", level: "amber", text: `A source "${A_WRITTEN}" is not one of schema v1's values: exported as "not known" with A ${c.A ?? "–"} mm² – choose the source in Kuzo.`, reason: null });
+  const da = KZ_NUM(rec.da), db = KZ_NUM(rec.db), pair = [da, db].filter((x) => x != null);
+  return {
+    format: "rope-record", schema_version: SCHEMA_VERSION, record_id: String(rec.id || ""), saved_at: localIso(rec.savedAt || new Date()),
+    app: { name: "Rope Record", version: String(appVersion || rec.appVersion || "") },
+    job: { type: isRef ? "reference" : "site", reference_rope: isRef ? KZ_TXT(rec.ref) : null, job_order: isRef ? KZ_TXT(rec.jobno) : KZ_TXT(rec.jobno),
+      client: KZ_TXT(rec.client), position: KZ_TXT(rec.position), location: KZ_TXT(rec.location), date: String(rec.date || ""), engineer: String(rec.engineer || "").trim(),
+      rope_length_m: KZ_NUM(rec.length) },
+    rope: {
+      nominal_diameter_mm: num(rec.dnom), measured_diameter_mm: pair,
+      measured_diameter_mean_mm: pair.length === 2 ? Math.round((da + db) / 2 * 1000) / 1000 : pair.length === 1 ? pair[0] : null,
+      construction: String(rec.construction || "").trim(),
+      annex_h_construction: rec.annexh && rec.annexh !== ANNEX_OTHER ? rec.annexh : null,
+      rope_type: rec.annexh === ANNEX_OTHER && ROPE_TYPES.includes(rec.ropetype) ? rec.ropetype : null,
+      seale_19_or_fewer: rec.annexh === ANNEX_OTHER && (rec.seale === "yes" || rec.seale === "no") ? rec.seale : null,
+      core: rec.core, outer_strands: KZ_INT(rec.outer), wires_per_strand: KZ_INT(rec.wires),
+      lay: LAYS.includes(rec.lay) ? rec.lay : null, runs_on: rec.runs === RUNS[0] ? "steel sheaves" : rec.runs === RUNS[1] ? "multi-layer drum" : null,
+      iso2408_class: rec.asrc === A_ISO && c.iso.ok ? rec.isoclass : null,
+      metallic_area_mm2: c.A != null ? c.A : null,
+      metallic_area_source: c.A != null ? (KZ_A_SRC[rec.asrc] || "not known") : "not known",
+      dmax_mm: c.dmax ?? null, dmax_source: KZ_DMAX_SRC[rec.dmaxsrc] || "not available",
+    },
+    heads,
+    reference_sections: isRef ? { datum: KZ_TXT(rec.datum), sections: SECTIONS.map((s) => ({ name: s, from_m: num(rec[s + "_from"]), to_m: num(rec[s + "_to"]), wires_cut: KZ_INT(rec[s + "_w"]), gap_mm: KZ_NUM(rec[s + "_gap"]) })).filter((x) => x.from_m != null || x.to_m != null || x.wires_cut != null || x.gap_mm != null) } : null,
+    checks: out,
+    sign_off: { counted_by: KZ_TXT(rec.counted), checked_by: KZ_TXT(rec.checked), notes: KZ_TXT(rec.notes) },
+  };
+}
+export const kuzoFileName = (rec, when) => fileName(rec, when).replace(/\.csv$/, ".kuzo.json");
+export const kuzoText = (rec, appVersion) => JSON.stringify(kuzoRecord(rec, appVersion));   // compact JSON (x-qr payload)
+
+// QR route, schema "x-qr": zlib (RFC 1950) -> base45 (RFC 9285) -> CRC-32 of the compressed bytes -> parts of at most
+// 1000 characters, each "RR1 PART <n>/<N> <CRC> <piece>". Same algorithms as Kuzo's reader (siterecord.js).
+const B45 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+export function base45(bytes) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 2) {
+    if (i + 1 < bytes.length) { let x = bytes[i] * 256 + bytes[i + 1]; const e = Math.floor(x / 2025); x %= 2025; s += B45[x % 45] + B45[Math.floor(x / 45)] + B45[e]; }
+    else { const x = bytes[i]; s += B45[x % 45] + B45[Math.floor(x / 45)]; }
+  }
+  return s;
+}
+let CRC_T = null;
+export function crc32(bytes) {
+  if (!CRC_T) { CRC_T = new Uint32Array(256); for (let i = 0; i < 256; i++) { let c = i; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; CRC_T[i] = c >>> 0; } }
+  let c = 0xFFFFFFFF; for (const b of bytes) c = CRC_T[(c ^ b) & 255] ^ (c >>> 8);
+  return ((c ^ 0xFFFFFFFF) >>> 0).toString(16).toUpperCase().padStart(8, "0");
+}
+export async function zlib(text) {
+  const cs = new CompressionStream("deflate");                 // "deflate" = zlib format (RFC 1950)
+  const buf = await new Response(new Blob([new TextEncoder().encode(text)]).stream().pipeThrough(cs)).arrayBuffer();
+  return new Uint8Array(buf);
+}
+export async function qrParts(text, size = 1000) {
+  const z = await zlib(text), t = base45(z), crc = crc32(z), N = Math.max(1, Math.ceil(t.length / size));
+  return Array.from({ length: N }, (_, i) => `RR1 PART ${i + 1}/${N} ${crc} ${t.slice(i * size, (i + 1) * size)}`);
+}

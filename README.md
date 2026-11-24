@@ -46,6 +46,7 @@ Follows **PRO-AIC-0608 as filed** and fills in what it can, so the engineer ente
 - The LF threshold rule is one table in `calc.js` (`LF_RULESETS`); `LF_RULESET` switches it when the procedure is amended.
 - Save keeps the record on the phone and downloads its CSV (UTF-8 with BOM); **Share** sends it through the Android
   share sheet. Records stay on the phone.
+- **Kuzo link:** Save also writes `<ref>_<date>_<HHMM>.kuzo.json` (rope-record-schema-v1, Kuzo is the master); Share sends the CSV and the .kuzo.json together; "QR for Kuzo" on a saved record shows the same record as QR codes (one per screen, auto-advance every 2 s). QR encoder: `vendor/qrcode.js` (qrcode-generator 1.4.4, MIT).
 - Register AIC-0608-E is not loaded yet: serials are typed, liner and verification are shown "check by hand".
 
 ## Files

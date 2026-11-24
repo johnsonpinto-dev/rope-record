@@ -4,9 +4,10 @@ Facts only. Owner's notes: vault note "Rope Record app (24-Nov-2026)" and MRTrev
 
 ## Where things are
 - Repo on the Mac: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/rope-record` (git remote `origin` = github.com/johnsonpinto-dev/rope-record, branch `main`).
-- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – version 1.2.0 (24-Nov-2026), commit 230cded; version.js on the live address read 1.2.0 on 24-Nov-2026.
-- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded.
-- Not published (gitignored): `dev/` (tests `dev/calc.test.mjs`, test records `dev/examples.mjs`, real-Chrome check `dev/cdp-check.mjs`, local server `dev/serve.mjs`, icon pages) and `sources/`.
+- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – see version.js (1.3.0 from 24-Nov-2026).
+- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 (.kuzo.json export + QR; this commit – hash in the git log and the vault note).
+- Not published (gitignored): `dev/` (tests `dev/calc.test.mjs`, `dev/export.test.mjs`; test records `dev/examples.mjs`; real-Chrome checks `dev/cdp-check.mjs`, `dev/qr-screen-check.mjs` + `dev/png2rgba.py`; local server `dev/serve.mjs`; icon pages) and `sources/`.
+- `vendor/qrcode.js` = qrcode-generator 1.4.4 (Kazuhiko Arase, MIT licence, header kept), from the npm registry 24-Nov-2026.
 - Local preview: MRTreview/.claude/launch.json entry "rope-record" (node dev/serve.mjs, port 8770).
 
 ## sources/ (on the Mac only, not in git)
@@ -26,6 +27,7 @@ Folder base: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/MRTre
 - `rope-record-screens/` (1.0): 00 start - job type.jpg · 01 results with working - 48 mm.jpg · 02 calibration step 1 - equipment and liner.jpg · 03 calibration step 2 - zero on sound section.jpg · 04 calibration step 3 - air value 109 CAUGHT.jpg · 05 calibration step 4 - LMA check.jpg · 06 calibration step 5 - LF calibration.jpg · 07 calibration step 6 - one-wire LF signal.jpg · 08 calibration step 7 - zero threshold CAUGHT.jpg · 09 save blocked until fixed or reason given.jpg · 10 records on the phone - edit CSV share.jpg · 11 LIVE site in airplane mode - saved.png · 12 LIVE site in airplane mode - opens.png
 - `rope-record-1.1-screens/`: 01 C1 equipment - register not loaded (amber) and problems bar.jpg · 02 C1 pop-up - basic unit 505134 no certificate (red).jpg · 03 C4 LMA calibration - air value to type in large print.jpg · 04 C4 pop-up - air value 109 caught (Table 4 gives 101).jpg · 05 C5 pop-up - zero threshold caught.jpg · 06 C5 pop-up - BU-M alarm rule (filed C5, 5.2).jpg · 07 C5 threshold screen - alarm to set in large print.jpg · 08 Save shows the problem list again.jpg · 09 LIVE in airplane mode - About (procedure SHA-256).png · 10 LIVE in airplane mode - saved.png · 11 app icon 512 - AS mark from acumen-watermark-form.png
 - `rope-record-1.2-screens/`: 01 out-of-range rope - 100 mm on MH 40-70 (red).jpg · 02 MH 80-120 - air value from own manual (amber, no figure).jpg
+- `rope-record-1.3-screens/`: 01 rope data - one pair at the widest point, certificate diameters (D1, D2).jpg · 02 QR for Kuzo - code 1 of 2.jpg · 03 QR screen photographed in Chrome - part 1 (read by Kuzo's reader).png · 04 QR screen photographed in Chrome - part 2 (read by Kuzo's reader).png
 
 ## Locked settings (change only on the owner's word)
 - `LF_RULESET = "filed"` – until the 24-Nov LF amendment is filed.
@@ -33,13 +35,35 @@ Folder base: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/MRTre
 - `REGISTER_LOADED = false` – until register AIC-0608-E is on the Mac.
 
 ## Tests
-- `node dev/calc.test.mjs` – rules and checks, all pass at 1.2.0.
-- `node dev/cdp-check.mjs <url> <outdir>` – headless Chrome at Android size: service worker, installability, airplane mode, full 22 mm record, mistakes caught. Passed on the live 1.2.0.
+- `node dev/calc.test.mjs` – rules and checks, all pass at 1.3.0.
+- `node dev/export.test.mjs` – .kuzo.json and QR against Kuzo's own code (MRTreview, read only): schema validation with Kuzo's `validate()`, structure against Kuzo's sample `AIC-RR-48-01_2026-11-23_1030.kuzo.json` (every key present, same values), Kuzo's `crossCheck()` / `targets()` fill plan, QR round trip (qrcode-generator → jsQR → Kuzo `QrCollector` → CRC → inflate → valid), damaged code refused, missing part named. All pass at 1.3.0.
+- `node dev/qr-screen-check.mjs <url> <outdir>` – real Chrome at Android size: the QR screen photographed code by code, pictures read by jsQR, joined by Kuzo's `QrCollector`, record valid. Passed at 1.3.0.
+- `node dev/cdp-check.mjs <url> <outdir>` – headless Chrome at Android size: service worker, installability, airplane mode, full 22 mm record saved with both files. Passed at 1.3.0.
 - iPhone / Safari: NOT tested. 24-Nov-2026: safaridriver refuses – "You must enable 'Allow remote automation' in the Developer section of Safari Settings". No Xcode on the Mac, so no iOS Simulator.
+
+## Owner's rulings D1–D5 (24-Nov-2026) – built in 1.3.0
+Kuzo is the master; Rope Record adapts.
+- D1 Certificate's measured diameter: box "Measured diameter on the certificate" (`d_cert`); kept on the phone and in the CSV; NOT exported.
+- D2 Diameter: one position only – two caliper readings at 90° at the widest point (`da`, `db`), plus the nominal diameter and the certificate's measured diameter. The three-position entry is removed. Exported: rope.nominal_diameter_mm, rope.measured_diameter_mm [da, db], rope.measured_diameter_mean_mm (mean). Records saved by 1.2 open with their first pair as da / db.
+- D3 LMA route: the engineer chooses the route and enters its details. Only route 2 with the air value has an air value. Exported per head: `lma_calibration_route` = Kuzo's own route ids (app/src/jobs/calroute.js) "ref_rope" | "air" | "auto" | "added"; `air_value_entered_pct` = the air value for "air", null for the others.
+- D4 Metallic area source: exactly Kuzo's choices – certificate · maker's data · client or maker written confirmation · calculated (ISO 2408); blank = A not known. The A override is removed (records from 1.2 with an A override keep it as a line in Notes).
+- D5 LF threshold (and alarm): any value is recorded; Rope Record makes no check of its own; Kuzo checks. LF_RULESETS / LF_RULESET = "filed" stay in calc.js unchanged and unused for checks.
+Other choice words now Kuzo's: construction source "client advice"; δmax source "certificate, rope maker's data or written confirmation for that rope". Optional "Scan step set on the basic unit" box (Kuzo cross-checks it against the scan).
+
+## .kuzo.json export and QR (1.3.0)
+- Save downloads `<ref>_<YYYY-MM-DD>_<HHMM>.csv` and `<ref>_<YYYY-MM-DD>_<HHMM>.kuzo.json` (UTF-8, no BOM, schema v1); Share sends both through the share sheet (download where sharing files is not possible). Records list: Edit · Files · Share · QR for Kuzo.
+- Export rules (calc.js `kuzoRecord`): numbers in the key's unit; not available (blank or 0) = null; choices mapped as in "The 21 gaps, decided" below; saved_at local time with offset; checks[] = id, level, "<what is wrong> Correct: <value or range> [<clause>]", reason "<reason> (<date time>)".
+- QR (schema "x-qr"): compact JSON → zlib (CompressionStream "deflate") → base45 → CRC-32 of the compressed bytes → parts of at most 1000 characters "RR1 PART n/N CRC piece"; one code per screen, ECC M, alphanumeric mode, quiet zone 4; Next / Previous, auto-advance every 2 s, screen kept awake (Wake Lock where the phone allows); works offline (vendor/qrcode.js in the cache). The 48 mm and 22 mm test records each give 2 codes.
+
+## Kuzo-side changes needed (for the owner – Kuzo NOT changed by Rope Record)
+- K1 Air value null: schema v1 requires `heads[].air_value_entered_pct` as a number, so Kuzo's `validate()` refuses Rope Record files for C4 route 1 (reference rope), route 3 (added wires) and route 2 automatic calibration with "heads[0].air_value_entered_pct: must be number, found null" (shown by dev/export.test.mjs). Kuzo's importer must accept null when the route is not "air".
+- K2 Route: Rope Record sends `heads[].lma_calibration_route` ("ref_rope" | "air" | "auto" | "added" – Kuzo's calroute ids). Schema v1 does not list it (extra key; Kuzo's validator ignores it). Kuzo's importer today ticks LMA route "air" whenever the air value matches the scan; it should tick cal_lma from this key.
+- K3 A source "client or maker written confirmation" (a Kuzo choice) has no value in schema v1's metallic_area_source enum: Rope Record exports A with source "not known" plus an amber check telling the engineer to choose the source in Kuzo.
+- K4 LF "base-trace configuration file loaded" and "reference rope fault" (Kuzo ticks base_trace / local_fault) have no value in schema v1's lf_calibrated_on enum: exported as null, ticked in Kuzo.
 
 ## schema-v1 gaps (redone 24-Nov-2026: Kuzo is the master)
 Rule (owner, 24-Nov-2026): Kuzo is finished and is the master; there is no schema v2; Rope Record adapts to Kuzo.
-Read: vault note "Kuzo – status and handover (24-Nov-2026)"; Kuzo code in acumen-mrt-review – `app/src/jobs/siterecord.js` (`validate`, `targets`, `notFilled`, `crossCheck`), `app/src/index.html` rope form, `app/src/jobs/details.js`, `app/src/jobs/calroute.js`, `engine/checks.py` (`c5_check`), `engine/limits.py`, `engine/lftable.py`; `Downloads/rope-record-schema-v1.json` (SHA-256 starts bfe8654107c57535). Export and QR NOT built.
+Read: vault note "Kuzo – status and handover (24-Nov-2026)"; Kuzo code in acumen-mrt-review – `app/src/jobs/siterecord.js` (`validate`, `targets`, `notFilled`, `crossCheck`), `app/src/index.html` rope form, `app/src/jobs/details.js`, `app/src/jobs/calroute.js`, `engine/checks.py` (`c5_check`), `engine/limits.py`, `engine/lftable.py`; `Downloads/rope-record-schema-v1.json` (SHA-256 starts bfe8654107c57535). Export and QR built in 1.3.0 (see above).
 
 ### What Kuzo takes from a rope record (schema v1 → Kuzo box, from `siterecord.js targets()`)
 Required by the schema: format "rope-record"; schema_version 1; record_id; saved_at; app.name "Rope Record", app.version; job.type ("site" | "reference"), job.date (YYYY-MM-DD), job.engineer; rope.nominal_diameter_mm, rope.construction, rope.core, rope.metallic_area_source, rope.dmax_source; heads (1–2) each with head_model, head_serial, basic_unit_serial, air_value_entered_pct (number); checks (array). Not available = null, never 0 or "".
@@ -82,7 +106,7 @@ Kuzo calculates itself (engine): A from ISO 2408 when the engineer asks; RCN fro
 21. QR – the schema's "x-qr" rules (zlib, base45, CRC-32, "RR1 PART n/N CRC piece", ≤ 1000 characters, ECC M); needs one QR encoder file in the app. Build item, not a schema gap.
 Also found: scan_step_mm is an optional schema field that Kuzo cross-checks against the scan; Rope Record has no scan-step box yet (can be added with the export).
 
-### (d) – waiting for the owner's ruling
+### (d) – ruled by the owner 24-Nov-2026 (see "Owner's rulings D1–D5" above)
 - D1 Certificate's measured diameter: no field in schema v1.
 - D2 Which of the three caliper pairs is exported.
 - D3 Records without an air value (C4 route 1, route 3, automatic calibration): schema v1 requires air_value_entered_pct, and Kuzo's importer then ticks the "air value" route.

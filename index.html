@@ -16,6 +16,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="stylesheet" href="styles.css">
 <script src="version.js"></script>
+<script src="vendor/qrcode.js"></script>
 <script type="module" src="app.js"></script>
 </head>
 <body>
@@ -48,6 +49,15 @@
     <h2>About</h2>
     <div id="aboutBody"></div>
     <button type="button" id="aboutBack" class="wide">Back</button>
+  </section>
+
+  <section id="qr" class="qr" hidden>
+    <h2 id="qrTitle"></h2>
+    <p class="qrhelp">Open Kuzo › Import from phone (QR) and point the camera at the codes. One code per screen; Kuzo reads them in any order.</p>
+    <p id="qrPart" class="qrpart"></p>
+    <div id="qrCode" class="qrcode"></div>
+    <div class="row qrbtns"><button type="button" id="qrPrev">Previous</button><button type="button" id="qrNext" class="p">Next</button></div>
+    <div class="row qrbtns"><button type="button" id="qrAuto"></button><button type="button" id="qrClose">Close</button></div>
   </section>
 
   <section id="form" hidden>
