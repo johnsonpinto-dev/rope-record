@@ -4,9 +4,9 @@ Facts only. Owner's notes: vault note "Rope Record app (24-Nov-2026)" and MRTrev
 
 ## Where things are
 - Repo on the Mac: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/rope-record` (git remote `origin` = github.com/johnsonpinto-dev/rope-record, branch `main`).
-- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – see version.js (1.3.0 from 24-Nov-2026).
-- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 (.kuzo.json export + QR; this commit – hash in the git log and the vault note).
-- Not published (gitignored): `dev/` (tests `dev/calc.test.mjs`, `dev/export.test.mjs`; test records `dev/examples.mjs`; real-Chrome checks `dev/cdp-check.mjs`, `dev/qr-screen-check.mjs` + `dev/png2rgba.py`; local server `dev/serve.mjs`; icon pages) and `sources/`.
+- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – see version.js (1.4.0 from 25-Nov-2026).
+- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 1290116 (.kuzo.json export + QR) · 1.4.0 set-up calculator (25-Nov-2026; published on the owner's word – hash in the git log and the vault note).
+- Not published (gitignored): `dev/` (tests `dev/calc.test.mjs`, `dev/export.test.mjs`, `dev/calculator.test.mjs`; test records `dev/examples.mjs`; real-Chrome checks `dev/cdp-check.mjs`, `dev/qr-screen-check.mjs` + `dev/png2rgba.py`; local server `dev/serve.mjs`; icon pages) and `sources/`.
 - `vendor/qrcode.js` = qrcode-generator 1.4.4 (Kazuhiko Arase, MIT licence, header kept), from the npm registry 24-Nov-2026.
 - Local preview: MRTreview/.claude/launch.json entry "rope-record" (node dev/serve.mjs, port 8770).
 
@@ -40,6 +40,22 @@ Folder base: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/MRTre
 - `node dev/qr-screen-check.mjs <url> <outdir>` – real Chrome at Android size: the QR screen photographed code by code, pictures read by jsQR, joined by Kuzo's `QrCollector`, record valid. Passed at 1.3.0.
 - `node dev/cdp-check.mjs <url> <outdir>` – headless Chrome at Android size: service worker, installability, airplane mode, full 22 mm record saved with both files. Passed at 1.3.0.
 - iPhone / Safari: NOT tested. 24-Nov-2026: safaridriver refuses – "You must enable 'Allow remote automation' in the Developer section of Safari Settings". No Xcode on the Mac, so no iOS Simulator.
+
+## 1.4.0 set-up calculator (25-Nov-2026)
+Owner's brief: the job-record form is too heavy; the calculator takes the rope details and gives the LMA and LF set-up values, each with its working and source. No job order, no report number, no saved record. Purpose unchanged: stop LMA and LF calibration mistakes.
+- Files: `calculator.js` (screen, opens first), `calc.js` section "CALCULATOR (1.4.0)" (`calculator()`, `calcLfRule()`, `calcRoute()`, `ACUMEN_ONE_WIRE`). It calls the existing `compute()` – A, air value, 6d / 30d and the Annex C broken-wire limits are unchanged. The full site record (`app.js`) is kept as it was, behind "Full site record (old form)"; the records list has a "Set-up calculator" button back.
+- In: nominal d; ISO 2408 class and core; head (Acumen's list + MH-PC); A source certificate / rope maker's own data / calculated (ISO 2408, 2–60 mm); outer wire δ with its source certificate / maker's data / measured on a wire.
+- Out: A; air value (large), the air value the engineer entered and the zero reading 0 ± 0.5 % (a wrong value is an amber warning, not a stop; warnings stay in a bar at the top of the screen); one outer wire as % of A ("cannot be given" with no δ); the head's LF threshold rule; the LF route used; 6d / 30d and broken-wire limits (only with A and δ – the calculator does not ask for the Annex H construction and lay). A not known (no certificate, no maker's data, no ISO 2408 factor – e.g. over 60 mm): the air value is estimated from the density factor K as PRO-AIC-0608 A3 (p. 8) allows, S = K × π × d² ÷ 4 (K 0.5 fibre core, 0.65 steel core, 0.8 locked coil), amber "estimate - air value only, not reported", with the next band's air value and "Confirm the zero on the rope before relying on this value." No one-wire % and no broken-wire limits from it.
+- LF routes (owner's order, 25-Nov-2026 evening): 1 real broken wire (PRO-AIC-0608 C5); 2 Acumen's recorded one-wire value, same head and same nominal d (MH 40-64 manual v1.1 2.5.2.10 p. 21; manual v1.3 2.4.2.10 p. 28) – table `ACUMEN_ONE_WIRE`, approved by the owner, one value: 48 mm, MH 40-64, 10 mV (25-Nov-2026 reference rope rerun), shown "from Acumen records"; 3 indication found by running the head – red: not tied to a known broken wire, a single broken wire may not be detected. Simulated wire shown separately as an option, ready for when the wires arrive – two added wires ≥ 0.3 m (0.6 m MH 80-120), gap 1–3 wire diameters (MH 40-64 manual v1.1 2.5.2.9 p. 21; manual v1.3 2.4.2.9 p. 28).
+- LF threshold rule in the calculator: MH 40-64 from the held manual v1.1 2.5.1.7 item 5 (p. 19) – one-wire value minus 2 to 3; the manual states no unit for "2-3" and the screen says so; Acumen example 48 mm reference rope, 10 mV, threshold 8 mV (25-Nov-2026). Other heads: as the app holds them (`LF_RULESET` "filed"). MH-PC: name only – "own manual – check it" for range, air value and LF rule until a manual is held.
+- NO outer wire estimate (owner's decision, 25-Nov-2026): tested on the reference ropes it overstated the one-wire share by 16 % on the 48 mm rope – the unsafe direction. Not built.
+- 24 mm reference rope: outer wires per strand not known – the owner will have them counted. Nothing assumed.
+- Tests: `node dev/calculator.test.mjs` – worked example 48 mm 6 × 36 IWRC, MH 40-64, A calculated, δ 2.7 mm measured on a wire (24-Nov record AIC-RR-48-01): A 0.460 × 48² = 1059.8 mm², air 84 % (820–1300), one wire 5.73 mm² = 0.54 % of A, 6d / 30d 0.288 / 1.44 m, 11 / 19 wires; plus A sources, > 60 mm, EN warnings, no-δ, MH-PC, head range, routes 1–3 and the simulated wire; A not known on a 72 mm rope (fibre core S 2036 mm² → 113 %, next band 120 %; steel core S 2646 mm² → 120 %, no next band; no one-wire %, no limits; 72 mm is outside every head with an air table, so the range warning shows too). All pass; `calc.test.mjs` and `export.test.mjs` still pass.
+
+## Standards and documents held (25-Nov-2026)
+- ISO 2408 Tables C.1 / C.2 in calc.js checked against p. 18 on 25-Nov-2026: all 20 classes match. No factor above 60 mm. ISO 2408 stays the only factor table.
+- EN 12385-2:2002+A1:2008 3.10.3 is cited beside ISO 2408 Annex C wherever a calculated A is shown. No factor from EN 12385-4 is used.
+- Details in the owner's vault note.
 
 ## Owner's rulings D1–D5 (24-Nov-2026) – built in 1.3.0
 Kuzo is the master; Rope Record adapts.

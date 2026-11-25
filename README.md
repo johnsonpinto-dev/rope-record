@@ -5,6 +5,12 @@ working shown and mistakes stopped before the record is saved. **Site record –
 
 Open: https://johnsonpinto-dev.github.io/rope-record/
 
+**1.4.0: the set-up calculator opens first.** Rope details in (nominal d, ISO 2408 class and core, head,
+A from certificate / maker / calculated, outer wire δ with its source) – LMA and LF set-up values out, each with its working
+and source: A, the air value to enter, the zero check, one outer wire as % of A, the head's LF threshold rule, the LF
+calibration route used, 6d / 30d and broken-wire limits. Nothing is saved. The full site record below is kept behind
+"Full site record (old form)".
+
 ## Install on an Android phone
 
 1. Open the address above in **Chrome** (with signal, once).
@@ -51,7 +57,7 @@ Follows **PRO-AIC-0608 as filed** and fills in what it can, so the engineer ente
 
 ## Files
 
-`index.html`, `styles.css`, `app.js` (screens), `calc.js` (rules with their sources, calculations and checks), `version.js` (version and
+`index.html`, `styles.css`, `calculator.js` (set-up calculator, opens first), `app.js` (full site record), `calc.js` (rules with their sources, calculations and checks), `version.js` (version and
 date, shown in the app and naming the offline cache), `sw.js` (offline cache), `manifest.webmanifest`, `icons/`.
 
 To publish a new version: change `version.js`, then push. Phones pick it up the next time the app opens with signal.

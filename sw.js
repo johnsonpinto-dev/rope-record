@@ -2,7 +2,7 @@
 // and saves with no signal. A new version (version.js) makes a new cache and drops the old one.
 importScripts("./version.js");
 const CACHE = "rope-record-" + self.RR_VERSION.version;
-const FILES = ["./", "./index.html", "./styles.css", "./version.js", "./calc.js", "./app.js", "./manifest.webmanifest",
+const FILES = ["./", "./index.html", "./styles.css", "./version.js", "./calc.js", "./app.js", "./calculator.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/acumen-logo.png", "./icons/apple-touch-icon.png", "./vendor/qrcode.js"];
 
 self.addEventListener("install", (e) => {

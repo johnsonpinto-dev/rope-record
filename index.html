@@ -18,6 +18,7 @@
 <script src="version.js"></script>
 <script src="vendor/qrcode.js"></script>
 <script type="module" src="app.js"></script>
+<script type="module" src="calculator.js"></script>
 </head>
 <body>
 <div class="banner" role="note">Site record – not a report</div>
@@ -27,7 +28,17 @@
 </header>
 
 <main>
-  <section id="home">
+  <section id="calc" hidden>
+    <div id="cWarn" class="cwarn" role="region" aria-label="Warnings" hidden></div>
+    <h2>Set-up calculator</h2>
+    <p class="intro">Rope details in – LMA and LF set-up values out, each with its working and source. Nothing is saved.</p>
+    <div id="cIn"></div>
+    <h2>Results</h2>
+    <div id="cOut"></div>
+    <button type="button" id="toForm" class="wide">Full site record (old form)</button>
+  </section>
+
+  <section id="home" hidden>
     <h2>New record</h2>
     <p>Choose the job type.</p>
     <div class="big2">

@@ -587,3 +587,148 @@ export async function qrParts(text, size = 1000) {
   const z = await zlib(text), t = base45(z), crc = crc32(z), N = Math.max(1, Math.ceil(t.length / size));
   return Array.from({ length: N }, (_, i) => `RR1 PART ${i + 1}/${N} ${crc} ${t.slice(i * size, (i + 1) * size)}`);
 }
+
+// =============================================================================================
+// CALCULATOR (1.4.0) - rope details in, LMA and LF set-up values out, each with its working and source.
+// No job, no record, nothing saved. Reuses compute() above; changes nothing in it.
+// =============================================================================================
+export const MH_PC = "MH-PC";                     // name only: no manual held (owner, 25-Nov-2026)
+export const CALC_HEADS = [...HEAD_CHOICES, MH_PC];
+export const CALC_A_SOURCES = ["rope certificate", "rope maker's own data", "calculated"];
+export const CALC_W_SOURCES = ["rope certificate", "rope maker's own data", "measured on a wire"];
+// Owner's order (25-Nov-2026 evening): 1 broken wire, 2 Acumen record, 3 indication. The simulated wire is a separate
+// option ("sim"), ready for when the engineers carry the wires.
+export const LF_ROUTES = [
+  "A real broken wire on the rope",
+  "Acumen's recorded one-wire value for this head on a similar rope",
+  "An indication found by running the head over the rope",
+];
+export const LF_SIM = "Simulated wire (two added wires, as the Intron manual describes) – ready for when the wires arrive";
+// Manuals held in sources/, cited by head and version.
+const M13 = "Intron MH 6-26 / 22-45 / 40-70 operating manual v1.3";
+const M64 = "Intron MH 40-64 operating manual v1.1";
+const V13_HEADS = ["MH 6-26", "MH 22-45", "MH 40-70"];
+const manualRef = (m, c13, p13, c64, p64) => (m === "MH 40-64" ? `${M64}, ${c64} (p. ${p64})` : V13_HEADS.includes(m) ? `${M13}, ${c13} (p. ${p13})` : null);
+const ISO_SRC = "ISO 2408:2017 Annex C, Table C.1 / C.2 (p. 18); A = C × d²: EN 12385-2:2002+A1:2008, 3.10.3";
+
+// Acumen's recorded one-wire LF values. One table, approved by the owner. Match: same head and same nominal diameter.
+export const ACUMEN_ONE_WIRE = [
+  { head: "MH 40-64", d: 48, mv: 10, note: "48 mm reference rope, rerun 25-Nov-2026" },
+];
+export const acumenOneWire = (head, d) => ACUMEN_ONE_WIRE.find((x) => x.head === head && x.d === d) || null;
+
+// LF threshold rule shown by the calculator. MH 40-64 from the held manual (owner, 25-Nov-2026); the others as the app holds them (LF_RULESET).
+export function calcLfRule(model) {
+  if (!model) return null;
+  if (model === MH_PC) return { words: `${OWN_MANUAL}.`, src: "no MH-PC manual in sources/", own: true };
+  if (model === "MH 40-64") return {
+    words: "LF threshold = the one-wire LF value minus 2 to 3. The manual does not state the unit for \"2-3\".",
+    src: `${M64}, 2.5.1.7 item 5 (p. 19)`,
+    example: "Acumen example: 48 mm reference rope, one-wire 10 mV, threshold 8 mV (25-Nov-2026).",
+  };
+  const r = lfRule(headOf(model));
+  return r ? { words: r.words, src: `${r.src} (${LF_RULESETS[LF_RULESET].name})` } : null;
+}
+
+export function calcRoute(n, model, d, A) {
+  const h = headOf(model);
+  if (n === 1) return { n, label: "route 1", title: LF_ROUTES[0], text: "Set the LF channel on the broken wire. Record the one-wire LF signal.", src: "PRO-AIC-0608 C5" };
+  if (n === "sim") {
+    const len = model === "MH 80-120" ? 0.6 : 0.3;
+    const src = manualRef(model, "2.4.2.9", 28, "2.5.2.9", 21) || (model === MH_PC ? OWN_MANUAL : "PRO-AIC-0608 C5 (head manual not in sources/)");
+    return { n, label: "simulated wire (separate option)", title: LF_SIM, src, len,
+      text: `Two steel wires of known diameter, each at least ${len} m long, fixed along the rope axis one after the other, with a gap of 1 to 3 wire diameters, on a sound section. Set the LF channel on them as on a broken wire.`,
+      note: "The engineers do not carry these wires yet." };
+  }
+  if (n === 2) {
+    const rec = acumenOneWire(model, d);
+    const src = manualRef(model, "2.4.2.10", 28, "2.5.2.10", 21) || "Acumen records";
+    if (!rec) return { n, label: "route 2", title: LF_ROUTES[1], src, none: true, text: "No Acumen record for this head on a rope of this nominal diameter – choose another route." };
+    return { n, label: "route 2", title: LF_ROUTES[1], src, mv: rec.mv, text: `One-wire LF value ${rec.mv} mV – from Acumen records (${rec.head}, ${rec.note}). Enter it as the known one-wire value.` };
+  }
+  if (n === 3) return { n, label: "route 3", title: LF_ROUTES[2], warn: true, src: "Acumen practice – not a PRO-AIC-0608 C5 method",
+    text: "This value is NOT tied to a known broken wire. A single broken wire may not be detected." };
+  return null;
+}
+
+// inp: { d, cls, core, head, asrc, a, wsrc, w, route, airIn, zero, addW }
+export function calculator(inp) {
+  const d = pos(num(inp.d)), head = inp.head || "", h = headOf(head);
+  const warn = [];
+  const W = (level, text, src) => warn.push({ level, text, src });
+  const asrc = inp.asrc || "";
+  const rec = { dnom: inp.d, isoclass: inp.cls, core: inp.core, h1_head: h ? head : "", dmaxsrc: "",
+    asrc: asrc === "calculated" ? A_ISO : asrc === CALC_A_SOURCES[0] ? A_CERT : asrc === CALC_A_SOURCES[1] ? A_MAKER : "",
+    a: inp.a, dmax: inp.wsrc ? inp.w : "" };
+  const c = compute(rec);
+  const out = { d, head, warn };
+
+  // 1. Metallic area A
+  if (!asrc) out.A = { value: null, text: "Choose where A comes from: certificate, rope maker's own data, or calculated." };
+  else if (asrc === "calculated") {
+    out.A = c.iso.ok
+      ? { value: c.A, text: `A = C × d² = ${c.iso.C.toFixed(3)} × ${d}² = ${r1(c.A)} mm² (Table ${c.iso.row.table}, ${c.iso.row.cls}, ${c.iso.col})`, src: ISO_SRC }
+      : { value: null, text: `A cannot be calculated: ${c.iso.why}. Take A from the certificate or the rope maker.`, src: ISO_SRC };
+    if (c.iso.ok && inp.core === CORES[2] && c.iso.row.cls === "6 × 7") W("amber", "6 × 7 with wire strand core: EN 12385-4:2002 Table B.1 gives C3 = 0.432, ISO 2408 gives 0.441. Take A from the certificate or the rope maker where possible.", "EN 12385-4:2002 Table B.1 (p. 23); ISO 2408:2017 Table C.1 (p. 18)");
+    if (c.iso.ok && inp.core === CORES[2] && c.iso.row.cls === "8 × 7") W("red", "8 × 7 with wire strand core: the standards disagree – EN 12385-4:2002 Table 6 gives C3 = 0.379, ISO 2408 gives 0.520. The calculated area is NOT reliable. Use the certificate or the rope maker.", "EN 12385-4:2002 Table 6 (p. 10); ISO 2408:2017 Table C.1 (p. 18)");
+  } else {
+    out.A = c.A != null ? { value: c.A, text: `A = ${r1(c.A)} mm², as given`, src: asrc } : { value: null, text: `Type A from the ${asrc}.` };
+    if (c.A != null && d && c.A >= PI * d * d / 4) W("red", `A ${r1(c.A)} mm² is not less than the circle area π × d² ÷ 4 = ${r1(PI * d * d / 4)} mm² – the circle area is never A.`, "PRO-AIC-0608 A3, §9.2.1");
+  }
+  const A = out.A.value;
+
+  // head range (nominal diameter)
+  if (h && d && (d < h.d[0] || d > h.d[1])) W("red", `${d} mm is outside the ${head} range ${h.d[0]}–${h.d[1]} mm.`, `${h.rangeSrc}; C2`);
+  if (head === MH_PC) W("amber", `MH-PC: ${OWN_MANUAL} – no rope range, air value or LF rule held.`, "no MH-PC manual in sources/");
+
+  // 2. Air value and zero
+  const tbl = h && AIR[head];
+  const airSrcC = manualRef(head, "Table 4", 27, "Table 4", 21);
+  if (!head) out.air = { value: null, text: "Choose the head." };
+  else if (!tbl) out.air = { value: null, own: true, text: `${head}: ${OWN_MANUAL}.`, src: `no air value table in sources/ for ${head}` };
+  else if (A == null) {
+    // A not known: PRO-AIC-0608 A3 allows S = K × π × d² ÷ 4 to choose the air value only (not reported, no limit from it).
+    const K3 = "PRO-AIC-0608 A3 (p. 8): rope density factor K, S = K × π × d² ÷ 4 – air value only";
+    if (!c.S) out.air = { value: null, text: "A not known. An estimate from K needs the nominal diameter and the core.", src: K3 };
+    else {
+      const t = airFromT4(head, c.S);
+      const base = `A not known. S = K × π × d² ÷ 4 = ${c.k} × π × ${d}² ÷ 4 = ${r1(c.S, 0)} mm² (K for ${inp.core})`;
+      if (t.value == null) out.air = { value: null, own: true, estimate: true, S: c.S, text: `${base}; outside the ${head} table (${t.lo}–${t.hi} mm²): ${OWN_MANUAL}.`, src: `${K3}; ${airSrcC}` };
+      else {
+        const rows = AIR[head].rows, i = rows.findIndex((x) => x[0] === t.from && x[1] === t.to), nx = rows[i + 1] || null;
+        out.air = { value: t.value, estimate: true, S: c.S, next: nx ? { value: nx[2], from: nx[0], to: nx[1] } : null,
+          text: `${base} is in ${t.from}–${t.to} mm² → ${t.value} %. ${nx ? `Next band: ${nx[0]}–${nx[1]} mm² → ${nx[2]} %.` : "No next band in the table."} Confirm the zero on the rope before relying on this value.`,
+          src: `${K3}; ${airSrcC}; ${T4_SRC}` };
+      }
+      W("amber", `Air value: estimate - air value only, not reported (A not known; S from the density factor K). Confirm the zero on the rope before relying on this value.`, K3);
+    }
+  }
+  else {
+    const t = airFromT4(head, A);
+    out.air = t.value != null
+      ? { value: t.value, text: `A ${r1(A)} mm² is in ${t.from}–${t.to} mm² → ${t.value} %`, src: `${airSrcC}; ${T4_SRC}` }
+      : { value: null, own: true, text: `A ${r1(A)} mm² is outside the ${head} table (${t.lo}–${t.hi} mm²): ${OWN_MANUAL}.`, src: `${airSrcC}; ${T4_SRC}` };
+  }
+  const airIn = num(inp.airIn), zero = num(inp.zero);
+  if (airIn != null && out.air.value != null && airIn !== out.air.value && !(out.air.next && airIn === out.air.next.value)) W("amber", `Air value entered ${airIn} % – the table gives ${out.air.value} %. Correct it, or go on with this warning.`, out.air.src);
+  if (zero != null && Math.abs(zero) > 0.5) W("amber", `Zero reading ${zero} % is outside 0 ± 0.5 %. Repeat the calibration; still outside → head withdrawn.`, "PRO-AIC-0608 C4");
+
+  // 3. One outer wire as % of A (no estimate of the outer wire, ever - owner, 25-Nov-2026)
+  const w = inp.wsrc ? pos(num(inp.w)) : null;
+  if (!w) out.wire = { value: null, text: pos(num(inp.w)) && !inp.wsrc ? "Choose where the outer wire diameter comes from." : "No outer wire diameter available: one outer wire as a percentage of A cannot be given." };
+  else if (A == null) out.wire = { value: null, text: "One outer wire as a percentage of A needs A." };
+  else out.wire = { value: c.share, area: c.wireArea, text: `π × ${w}² ÷ 4 = ${r1(c.wireArea, 2)} mm²; ÷ ${r1(A)} × 100 = ${r1(c.share, 2)} % of A`, src: `outer wire δ: ${inp.wsrc}; PRO-AIC-0608 A3` };
+
+  // 4. LF threshold rule; 5. LF route
+  out.lfRule = calcLfRule(head);
+  const rn = inp.route === "sim" ? "sim" : Number(inp.route) || 0;
+  out.route = rn ? calcRoute(rn, head, d, A) : null;
+  if (out.route && rn === "sim") { const dw = pos(num(inp.addW)); if (dw) { out.route.gap = [dw, 3 * dw]; if (A != null) out.route.share = PI * dw * dw / 4 / A * 100; } }
+  if (rn === 3) W("red", "LF set from an indication found by running the head: not tied to a known broken wire – a single broken wire may not be detected.", out.route.src);
+
+  // 6. 6d / 30d and broken-wire limits (existing calculation, unchanged)
+  out.len = d ? { l6: c.l6, l30: c.l30, text: `6 × ${d} mm = ${r1(c.l6, 3)} m; 30 × ${d} mm = ${r1(c.l30, 2)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
+  out.lf = c.lf.ok ? { l6: c.lf.l6, l30: c.lf.l30, text: `${c.lf.route}. ${c.lf.working}`, src: c.lf.src }
+    : { l6: null, text: "Broken-wire limits not calculated here: they need A and the outer wire diameter (the calculator does not ask for the ISO 4309 Annex H construction and lay)." };
+  return out;
+}
