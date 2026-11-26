@@ -608,8 +608,9 @@ export function kuzoRecord(rec, appVersion) {
       one_wire_lf_mv: KZ_NUM(rec[p + "sig"]), lf_threshold_mv: KZ_NUM(rec[p + "thr"]), lf_alarm_mv: KZ_NUM(rec[p + "alarm"]),
     };
   });
-  // Breaking-force advice (bf-…, 1.5.0) stays on the phone and in the CSV: not exported until the owner's word.
-  const out = ch.filter((x) => !x.id.startsWith("bf-")).map((x) => { const rs = reasonOf(rec, x.id); return { id: x.id, level: x.level, text: `${x.text} Correct: ${x.want} [${x.src}]`, reason: rs ? `${rs.text} (${rs.time})` : null }; });
+  // Owner's rule 28 (26-Nov-2026), with Kuzo 0.2.10: the breaking-force ambers (bf-fits, bf-below) ARE exported in checks[] -
+  // Kuzo shows them as advisory lines and never uses them for a result. Schema stays v1.
+  const out = ch.map((x) => { const rs = reasonOf(rec, x.id); return { id: x.id, level: x.level, text: `${x.text} Correct: ${x.want} [${x.src}]`, reason: rs ? `${rs.text} (${rs.time})` : null }; });
   if (rec.asrc === A_WRITTEN) out.push({ id: "a-src-written", level: "amber", text: `A source "${A_WRITTEN}" is not one of schema v1's values: exported as "not known" with A ${c.A ?? "–"} mm² – choose the source in Kuzo.`, reason: null });
   const da = KZ_NUM(rec.da), db = KZ_NUM(rec.db), pair = [da, db].filter((x) => x != null);
   return {
@@ -631,6 +632,8 @@ export function kuzoRecord(rec, appVersion) {
       metallic_area_mm2: c.A != null ? c.A : null,
       metallic_area_source: c.A != null ? (KZ_A_SRC[rec.asrc] || "not known") : "not known",
       dmax_mm: c.dmax ?? null, dmax_source: KZ_DMAX_SRC[rec.dmaxsrc] || "not available",
+      // rule 28: the construction note - an optional key (schema v1 unchanged in version; older files have no such key)
+      ...(String(rec.class_note ?? "").trim() ? { class_note: String(rec.class_note).trim() } : {}),
     },
     heads,
     reference_sections: isRef ? { datum: KZ_TXT(rec.datum), sections: SECTIONS.map((s) => ({ name: s, from_m: num(rec[s + "_from"]), to_m: num(rec[s + "_to"]), wires_cut: KZ_INT(rec[s + "_w"]), gap_mm: KZ_NUM(rec[s + "_gap"]) })).filter((x) => x.from_m != null || x.to_m != null || x.wires_cut != null || x.gap_mm != null) } : null,
