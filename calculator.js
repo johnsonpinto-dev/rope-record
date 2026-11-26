@@ -1,13 +1,15 @@
-// Rope Record 1.4.0 - the set-up calculator, the screen that opens first. Rules and figures are in calc.js (calculator()).
+// Rope Record 1.4.0 (1.5.0: breaking-force check, construction note) - the set-up calculator, the screen that opens first. Rules and figures are in calc.js (calculator()).
 // Nothing is saved: no job, no report number, no record. The full site record (app.js) is kept, set aside, behind a link.
 import * as K from "./calc.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const inp = { d: "", cls: "", core: "", head: "", asrc: "", a: "", wsrc: "", w: "", route: "", airIn: "", zero: "", addW: "" };
+const inp = { d: "", cls: "", core: "", head: "", asrc: "", a: "", wsrc: "", w: "", route: "", airIn: "", zero: "", addW: "", note: "", bf: "", grade: "" };
 
 const num = (id, label, unit, hint = "") => `<label class="f"><span class="lab">${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ""}
   <span class="in"><input id="c_${id}" data-k="${id}" type="text" inputmode="decimal" autocomplete="off" value="${esc(inp[id])}"><span class="unit">${esc(unit)}</span></span></label>`;
+const txt = (id, label, hint = "") => `<label class="f"><span class="lab">${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ""}
+  <span class="in"><input id="c_${id}" data-k="${id}" type="text" autocomplete="off" value="${esc(inp[id])}"></span></label>`;
 const sel = (id, label, opts) => `<label class="f"><span class="lab">${esc(label)}</span><select id="c_${id}" data-k="${id}"><option value="">– choose –</option>
   ${opts.map((o) => `<option ${inp[id] === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
 const radio = (id, label, opts, vals = opts) => `<fieldset class="radio"><legend>${esc(label)}</legend>${opts.map((o, k) =>
@@ -19,7 +21,10 @@ function inputs() {
   return `
   ${num("d", "Nominal rope diameter", "mm")}
   ${sel("cls", "Construction class (ISO 2408 Table C.1 / C.2)", [...K.ISO_CLASSES, K.ISO_NONE])}
+  ${txt("note", "Reason, if the class differs from the certificate", "e.g. certificate says 35W x 7; compacted per DSR catalogue, PowerFlex 35")}
   ${sel("core", "Core", K.CORES)}
+  ${num("bf", "Breaking force on the certificate", "kN", "optional – with the grade, checked against ISO 2408 Fmin")}
+  ${num("grade", "Rope grade", "N/mm²", "e.g. 1960, 2160")}
   ${sel("head", "Magnetic head", K.CALC_HEADS)}
   ${radio("asrc", "Metallic area A from", K.CALC_A_SOURCES)}
   ${inp.asrc && inp.asrc !== "calculated" ? num("a", `Metallic area A from the ${inp.asrc}`, "mm²") : ""}
@@ -44,14 +49,21 @@ function results(r) {
     route += `<i class="src">${esc(rt.src)}</i></div>`;
   }
   route += "</div>";
+  const bf = r.bf;
+  const bfBox = !bf ? res(7, "Breaking-force check (ISO 2408)", "", "Enter the certificate breaking force and the rope grade to compare them with the ISO 2408 minimum for the class and core chosen.", "", "none")
+    : !bf.ok ? res(7, "Breaking-force check (ISO 2408)", "", bf.why, K.BF_SRC, "none")
+    : res(7, "Breaking-force check (ISO 2408)", `Certificate ${K.r1(bf.bf, 1)} kN vs Fmin ${K.r1(bf.Fmin, 1)} kN`,
+      `${bf.amber ? "⚠ " + bf.amber.text + " " : ""}${bf.full} Advice only – nothing is changed by the app.`, K.BF_SRC, bf.amber ? "bfamber" : "");
+  const noteBox = r.note ? `<div class="cres sub"><small>Construction note: ${esc(r.note)}</small><i class="src">engineer</i></div>` : "";
   return [
-    res(1, "Metallic area A", r.A.value != null ? `${K.r1(r.A.value)} mm²` : "", r.A.text, r.A.src),
+    res(1, "Metallic area A", r.A.value != null ? `${K.r1(r.A.value)} mm²` : "", r.A.text, r.A.src) + noteBox,
     airBox,
     res(3, "One outer wire as a percentage of A", r.wire.value != null ? `${K.r1(r.wire.value, 2)} % of A` : "", r.wire.text, r.wire.src, r.wire.value == null ? "none" : ""),
     lr ? res(4, "LF threshold rule for this head", "", `${lr.words}${lr.example ? " " + lr.example : ""}`, lr.src, lr.own ? "none" : "") : res(4, "LF threshold rule for this head", "", "Choose the head."),
     route,
     res(6, "6d / 30d and broken-wire limits", r.len ? `${K.r1(r.len.l6, 3)} m / ${K.r1(r.len.l30, 2)} m` : "", r.len ? r.len.text : "Needs the nominal diameter.", r.len && r.len.src)
       + `<div class="cres sub">${r.lf.l6 != null ? `<b>${r.lf.l6} wires over 6d / ${r.lf.l30} over 30d</b>` : ""}<small>${esc(r.lf.text)}</small>${r.lf.src ? `<i class="src">${esc(r.lf.src)}</i>` : ""}</div>`,
+    bfBox,
   ].join("");
 }
 

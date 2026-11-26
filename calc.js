@@ -85,17 +85,20 @@ export const CORES = ["fibre core (FC)", "steel core (IWRC)", "wire strand core 
 const K = { "fibre core (FC)": 0.5, "steel core (IWRC)": 0.65, "wire strand core (WSC)": 0.65, "locked coil": 0.8 };
 const ISO_COL = { "fibre core (FC)": "C1", "steel core (IWRC)": "C2", "wire strand core (WSC)": "C3" };
 
-// ISO 2408:2017 Annex C, Table C.1 / C.2 (p. 18): cross-sectional metallic area factors C1 / C2 / C3 (never W).
+// ISO 2408:2017 Annex C, Table C.1 / C.2 (p. 18): cross-sectional metallic area factors C1 / C2 / C3 (never W) and
+// minimum breaking force factors K1 / K2 / K3 (1.5.0, read from p. 18 on 26-Nov-2026). null = blank in the table.
+// 35(W) × 7 K3 depends on the rope grade (Table C.1 footnotes a / b): K35W below.
+const K35W = "35W";
 const ISO2408 = [
-  ["C.1", "6 × 7", 0.369, 0.432, 0.441], ["C.1", "6 × 19", 0.384, 0.449, null], ["C.1", "6 × 24", 0.329, null, null],
-  ["C.1", "6 × 36", 0.393, 0.460, null], ["C.1", "6 × 19M", 0.357, 0.398, 0.418], ["C.1", "6 × 37M", 0.357, 0.418, 0.418],
-  ["C.1", "8 × 7", 0.335, 0.439, 0.520], ["C.1", "8 × 19", 0.349, 0.457, null], ["C.1", "8 × 36", 0.357, 0.468, null],
-  ["C.1", "4 × 19 / 4 × 36", 0.429, null, null], ["C.1", "18 × 7 / 18 × 19", 0.408, null, 0.433],
-  ["C.1", "34(M) × 7", 0.424, null, 0.428], ["C.1", "35(W) × 7", null, null, 0.480],
-  ["C.2", "6 × K7", 0.426, null, null], ["C.2", "6 × K19 / 6 × K36", 0.453, 0.516, null], ["C.2", "8 × K19 / 8 × K36", 0.400, 0.516, null],
-  ["C.2", "K4 × 35N", 0.429, null, null], ["C.2", "15 × K7", null, 0.528, null], ["C.2", "18 × K7 / 18 × K19", 0.449, null, 0.475],
-  ["C.2", "35(W) × K7", null, null, 0.527],
-].map(([table, cls, C1, C2, C3]) => ({ table, cls, C1, C2, C3 }));
+  ["C.1", "6 × 7", 0.369, 0.432, 0.441, 0.332, 0.359, 0.388], ["C.1", "6 × 19", 0.384, 0.449, null, 0.330, 0.356, null], ["C.1", "6 × 24", 0.329, null, null, 0.286, null, null],
+  ["C.1", "6 × 36", 0.393, 0.460, null, 0.330, 0.356, null], ["C.1", "6 × 19M", 0.357, 0.398, 0.418, 0.307, 0.332, 0.362], ["C.1", "6 × 37M", 0.357, 0.418, 0.418, 0.295, 0.319, 0.346],
+  ["C.1", "8 × 7", 0.335, 0.439, 0.520, 0.291, 0.359, 0.404], ["C.1", "8 × 19", 0.349, 0.457, null, 0.293, 0.356, null], ["C.1", "8 × 36", 0.357, 0.468, null, 0.293, 0.356, null],
+  ["C.1", "4 × 19 / 4 × 36", 0.429, null, null, 0.360, null, null], ["C.1", "18 × 7 / 18 × 19", 0.408, null, 0.433, 0.328, null, 0.328],
+  ["C.1", "34(M) × 7", 0.424, null, 0.428, 0.318, null, 0.318], ["C.1", "35(W) × 7", null, null, 0.480, null, null, K35W],
+  ["C.2", "6 × K7", 0.426, null, null, 0.375, null, null], ["C.2", "6 × K19 / 6 × K36", 0.453, 0.516, null, 0.373, 0.410, null], ["C.2", "8 × K19 / 8 × K36", 0.400, 0.516, null, 0.330, 0.410, null],
+  ["C.2", "K4 × 35N", 0.429, null, null, 0.375, null, null], ["C.2", "15 × K7", null, 0.528, null, null, 0.410, null], ["C.2", "18 × K7 / 18 × K19", 0.449, null, 0.475, 0.350, null, 0.370],
+  ["C.2", "35(W) × K7", null, null, 0.527, null, null, 0.410],
+].map(([table, cls, C1, C2, C3, K1, K2, K3]) => ({ table, cls, C1, C2, C3, K1, K2, K3 }));
 export const ISO_CLASSES = ISO2408.map((r) => `${r.cls} (Table ${r.table})`);
 export const ISO_NONE = "not in ISO 2408 Table C.1 / C.2";
 
@@ -157,7 +160,7 @@ export const FIELDS = [
   "type", "ref", "jobno", "client", "position", "date", "engineer", "location", "length",
   "dnom", "d_cert", "da", "db",
   "construction", "csrc", "annexh", "ropetype", "seale", "core", "outer", "wires", "lay", "runs", "spool_from", "spool_to",
-  "isoclass", "asrc", "a", "dmaxsrc", "dmax",
+  "isoclass", "asrc", "a", "dmaxsrc", "dmax", "class_note", "bf", "grade",
   ...HEAD_FIELDS.map((f) => "h1_" + f), "h2on", ...HEAD_FIELDS.map((f) => "h2_" + f),
   "datum", "A_from", "A_to", "A_w", "A_gap", "B_from", "B_to", "B_w", "B_gap", "C_from", "C_to", "C_w", "C_gap",
   "counted", "checked", "notes",
@@ -183,6 +186,75 @@ function isoFactor(rec, d) {
   if (d == null) return { ok: false, why: "nominal diameter not entered" };
   if (d < 2 || d > 60) return { ok: false, why: `d ${d} mm is outside 2–60 mm: ISO 2408 factors not used – A not known (A3, R06)` };
   return { ok: true, C, col, row, A: Math.round(C * d * d * 10) / 10 };
+}
+
+// ---------------------------------------------------------------------------------------------
+// BREAKING-FORCE CHECK (1.5.0, owner's word 26-Nov-2026, item 6). Advice only: nothing is changed by it.
+// ISO 2408:2017 Annex C, C.1 (p. 17): Fmin = d² × Rr × K ÷ 1000 (Formula C.1), kN; d nominal mm, Rr rope grade N/mm²,
+// 2–60 mm only. K from Table C.1 / C.2 (p. 18): K1 fibre core, K2 IWRC, K3 wire strand core or centre.
+// ---------------------------------------------------------------------------------------------
+const K_COL = { "fibre core (FC)": "K1", "steel core (IWRC)": "K2", "wire strand core (WSC)": "K3" };
+// Same family, compacted (Table C.1 class -> Table C.2 class). Owner's rule 26-Nov-2026: amber when the certificate force
+// is at or above the Fmin of this compacted class, same core column (K1 / K2 / K3).
+const COMPACTED_OF = { "6 × 7": "6 × K7", "6 × 19": "6 × K19 / 6 × K36", "6 × 36": "6 × K19 / 6 × K36", "8 × 19": "8 × K19 / 8 × K36",
+  "8 × 36": "8 × K19 / 8 × K36", "18 × 7 / 18 × 19": "18 × K7 / 18 × K19", "35(W) × 7": "35(W) × K7" };
+export const BF_SRC = "ISO 2408:2017 Annex C, Formula (C.1) (p. 17); K from Table C.1 / C.2 (p. 18)";
+const rowOf = (isoclass) => ISO2408.find((r) => `${r.cls} (Table ${r.table})` === isoclass) || null;
+
+// K for a class row and core at a grade: { K, col, note } or { why }.
+function kFactor(row, core, grade) {
+  const col = K_COL[core];
+  if (!col) return { why: core ? `ISO 2408 gives no breaking force factor for ${core}` : "core not chosen" };
+  const k = row[col];
+  if (k == null) return { why: `ISO 2408 Table ${row.table} gives no ${col} for ${row.cls}` };
+  if (k !== K35W) return { K: k, col };
+  // Table C.1 footnotes: a "Up to rope grade 1960" -> 0.360; b "Rope grade over than 1960 up to 2160" -> 0.350.
+  if (grade <= 1960) return { K: 0.360, col, note: "Table C.1 footnote a: up to rope grade 1960" };
+  if (grade <= 2160) return { K: 0.350, col, note: "Table C.1 footnote b: rope grade over 1960 up to 2160" };
+  return { why: `ISO 2408 Table C.1 gives K3 for ${row.cls} only up to rope grade 2160 (footnotes a, b); grade ${grade} has no K` };
+}
+const fminOf = (d, grade, K) => d * d * grade * K / 1000;
+const pctFrom = (bf, f) => (bf - f) / f * 100;
+const aboveBelow = (p) => `${r1(Math.abs(p), 1)} % ${p >= 0 ? "above" : "below"}`;
+const EPS = 1e-6;   // kN: equal figures (floating point) count as "at"
+export const BF_FITS = "Breaking force fits the compacted class better - check the construction";
+export const BF_BELOW = "Certificate breaking force below the ISO 2408 minimum for this class - check the class, core and grade";
+
+// { d, isoclass, core, bf, grade } -> null (nothing entered) | { ok: false, why } | { ok: true, Fmin, K, col, pct, working, compacted }
+export function bfCheck({ d, isoclass, core, bf, grade }) {
+  const D = pos(num(d)), F = pos(num(bf)), R = pos(num(grade));
+  if (F == null && R == null) return null;
+  const need = [F == null && "the certificate breaking force", R == null && "the rope grade", D == null && "the nominal diameter",
+    !isoclass && "the ISO 2408 class", !core && "the core"].filter(Boolean);
+  if (need.length) return { ok: false, why: `Breaking-force check needs ${need.join(", ")}.` };
+  if (isoclass === ISO_NONE) return { ok: false, why: "Class not in ISO 2408 Table C.1 / C.2: no K – no breaking-force check." };
+  const row = rowOf(isoclass);
+  if (!row) return { ok: false, why: "ISO 2408 class not chosen." };
+  if (D < 2 || D > 60) return { ok: false, why: `d ${D} mm is outside 2–60 mm: ISO 2408 Annex C (C.1) does not cover it – no breaking-force check.` };
+  const k = kFactor(row, core, R);
+  if (k.why) return { ok: false, why: `${k.why}: no K – no breaking-force check.` };
+  const Fmin = fminOf(D, R, k.K), pct = pctFrom(F, Fmin);
+  const out = { ok: true, Fmin, K: k.K, col: k.col, row, pct, bf: F, grade: R, d: D, below: F < Fmin - EPS, fits: false,
+    working: `Fmin = d² × Rr × K ÷ 1000 = ${D}² × ${R} × ${k.K.toFixed(3)} ÷ 1000 = ${r1(Fmin, 1)} kN (Table ${row.table}, ${row.cls}, ${k.col}${k.note ? "; " + k.note : ""}). Certificate ${r1(F, 1)} kN is ${aboveBelow(pct)} Fmin.`,
+    compacted: null, compNote: "" };
+  const cc = COMPACTED_OF[row.cls];
+  if (row.table === "C.2") out.compNote = `The class chosen is already compacted (Table C.2): no compacted-class check.`;
+  else if (!cc) out.compNote = `ISO 2408 Table C.2 has no compacted class of the ${row.cls} family: no compacted-class check.`;
+  else {
+    const crow = ISO2408.find((r) => r.cls === cc), ck = kFactor(crow, core, R);
+    if (ck.why) out.compNote = `Same family, compacted: ${cc} – ${ck.why.replace(/^ISO 2408 /, "")}: no compacted-class check.`;
+    else {
+      const cf = fminOf(D, R, ck.K), cp = pctFrom(F, cf);
+      out.fits = F >= cf - EPS;
+      out.compacted = { cls: cc, table: crow.table, K: ck.K, col: ck.col, Fmin: cf, pct: cp, gap: cf - Fmin, gapPct: (cf - Fmin) / Fmin * 100,
+        text: `Same family, compacted: ${cc} (Table ${crow.table}, ${ck.col} ${ck.K.toFixed(3)}): Fmin = ${D}² × ${R} × ${ck.K.toFixed(3)} ÷ 1000 = ${r1(cf, 1)} kN. Gap between the two minimums: ${r1(cf, 1)} − ${r1(Fmin, 1)} = ${r1(cf - Fmin, 1)} kN (${r1((cf - Fmin) / Fmin * 100, 1)} %). Certificate ${r1(F, 1)} kN is ${out.fits ? "at or above" : "below"} the compacted Fmin.` };
+    }
+  }
+  const compLine = out.compacted ? out.compacted.text : out.compNote;
+  out.full = `${out.working} ${compLine}`;
+  if (out.fits) out.amber = { id: "bf-fits", text: `${BF_FITS}: certificate ${r1(F, 1)} kN is at or above the ${cc} Fmin ${r1(out.compacted.Fmin, 1)} kN (${row.cls} Fmin ${r1(Fmin, 1)} kN).` };
+  else if (out.below) out.amber = { id: "bf-below", text: `${BF_BELOW}: certificate ${r1(F, 1)} kN, Fmin ${r1(Fmin, 1)} kN (${r1(Math.abs(pct), 1)} % below).` };
+  return out;
 }
 
 export function airFromT4(model, A) {
@@ -274,6 +346,7 @@ export function compute(rec) {
     share: wireArea && A ? wireArea / A * 100 : null,
     l6: dn ? 6 * dn / 1000 : null, l30: dn ? 30 * dn / 1000 : null };
   c.lf = lfLimit(rec, c);
+  c.bf = bfCheck({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, bf: rec.bf, grade: rec.grade });
   c.heads = activeHeads(rec).map((i) => {
     const h = headOf(rec[`h${i}_head`]);
     const out = { i, h };
@@ -309,6 +382,10 @@ export function compute(rec) {
     ["RCN", c.lf.rcn ?? (rcnFor(rec).ok ? rcnFor(rec).rcn ?? "> 300 wires" : "–"), rcnFor(rec).ok ? rcnFor(rec).how : rcnFor(rec).why, "ISO 4309 Annex H (pp. 51–56); PRO-AIC-0608 §9.2.2"],
     ["LF limit 6d / 30d", c.lf.ok ? `${c.lf.l6} / ${c.lf.l30} wires${c.lf.drum6 != null ? ` (multi-layer drum ${c.lf.drum6} / ${c.lf.drum30})` : ""}${ovr(rec, "lf6") != null || ovr(rec, "lf30") != null ? " (overridden)" : ""}` : "not calculated", c.lf.ok ? `${c.lf.route}. ${c.lf.working}` : c.lf.why, c.lf.src],
   ];
+  const note = String(rec.class_note ?? "").trim();
+  if (note) c.working.push(["Construction note", note, "reason, if the class differs from the certificate", "engineer"]);
+  if (c.bf) c.working.push(["Breaking-force check (ISO 2408)", c.bf.ok ? `Fmin ${r1(c.bf.Fmin, 1)} kN – certificate ${r1(c.bf.bf, 1)} kN, ${aboveBelow(c.bf.pct)}` : "no check",
+    c.bf.ok ? `${c.bf.full} Advice only – nothing is changed.` : c.bf.why, BF_SRC]);
   for (const hc of c.heads) if (hc.h) {
     c.working.push([`Air value to type into the BU-M – ${hc.h.model}`, hc.air != null ? `${hc.air} %` : OWN_MANUAL, hc.airWorking, airSrc(hc.h.model)]);
   }
@@ -320,7 +397,7 @@ export function compute(rec) {
 // level red = fix, or give a reason (saved with the time); amber = warning, can continue.
 // ---------------------------------------------------------------------------------------------
 const ZERO_FIELDS = { length: "Rope length", dnom: "Nominal diameter", d_cert: "Measured diameter (certificate)", da: "Diameter reading 1", db: "Diameter reading 2",
-  outer: "Outer strands", wires: "Wires per strand", a: "Metallic area A", dmax: "δmax", A_gap: "Section A gap", B_gap: "Section B gap", C_gap: "Section C gap" };
+  outer: "Outer strands", wires: "Wires per strand", a: "Metallic area A", bf: "Breaking force (certificate)", grade: "Rope grade", dmax: "δmax", A_gap: "Section A gap", B_gap: "Section B gap", C_gap: "Section C gap" };
 // LF threshold and alarm are recorded with no check of Rope Record's own; Kuzo checks them (ruling D5, 24-Nov-2026).
 const HEAD_ZERO = { air: "Air value", lfwd: "Wire diameter", lflen: "Wire length", lfgap: "Gap", sig: "One-wire LF signal", r3_dw: "Added wire diameter", r1_known: "Known LMA of segment 2", scanstep: "Scan step" };
 const SCREEN_OF = { length: "job", A_gap: "sections", B_gap: "sections", C_gap: "sections" };
@@ -350,6 +427,7 @@ export function checks(rec, c = compute(rec)) {
   if (A_TYPED.includes(rec.asrc) && c.Aauto == null && !isZero("a")) add("red", "a-missing", "a", "rope", `A source is "${rec.asrc}" but no A is entered.`, "Type A from the document, or leave the source blank (A not known).", "PRO-AIC-0608 A3");
   if (c.A != null && dn && c.A >= PI * dn * dn / 4) add("red", "a-circle", "a", "rope", `A ${r1(c.A)} mm² is not less than the circle area π × d² ÷ 4 = ${r1(PI * dn * dn / 4)} mm².`, "A is the metallic area (always less than the circle area); the circle area is never entered as A.", "PRO-AIC-0608 A3, §9.2.1");
   if (rec.dmaxsrc && rec.dmaxsrc !== DMAX_SOURCES[2] && !pos(num(rec.dmax)) && !isZero("dmax")) add("red", "dmax-missing", "dmax", "rope", `δmax source is "${rec.dmaxsrc}" but no δmax is entered.`, "Type δmax, or choose 'not available' (then the ISO 4309 table limit is used).", "PRO-AIC-0608 A3");
+  if (c.bf && c.bf.amber) add("amber", c.bf.amber.id, "bf", "rope", c.bf.amber.text, "Advice only – the app changes nothing. Check the certificate and the maker's data.", BF_SRC);
   if (rec.runs === RUNS[1] && (raw("spool_from") === "" || raw("spool_to") === "")) add("amber", "spool", "spool_to", "rope", "Multi-layer drum: the spooling length is not entered.", "Enter the length that spools on the drum; the drum column applies only there.", "PRO-AIC-0608 §9.2.2; site sheet");
 
   for (const i of activeHeads(rec)) {
@@ -445,7 +523,7 @@ export const unresolved = (list, rec) => list.filter((x) => x.level === "red" &&
 // ---------------------------------------------------------------------------------------------
 const CALC_COLS = ["D_measured_mm", "A_used_mm2", "A_source", "S_K_mm2", "wire_area_mm2", "single_wire_share_pct", "n_outer_wires", "RCN",
   "len_6d_m", "len_30d_m", "lf_route", "lf_6d", "lf_30d", "lf_drum_6d", "lf_drum_30d", "lf_working",
-  "h1_air_to_type", "h2_air_to_type", "procedure_copy"];
+  "h1_air_to_type", "h2_air_to_type", "procedure_copy", "bf_Fmin_kN", "bf_check"];
 export const CSV_HEAD = ["record_id", "saved_at", "app_version", ...FIELDS, ...CALC_COLS, "problems_red", "problems_amber", "reasons_with_time", "overrides_with_time"];
 const q = (x) => { const t = String(x ?? ""); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
 const fx = (x, d) => (x == null || !isFinite(x) ? "" : Number(x.toFixed(d)));
@@ -455,7 +533,8 @@ export function csvLine(rec) {
   const calc = [fx(c.D, 2), fx(c.A, 1), c.A != null ? c.Asrc : "", fx(c.S, 1), fx(c.wireArea, 3), fx(c.share, 3), c.n ?? "", rc.ok ? rc.rcn ?? "> 300" : "",
     fx(c.l6, 3), fx(c.l30, 3), c.lf.ok ? c.lf.route : "not calculated", c.lf.ok ? c.lf.l6 : "", c.lf.ok ? c.lf.l30 : "", c.lf.drum6 ?? "", c.lf.drum30 ?? "",
     c.lf.ok ? c.lf.working : c.lf.why, H(1).air ?? (H(1).h ? "own manual" : ""), H(2).air ?? (H(2).h ? "own manual" : ""),
-    `${PROCEDURE.file} SHA-256 ${PROCEDURE.sha256}${PROCEDURE.confirmedFiled ? "" : " (copy not confirmed as filed)"}`];
+    `${PROCEDURE.file} SHA-256 ${PROCEDURE.sha256}${PROCEDURE.confirmedFiled ? "" : " (copy not confirmed as filed)"}`,
+    c.bf && c.bf.ok ? fx(c.bf.Fmin, 1) : "", c.bf ? (c.bf.ok ? c.bf.full : c.bf.why) : ""];
   const fmt = (x) => `${x.text} ${x.want} [${x.src}]`;
   return [rec.id, rec.savedAt, rec.appVersion, ...FIELDS.map((f) => rec[f] ?? ""), ...calc,
     ch.filter((x) => x.level === "red").map(fmt).join(" | "),
@@ -529,7 +608,8 @@ export function kuzoRecord(rec, appVersion) {
       one_wire_lf_mv: KZ_NUM(rec[p + "sig"]), lf_threshold_mv: KZ_NUM(rec[p + "thr"]), lf_alarm_mv: KZ_NUM(rec[p + "alarm"]),
     };
   });
-  const out = ch.map((x) => { const rs = reasonOf(rec, x.id); return { id: x.id, level: x.level, text: `${x.text} Correct: ${x.want} [${x.src}]`, reason: rs ? `${rs.text} (${rs.time})` : null }; });
+  // Breaking-force advice (bf-…, 1.5.0) stays on the phone and in the CSV: not exported until the owner's word.
+  const out = ch.filter((x) => !x.id.startsWith("bf-")).map((x) => { const rs = reasonOf(rec, x.id); return { id: x.id, level: x.level, text: `${x.text} Correct: ${x.want} [${x.src}]`, reason: rs ? `${rs.text} (${rs.time})` : null }; });
   if (rec.asrc === A_WRITTEN) out.push({ id: "a-src-written", level: "amber", text: `A source "${A_WRITTEN}" is not one of schema v1's values: exported as "not known" with A ${c.A ?? "–"} mm² – choose the source in Kuzo.`, reason: null });
   const da = KZ_NUM(rec.da), db = KZ_NUM(rec.db), pair = [da, db].filter((x) => x != null);
   return {
@@ -651,7 +731,7 @@ export function calcRoute(n, model, d, A) {
   return null;
 }
 
-// inp: { d, cls, core, head, asrc, a, wsrc, w, route, airIn, zero, addW }
+// inp: { d, cls, core, head, asrc, a, wsrc, w, route, airIn, zero, addW, note, bf, grade }
 export function calculator(inp) {
   const d = pos(num(inp.d)), head = inp.head || "", h = headOf(head);
   const warn = [];
@@ -659,7 +739,7 @@ export function calculator(inp) {
   const asrc = inp.asrc || "";
   const rec = { dnom: inp.d, isoclass: inp.cls, core: inp.core, h1_head: h ? head : "", dmaxsrc: "",
     asrc: asrc === "calculated" ? A_ISO : asrc === CALC_A_SOURCES[0] ? A_CERT : asrc === CALC_A_SOURCES[1] ? A_MAKER : "",
-    a: inp.a, dmax: inp.wsrc ? inp.w : "" };
+    a: inp.a, dmax: inp.wsrc ? inp.w : "", bf: inp.bf, grade: inp.grade };
   const c = compute(rec);
   const out = { d, head, warn };
 
@@ -730,5 +810,10 @@ export function calculator(inp) {
   out.len = d ? { l6: c.l6, l30: c.l30, text: `6 × ${d} mm = ${r1(c.l6, 3)} m; 30 × ${d} mm = ${r1(c.l30, 2)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
   out.lf = c.lf.ok ? { l6: c.lf.l6, l30: c.lf.l30, text: `${c.lf.route}. ${c.lf.working}`, src: c.lf.src }
     : { l6: null, text: "Broken-wire limits not calculated here: they need A and the outer wire diameter (the calculator does not ask for the ISO 4309 Annex H construction and lay)." };
+
+  // 7. Breaking-force check (1.5.0) - advice only; construction note shown with it
+  out.bf = c.bf;
+  if (c.bf && c.bf.amber) W("amber", `${c.bf.amber.text} Advice only – nothing is changed.`, BF_SRC);
+  out.note = String(inp.note ?? "").trim();
   return out;
 }

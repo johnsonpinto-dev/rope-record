@@ -11,6 +11,13 @@ and source: A, the air value to enter, the zero check, one outer wire as % of A,
 calibration route used, 6d / 30d and broken-wire limits. Nothing is saved. The full site record below is kept behind
 "Full site record (old form)".
 
+**1.5.0: breaking-force check and construction note.** Enter the certificate breaking force and the rope grade, and the
+app works out the ISO 2408 minimum Fmin = d² × Rr × K ÷ 1000 (Annex C, Formula C.1, 2–60 mm) for the class and core
+chosen, with the working. An amber note shows when the certificate is at or above the minimum of the compacted class of the
+same family ("fits the compacted class better – check the construction"), or below the minimum for the chosen class.
+Advice only: nothing is changed. A free-text box beside the class records the reason when the class differs from the
+certificate (kept in the record and the CSV).
+
 ## Install on an Android phone
 
 1. Open the address above in **Chrome** (with signal, once).

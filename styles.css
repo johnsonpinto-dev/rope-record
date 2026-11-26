@@ -143,6 +143,7 @@ dl.about dt { font-weight: 700; margin-top: 10px; } dl.about dd { margin: 2px 0 
 .cres small { display: block; font-size: 14px; color: #333; }
 .cres.none { border-left-color: #e0a000; }
 .cres.sub { margin-top: -8px; }
+.cres.bfamber { background: var(--warnbg); border-left-color: #e0a000; } .cres.bfamber small { color: var(--warn); }
 .cback { border: 2px dashed var(--line); border-radius: 10px; padding: 8px 12px 0; margin: -6px 0 14px; }
 .cwarnbox { background: var(--redbg); border-left: 5px solid var(--red); color: #7a0010; padding: 8px 12px; border-radius: 6px; font-weight: 650; }
 .cwarnbox small { color: #7a0010; }
