@@ -273,6 +273,9 @@ export const VIS_SRC = "ISO 4309:2017 Table 3 (pp. 17–18) / Table 4 (p. 19), A
 // Diameter against d_ref (item 4): advice only (amber), never red, never blocks Save.
 export const DREF_LABEL = "Reference diameter d_ref (measured after running in the new rope, ISO 4309 3.3)";
 export const AS_MADE = "as-made diameter, not d_ref";
+// 1.8.1 (owner's ruling 27-Nov-2026, night): no d_ref and no certificate diameter -> the 1.7.0 amber against the nominal is back.
+export const NOMINAL_BASE = "nominal diameter (no d_ref or certificate diameter)";
+const NOM_SRC = "PRO-AIC-0608 B2, §9.3 (ISO 4309 6.7.6 / Table 5); owner's ruling 27-Nov-2026 (1.8.1)";
 export const DIA_SRC = "ISO 4309:2017 3.3 (p. 2); 6.4.2 Formula (1), Table 5 (pp. 20–21); 6.7.6 (p. 23)";
 // Table 5 (p. 20): uniform decrease, % of nominal d, at which each severity starts (20 / 40 / 60 / 80 % / discard).
 const T5 = { fc: [6, 7, 8, 9, 10], steel: [3.5, 4.5, 5.5, 6.5, 7.5], rr: [1, 2, 3, 4, 5] };
@@ -562,7 +565,18 @@ export function diameterChange(rec, c) {
   const base = ref ? { v: ref, label: "d_ref" } : cert ? { v: cert, label: AS_MADE } : null;
   const out = { D, base, nominal: dn ? (D - dn) / dn * 100 : null, src: DIA_SRC };
   out.nomText = dn ? `nominal ${dn} mm: ${out.nominal >= 0 ? "+" : ""}${r1(out.nominal, 1)} % – for information only` : "";
-  if (!base) { out.text = "No d_ref and no measured diameter on the certificate – the change cannot be worked out."; return out; }
+  if (!base) {
+    if (!dn) { out.text = "No d_ref, no measured diameter on the certificate and no nominal diameter – the change cannot be worked out."; return out; }
+    // exactly as 1.7.0: 5 % (any core but fibre) / 10 % (fibre core) above the nominal; any value below the nominal
+    const p = out.nominal, lim = rec.core === CORES[0] ? 10 : 5;
+    out.base = { v: dn, label: NOMINAL_BASE, nominal: true }; out.nomText = ""; out.src = NOM_SRC;
+    if (p > 0) Object.assign(out, { kind: "increase", pct: p, limit: lim, amber: p >= lim,
+      text: `+${r1(p, 1)} % on the nominal ${dn} mm: (${r1(D, 2)} − ${dn}) ÷ ${dn} × 100. An increase of ${lim} % or more (${lim === 10 ? "fibre" : "steel"} core) is investigated and discard considered; check the nominal size. Record d_ref or the certificate diameter if known.` });
+    else if (p < 0) Object.assign(out, { kind: "decrease", pct: -p, amber: true,
+      text: `${r1(D, 2)} mm is below the nominal ${dn} mm (−${r1(-p, 2)} %). Decrease is evaluated against the reference diameter, never the nominal – record the reference diameter if known.` });
+    else Object.assign(out, { kind: "same", pct: 0, text: `Same as the nominal ${dn} mm.` });
+    return out;
+  }
   const steel = rec.core === CORES[1] || rec.core === CORES[2], fc = rec.core === CORES[0];
   if (D > base.v) {
     const p = (D - base.v) / base.v * 100, lim = steel ? 5 : fc ? 10 : null;
@@ -694,7 +708,11 @@ export function checks(rec, c = compute(rec)) {
   // diameter (B2) - 1.8.0 item 4: against d_ref, or the as-made diameter on the certificate; the nominal for information
   // only. Amber advice only - never red, never blocks Save.
   const dn = c.dn, dd = c.dia;
-  if (dd && dd.amber) {
+  if (dd && dd.amber && dd.base.nominal) {
+    // 1.8.1: the 1.7.0 ambers, word for word, when there is no d_ref and no certificate diameter
+    if (dd.kind === "increase") add("amber", "dia-up", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${r1(dd.pct, 1)} % above the nominal ${dn} mm.`, `An increase of ${dd.limit} % or more (${dd.limit === 10 ? "fibre" : "steel"} core) is investigated and discard considered; check the nominal size.`, "PRO-AIC-0608 B2, §9.3 (ISO 4309 6.7.6)");
+    else add("amber", "dia-down", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is below the nominal ${dn} mm.`, "Decrease is evaluated against the reference diameter, never the nominal – record the reference diameter if known.", "PRO-AIC-0608 B2, §9.3 (ISO 4309 Table 5)");
+  } else if (dd && dd.amber) {
     const b = dd.base, pc = r1(dd.pct, dd.kind === "decrease" ? 2 : 1);
     if (dd.kind === "increase") add("amber", "dia-up", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${pc} % above the ${b.label} ${b.v} mm.`, `ISO 4309 6.7.6: an increase of ${dd.limit} % or more (${dd.limit === 10 ? "fibre" : "steel"} core) is investigated and discard considered.`, DIA_SRC);
     else add("amber", "dia-down", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${pc} % of nominal d below the ${b.label} ${b.v} mm.`, dd.text, DIA_SRC);
