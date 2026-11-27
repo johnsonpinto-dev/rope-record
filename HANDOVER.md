@@ -74,20 +74,22 @@ Owner's "yes" 27-Nov-2026; publish only on the owner's word.
   does not treat a changed imported script as an update – the old service worker kept serving its 1.5.0 cache. Johnson
   cleared Safari's site data on his own phone on 27-Nov and now has 1.6.0.
 - Fix: `sw.js` carries `const SW_VERSION = "1.6.1";` at the top, equal to version.js, so its bytes change every release.
-  Everything else in sw.js is as it was (cache name `rope-record-<version.js version>`, install / activate / fetch).
+  Cache name now `"rope-record-" + SW_VERSION` (owner's "yes" 27-Nov-2026 – see "Seen" below); install / activate / fetch
+  as they were; `importScripts("./version.js")` kept (no longer used by sw.js itself).
   `version.js` → 1.6.1, 27-Nov-2026 (and its first-line comment no longer says it is the only place the version lives).
   No other app change. Records (localStorage) are not touched by a service-worker update.
-- Tests: `node dev/sw.test.mjs` (SW_VERSION = version.js; sw.js differs from the published 1.6.0; a mismatched copy fails it);
+- Tests: `node dev/sw.test.mjs` (SW_VERSION = version.js; cache named from SW_VERSION; sw.js differs from the published 1.6.0;
+  a mismatched copy fails it);
   calc, calculator, export, bf all pass.
 - Real Chrome: `node dev/sw-update-check.mjs <1.6.0 tree> . dev/screens-1.6.1` (old tree from `git archive 4966d0e`; one
   address serves 1.6.0, then 1.6.1, with Pages' max-age=600). Holding 1.6.0 with two seeded test records and a draft → open
   online, wait 15 s, close, reopen → footer 1.6.1; localStorage byte for byte unchanged; airplane mode opens 1.6.1 with the
   records; only the rope-record-1.6.1 cache left; no console errors. All pass.
-  Seen: 15 s after the first open the new worker is active and its cache holds the 1.6.1 files, but that cache can still be
-  NAMED rope-record-1.6.0 – the new worker's importScripts("./version.js") can come from the browser's HTTP cache (Pages
-  max-age=600). Chrome renames it at the next open. Files and footer are right either way. Option for the owner (not built –
-  the brief said keep the cache name as is): `const CACHE = "rope-record-" + SW_VERSION;` – same name, taken from sw.js's own
-  text, so it can never be stale.
+  Seen with the cache named from version.js: 15 s after the first open the new worker was active and its cache held the
+  1.6.1 files, but the cache was still NAMED rope-record-1.6.0 – the new worker's importScripts("./version.js") came from the
+  browser's HTTP cache (Pages max-age=600); Chrome renamed it at the next open. Fixed on the owner's "yes" (27-Nov-2026):
+  `const CACHE = "rope-record-" + SW_VERSION;` – same name, from sw.js's own text, never stale. Rerun: 15 s after the first
+  open the only cache is rope-record-1.6.1 holding the 1.6.1 files; all checks pass.
 - NOT tested on an iPhone (no Safari automation, no iOS Simulator on the Mac): Chrome updates on an imported-script change
   anyway, so the Chrome check proves the update path and that records survive; that sw.js now differs between releases
   (the iOS trigger) is proven by dev/sw.test.mjs.
