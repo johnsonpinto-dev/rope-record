@@ -1,7 +1,7 @@
 {
-  "name": "Rope Record",
-  "short_name": "Rope Record",
-  "description": "Site record of rope data and MRT calibration, with mistake checks. Works offline.",
+  "name": "Rope Record Checklist",
+  "short_name": "Rope Record Checklist",
+  "description": "Site checklist of rope data and MRT calibration, with mistake checks. Works offline.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

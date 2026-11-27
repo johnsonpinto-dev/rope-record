@@ -1,9 +1,23 @@
-# Rope Record
+# Rope Record Checklist
 
 An installable phone app (PWA) for MRT engineers on site: rope data and calibration for any rope, with the
-working shown and mistakes stopped before the record is saved. **Site record – not a report.**
+working shown and mistakes stopped before the record is saved. **Site checklist – not a report.**
+(Called "Rope Record" up to 1.6.1; same address, same records on the phone. Files for Kuzo keep the name "Rope Record".)
 
 Open: https://johnsonpinto-dev.github.io/rope-record/
+
+**1.7.0: only what is mandated, each fact asked once.** The set-up calculator's answers start the record ("Start the site
+record" / "Start a reference-rope record"). The construction is picked from a list (ISO 2408 Tables D.1–D.18) or typed as
+on the certificate; the ISO 2408 class, core, Annex H construction and counts, head serial (equipment register), liner set
+(the head manual's liner table) and added-wire diameter (from δmax) are filled in – still editable, and a change is recorded
+with the time. Two area boxes, each labelled by its source ("A - ISO 2408 factor (broken-wire limits)", "S - Intron density
+factor K (air value only)"); 6d and 30d each in its own box; LF route 4, the clean section (PRO-AIC-0608 C5 as refiled
+27-Nov-2026, last resort, wire count "estimated"); breaking force labelled by source (certificate, maker's data / manual,
+calculated from ISO 2408) with the figure used confirmed by the engineer; an optional "δmax estimated (nominal), based on
+construction" (EN 12385-4 outer wire factor; information only, never the LF limit); maker's figures held on the phone
+(makers.json, Kiswire so far) with "Use these figures" / "Not this rope" and a "Search the maker's site" link. No longer
+asked: ambient temperature, the class-difference reason (use Notes), most negative LMA, counted by, checked by; the basic
+unit is an optional drop-down. Older records open with nothing lost.
 
 **1.4.0: the set-up calculator opens first.** Rope details in (nominal d, ISO 2408 class and core, head,
 A from certificate / maker / calculated, outer wire δ with its source) – LMA and LF set-up values out, each with its working
@@ -22,13 +36,13 @@ certificate (kept in the record and the CSV).
 
 1. Open the address above in **Chrome** (with signal, once).
 2. Tap **Install app** on the app's home screen, or Chrome menu **⋮** → **Add to home screen** → **Install**.
-3. Open **Rope Record** from the home screen. From then on it works with no signal (airplane mode).
+3. Open **Rope Record Checklist** from the home screen. From then on it works with no signal (airplane mode).
 
 ## Install on an iPhone
 
 1. Open the address above in **Safari** (with signal, once).
 2. Tap **Share** (square with arrow) → **Add to Home Screen** → **Add**.
-3. Open **Rope Record** from the home screen; it works with no signal.
+3. Open **Rope Record Checklist** from the home screen; it works with no signal.
 
 ## Air value tables used
 
@@ -36,7 +50,7 @@ certificate (kept in the record and the CSV).
 |---|---|---|
 | MH 6-26, MH 22-45, MH 40-70 | Table 4 "LMA values for calibration without WRRS" | INTROS manual v1.3, p. 27 |
 | MH 40-64 | Table 4 | INTROS MH40-64 with BU-M manual v1.1, p. 21 |
-| MH 20-40, MH 80-120 | none held | "air value from the head's own manual – check it" (amber, no figure) |
+| MH 20-40, MH 80-120 | the head's own manual | "air value from the head's own manual – check it" (amber, no figure) |
 
 A outside a table also gives the amber "own manual" message, never a guessed figure.
 
@@ -60,18 +74,18 @@ Follows **PRO-AIC-0608 as filed** and fills in what it can, so the engineer ente
 - Save keeps the record on the phone and downloads its CSV (UTF-8 with BOM); **Share** sends it through the Android
   share sheet. Records stay on the phone.
 - **Kuzo link:** Save also writes `<ref>_<date>_<HHMM>.kuzo.json` (rope-record-schema-v1, Kuzo is the master); Share sends the CSV and the .kuzo.json together; "QR for Kuzo" on a saved record shows the same record as QR codes (one per screen, auto-advance every 2 s). QR encoder: `vendor/qrcode.js` (qrcode-generator 1.4.4, MIT).
-- Register AIC-0608-E is not loaded yet: serials are typed, liner and verification are shown "check by hand".
+- Equipment register AIC-0608-E: the head serial is filled in from it (MH 6-26 has two – chosen on site); the basic unit is optional.
 
 ## Files
 
-`index.html`, `styles.css`, `calculator.js` (set-up calculator, opens first), `app.js` (full site record), `calc.js` (rules with their sources, calculations and checks), `version.js` (version and
+`index.html`, `styles.css`, `calculator.js` (set-up calculator, opens first), `app.js` (the record), `makers.json` (maker's figures), `calc.js` (rules with their sources, calculations and checks), `version.js` (version and
 date, shown in the app and naming the offline cache), `sw.js` (offline cache; carries the same version as `SW_VERSION`), `manifest.webmanifest`, `icons/`.
 
 To publish a new version: change the version in **both** `version.js` and `sw.js` (`SW_VERSION`, the same number), then push.
 iPhones update the app only when `sw.js` itself changes, so a release that changes `version.js` alone is not picked up on an
 iPhone (found 27-Nov-2026).
 
-After a release: open Rope Record from the home-screen icon while online, wait 15 seconds, close it and open it again. The
+After a release: open Rope Record Checklist from the home-screen icon while online, wait 15 seconds, close it and open it again. The
 version at the bottom of the app (the footer) shows the copy the phone is running – check that, not `version.js?v=…` in the
 browser, which the phone answers from its own saved copy. Never clear the browser's site data for the app unless the
 phone's records have been shared first: the records live only on the phone.

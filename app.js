@@ -1,8 +1,12 @@
-// Rope Record - screens, live checks and pop-ups. Rules, figures and checks are in calc.js.
+// Rope Record Checklist - screens, live checks and pop-ups. Rules, figures and checks are in calc.js.
+// 1.7.0 (owner's block 27-Nov-2026, "only what is mandated, each fact asked once"): the record starts from the set-up
+// calculator's answers; values that follow from an earlier answer are filled in (editable; a change is recorded);
+// ambient temperature, class-difference reason, most negative LMA, counted by and checked by are no longer asked
+// (kept in older records, not shown); the basic unit is an optional drop-down.
 import * as K from "./calc.js";
 
 const V = self.RR_VERSION || { version: "?", date: "" };
-const STORE = "rope-record-records", DRAFT = "rope-record-draft";
+const STORE = "rope-record-records", DRAFT = "rope-record-draft", ENGINEER = "rope-record-engineer";   // same storage keys as 1.0–1.6
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const p2 = (n) => String(n).padStart(2, "0");
@@ -28,13 +32,14 @@ function headScreens(i) {
   };
   const S = (id, step, title, accept, fields, extra = {}) => ({ id: `h${i}-${id}`, group: `Head ${i}`, step, title: `Head ${i} · ${title}`, accept, fields, ...extra });
   return [
-    S("c1", "C1", "Equipment status", () => `On the equipment register; head and basic unit verified within the last 12 months. <b>Register AIC-0608-E not loaded – check by hand.</b>|PRO-AIC-0608 C1, §5.4`,
+    S("c1", "C1", "Equipment status", () => `Head on the equipment register (AIC-0608-E) and verified within the last 12 months. Basic unit: optional (owner's ruling 27-Nov-2026).|PRO-AIC-0608 C1, §5.4; ${K.REGISTER_SRC}`,
       [F(p + "head", "Magnetic head model", "select", { opts: K.HEAD_CHOICES, req: true }),
-        F(p + "head_sn", "Head serial No.", "text", { req: true, hint: "from the head's plate" }),
-        F(p + "bu_sn", "Basic unit serial No.", "text", { req: true, hint: "from the unit's plate" })]),
-    S("c2", "C2", "Head and liners", () => { const h = H(), c = K.compute(rec); return h ? `Measured diameter incl. coating ${c.D ? K.r1(c.D, 2) + " mm" : "–"} inside ${h.model} range <b>${h.d[0]}–${h.d[1]} mm</b> and the liner range; ambient temperature <b>${h.temp[0]} to +${h.temp[1]} °C</b>.|PRO-AIC-0608 §5.2 head limits, C2` : "Pick the head first.|PRO-AIC-0608 C2"; },
-      [F(p + "liner", "Liner set fitted", "text", { req: true, hint: "register not loaded – check the liner range by hand" }),
-        F(p + "temp", "Ambient temperature at the head", "snum", { unit: "°C", req: true })]),
+        F(p + "head_sn", "Head serial No.", "select", { req: true, opts: () => { const l = K.HEAD_SERIALS[rec[p + "head"]] || []; const v = rec[p + "head_sn"]; return v && !l.includes(v) ? [...l, v] : l; },
+          hint: () => (K.HEAD_SERIALS[rec[p + "head"]] || []).length > 1 ? `${K.REGISTER_SRC}: choose the head on site` : K.REGISTER_SRC }),
+        F(p + "bu_sn", "Basic unit (optional)", "select", { opts: () => { const v = rec[p + "bu_sn"]; return v && !K.BASIC_UNITS.includes(v) ? [...K.BASIC_UNITS, v] : K.BASIC_UNITS; },
+          hint: "leave it on \"– choose –\" if you do not want to name it" })]),
+    S("c2", "C2", "Head and liners", () => { const h = H(), c = K.compute(rec); return h ? `Measured diameter incl. coating ${c.D ? K.r1(c.D, 2) + " mm" : "–"} inside ${h.model} range <b>${h.d[0]}–${h.d[1]} mm</b> and the liner range.|PRO-AIC-0608 §5.2 head limits, C2` : "Pick the head first.|PRO-AIC-0608 C2"; },
+      [F(p + "liner", "Liner set fitted", "text", { req: true, hint: () => { const l = hc().liner; return l ? `${l.value ? "Proposed from the manual's liner table: " : ""}${l.text} (${l.src})` : ""; } })]),
     S("c3", "C3", "Settling and function check", () => { const h = H(); return `${h && h.settle ? `Let the instrument settle <b>${h.settle} h</b> to site conditions. ` : "No settling time stated for this head. "}Self-test passes; distance counter counts both ways.|PRO-AIC-0608 §5.2, C3`; },
       [F(p + "settled", "Settled for the time the manual states?", "radio", { ...YN, req: true, show: () => !!(H() && H().settle) }),
         F(p + "selftest", "Self-test passed?", "radio", { ...YN, req: true }),
@@ -49,7 +54,7 @@ function headScreens(i) {
         F(p + "r2_to", "Zero (sound) section to", "num", { unit: "m", req: true, show: () => route() && route() !== K.LMA_ROUTES[0] }),
         F(p + "r2_passes", "Head passed at least twice each way?", "radio", { ...YN, req: true, show: () => route() && route() !== K.LMA_ROUTES[0] }),
         F(p + "r3_n", "Number of added wires", "int", { req: true, show: () => route() === K.LMA_ROUTES[2] }),
-        F(p + "r3_dw", "Added wire diameter (caliper)", "num", { unit: "mm", req: true, show: () => route() === K.LMA_ROUTES[2] }),
+        F(p + "r3_dw", "Added wire diameter (caliper)", "num", { unit: "mm", req: true, show: () => route() === K.LMA_ROUTES[2], hint: "filled in from δmax when the same wire size is used – caliper it" }),
         F(p + "r3_set", "LMA value set", "snum", { unit: "%", req: true, show: () => route() === K.LMA_ROUTES[2] }),
         F(p + "r3_zero", "Zero check reads", "snum", { unit: "%", req: true, show: () => route() === K.LMA_ROUTES[2] }),
         F(p + "cal_time", "Calibration time", "time", { req: true })],
@@ -61,11 +66,16 @@ function headScreens(i) {
     S("c5", "C5", "LF calibration", () => `On the reference rope's fault, a known break, or two added wires each at least <b>${H() ? H().wireLen : 0.3} m</b> long with their ends <b>1 to 3 wire diameters</b> apart. Repeat test: load the base-trace configuration file first.|PRO-AIC-0608 C5, §5.2`,
       [F(p + "lfm", "LF calibrated on", "radio", { opts: K.LF_METHODS, req: true }),
         F(p + "lf_at", "Known break at", "num", { unit: "m", req: true, show: () => rec[p + "lfm"] === K.LF_METHODS[2] }),
-        F(p + "lfwd", "Added wire diameter", "num", { unit: "mm", req: true, show: () => rec[p + "lfm"] === K.LF_METHODS[3] }),
+        F(p + "lfwd", "Added wire diameter", "num", { unit: "mm", req: true, show: () => rec[p + "lfm"] === K.LF_METHODS[3], hint: "filled in from δmax when the same wire size is used – caliper it" }),
         F(p + "lflen", "Each wire length", "num", { unit: "m", req: true, show: () => rec[p + "lfm"] === K.LF_METHODS[3] }),
-        F(p + "lfgap", "Gap between the wire ends", "num", { unit: "mm", req: true, show: () => rec[p + "lfm"] === K.LF_METHODS[3] })]),
+        F(p + "lfgap", "Gap between the wire ends", "num", { unit: "mm", req: true, show: () => rec[p + "lfm"] === K.LF_METHODS[3] }),
+        F(p + "cs_from", "Clean section from", "num", { unit: "m", req: true, show: () => rec[p + "lfm"] === K.LF_CLEAN, group: "Clean section (last resort)" }),
+        F(p + "cs_to", "Clean section to", "num", { unit: "m", req: true, show: () => rec[p + "lfm"] === K.LF_CLEAN, group: "Clean section (last resort)" }),
+        F(p + "cs_mv", "Highest LF reading on it (two passes)", "num", { unit: "mV", req: true, show: () => rec[p + "lfm"] === K.LF_CLEAN, group: "Clean section (last resort)" }),
+        F(p + "sig_est", "Estimated one-wire signal (optional)", "num", { unit: "mV", show: () => rec[p + "lfm"] === K.LF_CLEAN, group: "Clean section (last resort)", hint: "wire count marked 'estimated'" })],
+      { top: () => rec[p + "lfm"] === K.LF_CLEAN ? `<div class="calc"><b>${esc(K.cleanRule(H()))}</b><small>${esc(K.CLEAN_TEXT)}</small><i class="src">${esc(K.CLEAN_SRC)}</i></div>` : "" }),
     S("c5sig", "C5", "One-wire LF signal", () => "The local fault gives a clear pulse above the noise. Record the one-wire LF signal.|PRO-AIC-0608 C5",
-      [F(p + "sig", "One-wire LF signal", "num", { unit: "mV", req: true })]),
+      [F(p + "sig", "One-wire LF signal", "num", { unit: "mV", req: true })], { show: () => rec[p + "lfm"] !== K.LF_CLEAN }),
     S("c5thr", "C5", "LF threshold and alarm", () => "Record the LF threshold and the alarm as set on the basic unit. Rope Record does not check them – Kuzo checks the threshold.|PRO-AIC-0608 C5; owner's ruling D5 (24-Nov-2026)",
       [F(p + "thr", "LF threshold set", "num", { unit: "mV", req: true }),
         F(p + "alarm", "LF alarm (blank = not set)", "num", { unit: "mV" }),
@@ -74,12 +84,11 @@ function headScreens(i) {
         F(p + "scanstep", "Scan step set on the basic unit (if read)", "num", { unit: "mm", hint: "optional – Kuzo compares it with the scan" }),
         ...(i === 1 ? [F("h2on", "Calibrate a second head on this rope?", "radio", { ...YN, req: true })] : [])],
       ),
-    S("c6", "C6", "Closing check (after the recording)", () => "Read the LMA again on the zero section: <b>0 ± 0.5 %</b>. Recorded length within <b>1 %</b> of a known length. Negative LMA not more than <b>1 %</b> (E1).|PRO-AIC-0608 C6, E1",
+    S("c6", "C6", "Closing check (after the recording)", () => "Read the LMA again on the zero section: <b>0 ± 0.5 %</b>. Recorded length within <b>1 %</b> of a known length.|PRO-AIC-0608 C6",
       [F(p + "c6_done", "Closing check done?", "radio", { opts: ["yes", "no"], labels: ["Yes", "Not yet – after the recording"], req: true }),
         F(p + "c6_zero", "Closing zero reads", "snum", { unit: "%", req: true, show: () => rec[p + "c6_done"] === "yes" }),
         F(p + "c6_len", "Recorded length", "num", { unit: "m", req: true, show: () => rec[p + "c6_done"] === "yes" }),
-        F(p + "c6_known", "Known length", "num", { unit: "m", req: true, show: () => rec[p + "c6_done"] === "yes" }),
-        F(p + "lmaneg", "Most negative LMA on the trace (if any)", "snum", { unit: "%", show: () => rec[p + "c6_done"] === "yes" })]),
+        F(p + "c6_known", "Known length", "num", { unit: "m", req: true, show: () => rec[p + "c6_done"] === "yes" })]),
   ];
 }
 
@@ -92,7 +101,7 @@ const SCREENS = (r) => [
       F("client", "Client", "text"),
       F("position", "Crane / rope position", "text", { req: () => !isRef(rec) }),
       F("date", "Test date", "date", { req: true }),
-      F("engineer", "Engineer (MRT Level II)", "text", { req: true }),
+      F("engineer", "Engineer (MRT Level II)", "text", { req: true, hint: "filled in: last used on this phone" }),
       F("location", "Location", "text"),
       F("length", "Rope length", "num", { unit: "m", hint: blank }),
     ] },
@@ -102,7 +111,8 @@ const SCREENS = (r) => [
       F("d_cert", "Measured diameter on the certificate", "num", { unit: "mm", hint: "blank if the certificate gives none – kept on the phone and in the CSV" }),
       F("da", "Reading 1 at the widest point", "num", { unit: "mm", req: true, group: "Caliper readings" }),
       F("db", "Reading 2 at 90° to reading 1", "num", { unit: "mm", req: true, group: "Caliper readings" }),
-      F("construction", "Construction (as on the certificate)", "text", { req: true, hint: "e.g. 6x36 IWRC, 35(W)x7" }),
+      F("ckey", "Construction (list)", "select", { opts: () => [...K.CONSTRUCTIONS.map((e) => ({ value: e.key, label: `${e.key} – class ${e.cls}` })), K.CONSTR_OTHER], hint: "pick it, or \"Other\" and type the certificate's words" }),
+      F("construction", "Construction (as on the certificate)", "text", { req: true, hint: () => { const pc = K.parseConstruction(rec.construction); return pc && pc.note ? pc.note : "e.g. 6x36 IWRC, 35(W)x7"; } }),
       F("csrc", "Construction from", "radio", { opts: K.CONSTR_SOURCES, req: true }),
       F("annexh", "ISO 4309 Annex H construction (for the RCN)", "select", { opts: [...K.ANNEX_H_CHOICES, K.ANNEX_OTHER], req: true }),
       F("ropetype", "Rope type", "select", { opts: K.ROPE_TYPES, req: true, show: () => rec.annexh === K.ANNEX_OTHER }),
@@ -117,17 +127,22 @@ const SCREENS = (r) => [
       F("asrc", "Source of A", "select", { opts: () => { const d = K.num(rec.dnom); return d != null && (d < 2 || d > 60) ? K.A_SOURCES.filter((x) => x !== K.A_ISO) : K.A_SOURCES; },
         hint: () => `Kuzo's choices; leave blank when A is not known.${K.num(rec.dnom) > 60 ? " Over 60 mm: no ISO 2408 factor (2–60 mm only); Intron k gives an estimate for the air value only (A3)." : ""}` }),
       F("a", "Metallic area A", "num", { unit: "mm²", req: () => K.A_TYPED.includes(rec.asrc), show: () => K.A_TYPED.includes(rec.asrc) }),
-      F("isoclass", "ISO 2408 class (for the C and K factors)", "select", { opts: [...K.ISO_CLASSES, K.ISO_NONE], req: () => rec.asrc === K.A_ISO,
-        hint: "needed when A is calculated, and for the breaking-force check" }),
-      F("class_note", "Reason, if the class differs from the certificate", "text", { hint: "e.g. certificate says 35W x 7; compacted per DSR catalogue, PowerFlex 35 – kept in the record and the CSV, not in the Kuzo file" }),
-      F("bf", "Breaking force on the certificate", "num", { unit: "kN", hint: "optional – with the grade, checked against ISO 2408 Fmin (advice only)" }),
-      F("grade", "Rope grade", "num", { unit: "N/mm²", hint: "e.g. 1960, 2160" }),
+      F("isoclass", "ISO 2408 class (for the C and K factors)", "select", { opts: [...K.ISO_CLASS_OPTS, K.ISO_NONE], req: () => rec.asrc === K.A_ISO,
+        hint: "needed when A is calculated, and for the ISO 2408 breaking force" }),
+      F("maker", "Rope maker", "text", { hint: "optional – site sheet \"Rope maker\"" }),
+      F("bf", "Breaking force – rope certificate", "num", { unit: "kN", hint: "optional – every figure is labelled by its source", group: "Breaking force (optional)" }),
+      F("bf_maker", "Breaking force – maker's data / manual", "num", { unit: "kN", hint: () => rec.bf_maker_ref ? `from ${rec.bf_maker_ref}` : "", group: "Breaking force (optional)" }),
+      F("grade", "Rope grade", "num", { unit: "N/mm²", hint: "for the ISO 2408 figure, e.g. 1960, 2160", group: "Breaking force (optional)" }),
+      F("bf_used", "Figure used (engineer confirms)", "radio", { opts: () => K.bfFigures(rec).figs.map((f) => f.source), labels: () => K.bfFigures(rec).figs.map((f) => `${f.source} – ${K.r1(f.kN, 1)} kN`),
+        show: () => K.bfFigures(rec).figs.length > 0, group: "Breaking force (optional)" }),
       F("dmaxsrc", "Largest wire δmax – source", "select", { opts: K.DMAX_SOURCES, req: true }),
       F("dmax", "Largest wire δmax", "num", { unit: "mm", req: () => rec.dmaxsrc && rec.dmaxsrc !== K.DMAX_SOURCES[2], show: () => rec.dmaxsrc && rec.dmaxsrc !== K.DMAX_SOURCES[2] }),
+      F("dmax_est", `Show ${K.DMAX_EST_LABEL}?`, "radio", { opts: ["yes", ""], labels: ["Yes – information only", "No"], hint: "optional; never sets the LF limit" }),
     ],
     top: () => { const c = K.compute(rec), b = c.bf;
       return (c.D ? `<div class="calc"><b>Measured diameter ${K.r1(c.D, 2)} mm</b><small>mean of ${c.da} and ${c.db} mm at the widest point – selects the head and liners</small><i class="src">PRO-AIC-0608 C2; owner's ruling D2</i></div>` : "")
-        + (b ? `<div class="calc"><b>Breaking-force check: ${b.ok ? `certificate ${K.r1(b.bf, 1)} kN vs Fmin ${K.r1(b.Fmin, 1)} kN` : "no check"}</b><small>${esc(b.ok ? `${b.amber ? "⚠ " + b.amber.text + " " : ""}${b.full} Advice only – nothing is changed.` : b.why)}</small><i class="src">${esc(K.BF_SRC)}</i></div>` : ""); } },
+        + (b ? `<div class="calc"><b>Breaking-force check: ${b.ok ? `certificate ${K.r1(b.bf, 1)} kN vs Fmin ${K.r1(b.Fmin, 1)} kN` : "no check"}</b><small>${esc(b.ok ? `${b.amber ? "⚠ " + b.amber.text + " " : ""}${b.full} Advice only – nothing is changed.` : b.why)}</small><i class="src">${esc(K.BF_SRC)}</i></div>` : "")
+        + (c.dEst ? `<div class="calc est"><b>${esc(K.DMAX_EST_LABEL)}: ${c.dEst.value != null ? `${c.dEst.value.toFixed(2)} mm – estimated` : "not given"}</b><small>${esc(c.dEst.value != null ? c.dEst.text : c.dEst.why)}</small>${c.dEst.src ? `<i class="src">${esc(c.dEst.src)}</i>` : ""}</div>` : ""); } },
   { id: "results", group: "Results", title: "Filled in for this rope", accept: () => "Check the working. An automatic value can be changed only with a reason, saved with the time.|Rope Record", results: true, fields: [] },
   ...headScreens(1).filter((s) => !s.show || s.show()),
   ...(r.h2on === "yes" ? headScreens(2).filter((s) => !s.show || s.show()) : []),
@@ -136,7 +151,7 @@ const SCREENS = (r) => [
       ...K.SECTIONS.flatMap((s) => [F(`${s}_from`, "From", "num", { unit: "m", req: s === "A", group: `Section ${s}` }), F(`${s}_to`, "To", "num", { unit: "m", req: s === "A", group: `Section ${s}` }),
         F(`${s}_w`, "Wires cut", "int", { req: s === "A", group: `Section ${s}` }), F(`${s}_gap`, "Gap", "num", { unit: "mm", group: `Section ${s}` })])] }] : []),
   { id: "finish", group: "Save", title: "Problems, sign-off and save", finish: true, accept: () => "Every red problem fixed or given a reason; reasons and overrides are saved in the CSV with the time.|Rope Record",
-    fields: [F("counted", "Counted by", "text"), F("checked", "Checked by", "text"), F("notes", "Notes / remarks", "textarea")] },
+    fields: [F("notes", "Notes / remarks", "textarea", { hint: "site sheet Remarks – also where the class differs from the certificate, say why" })] },
 ];
 
 // ---------------- state ----------------
@@ -159,11 +174,13 @@ function input(f) {
   const ht = typeof f.hint === "function" ? f.hint() : f.hint;
   const hint = ht ? `<small>${esc(ht)}</small>` : "";
   const star = required(f) ? ' <i class="req">required</i>' : "";
-  if (f.kind === "radio") return `<fieldset class="radio fw" data-f="${f.id}"><legend>${esc(f.label)}${star}</legend>${f.opts.map((o, k) =>
-    `<label class="opt"><input type="radio" name="${f.id}" value="${esc(o)}" ${v === o ? "checked" : ""}><span>${esc(f.labels ? f.labels[k] : o)}</span></label>`).join("")}</fieldset>`;
-  const lab = `<span class="lab">${esc(f.label)}${star}</span>${hint}`;
-  const opts = typeof f.opts === "function" ? f.opts() : f.opts;
-  if (f.kind === "select") return `<label class="f fw" data-f="${f.id}">${lab}<select id="${f.id}"><option value="">– choose –</option>${opts.map((o) => `<option ${v === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
+  const filled = rec.auto && rec.auto[f.id] != null && String(rec[f.id] ?? "") === rec.auto[f.id] ? ' <i class="filled">filled in</i>' : rec.changes && rec.changes[f.id] ? ' <i class="filled chg">changed – recorded</i>' : "";
+  const opts = typeof f.opts === "function" ? f.opts() : f.opts, labels = typeof f.labels === "function" ? f.labels() : f.labels;
+  if (f.kind === "radio") return `<fieldset class="radio fw" data-f="${f.id}"><legend>${esc(f.label)}${star}${filled}</legend>${ht ? hint : ""}${opts.map((o, k) =>
+    `<label class="opt"><input type="radio" name="${f.id}" value="${esc(o)}" ${v === o ? "checked" : ""}><span>${esc(labels ? labels[k] : o)}</span></label>`).join("")}</fieldset>`;
+  const lab = `<span class="lab">${esc(f.label)}${star}${filled}</span>${hint}`;
+  const ov = (o) => (typeof o === "object" ? o.value : o), ol = (o) => (typeof o === "object" ? o.label : o);
+  if (f.kind === "select") return `<label class="f fw" data-f="${f.id}">${lab}<select id="${f.id}"><option value="">– choose –</option>${opts.map((o) => `<option value="${esc(ov(o))}" ${v === ov(o) ? "selected" : ""}>${esc(ol(o))}</option>`).join("")}</select></label>`;
   if (f.kind === "textarea") return `<label class="f fw" data-f="${f.id}">${lab}<textarea id="${f.id}" rows="4">${esc(v)}</textarea></label>`;
   const attrs = { num: 'type="text" inputmode="decimal" autocomplete="off"', snum: 'type="text" inputmode="decimal" autocomplete="off"', int: 'type="text" inputmode="numeric" autocomplete="off"', date: 'type="date"', time: 'type="time"', text: 'type="text" autocomplete="off"' }[f.kind];
   return `<label class="f fw" data-f="${f.id}">${lab}<span class="in">${f.kind === "snum" ? `<button type="button" class="neg" data-neg="${f.id}" aria-label="plus or minus">±</button>` : ""}<input id="${f.id}" ${attrs} value="${esc(v)}">${unit}</span></label>`;
@@ -237,11 +254,32 @@ function drawSteps() {
   const on = $("#steps .on"); if (on) on.scrollIntoView({ block: "nearest", inline: "center" });
 }
 
+// Filled in from an earlier answer (1.7.0 rule 1): set when the box is empty or still holds the earlier filled-in value;
+// a value the engineer typed is never overwritten. rec.auto keeps the filled-in values, rec.changes the engineer's changes.
+function applyAuto() {
+  rec.auto = rec.auto || {}; rec.changes = rec.changes || {};
+  const av = K.autoValues(rec);
+  for (const [f, { value }] of Object.entries(av)) {
+    const cur = String(rec[f] ?? "").trim(), prev = rec.auto[f];
+    if (cur === "" || (prev != null && cur === prev)) { rec[f] = value; rec.auto[f] = value; }
+    else if (prev != null) rec.auto[f] = value;            // typed by the engineer earlier: kept; a value typed before 1.7.0 is not marked
+    if (rec.changes[f] && String(rec[f]) === value) delete rec.changes[f];
+  }
+}
+// an edit to a filled-in box: recorded with the time (amber line in the record, the CSV and the Kuzo log)
+function noteChange(f) {
+  if (!rec.auto || rec.auto[f] == null) return;
+  const v = String(rec[f] ?? "").trim();
+  rec.changes = rec.changes || {};
+  if (v === rec.auto[f]) delete rec.changes[f];
+  else rec.changes[f] = { from: rec.auto[f], to: v, time: stamp() };
+}
 function draw() {
+  applyAuto();
   screens = SCREENS(rec);
   if (cur >= screens.length) cur = screens.length - 1;
   const s = screens[cur];
-  $("#home").hidden = true; $("#about").hidden = true; $("#form").hidden = false; $("#bar").hidden = false;
+  $("#calc").hidden = true; $("#home").hidden = true; $("#about").hidden = true; $("#form").hidden = false; $("#bar").hidden = false;
   $("#where").textContent = `${s.group}${s.step ? " · " + s.step : ""} · screen ${cur + 1} of ${screens.length}`;
   $("#title").textContent = s.title;
   if (s.id.endsWith("-c4") && !rec[s.id.slice(0, 2) + "_cal_time"]) { const d = new Date(); rec[s.id.slice(0, 2) + "_cal_time"] = `${p2(d.getHours())}:${p2(d.getMinutes())}`; }
@@ -314,11 +352,17 @@ function overrideDialog(key) {
 }
 
 // ---------------- events ----------------
-$("#fields").addEventListener("input", (e) => { const t = e.target; if (t.matches("input[type=radio]") || !t.id) return; rec[t.id] = t.value; saveDraft(); drawLive(); });
+$("#fields").addEventListener("input", (e) => { const t = e.target; if (t.matches("input[type=radio]") || !t.id) return; rec[t.id] = t.value; noteChange(t.id); saveDraft(); drawLive(); });
 $("#fields").addEventListener("focusout", (e) => { const t = e.target; if (t.matches("input:not([type=radio]), textarea") && t.id) { if (t.id === "dnom") { const f = screens[cur].fields.find((x) => x.id === "asrc"), el = document.querySelector('[data-f="asrc"]'); if (f && el) el.outerHTML = input(f); } liveCheck(t.id); } });
+// a typed box changes what is filled in (construction text -> class / core; caliper readings -> liner): redraw when the
+// engineer leaves the box for something outside the form, keeping the other boxes as typed
+$("#fields").addEventListener("change", (e) => { const t = e.target; if (t.matches("input[type=text]") && ["construction", "da", "db", "dmax", "dnom"].includes(t.id))
+  setTimeout(() => { const y = scrollY, a = document.activeElement, id = a && a.id; draw(); scrollTo(0, y); const f = id && document.getElementById(id); if (f) f.focus(); }, 0); });
 $("#fields").addEventListener("change", (e) => {
   const t = e.target;
   if (t.matches("input[type=radio]")) rec[t.name] = t.value; else if (t.id) rec[t.id] = t.value;
+  noteChange(t.name || t.id);
+  if (t.id === "ckey" && rec.ckey === K.CONSTR_OTHER && rec.auto && rec.construction === rec.auto.construction) { rec.construction = ""; delete rec.auto.construction; }
   if (t.matches("select, input[type=radio]")) { draw(); liveCheck(t.name || t.id); } else { saveDraft(); drawLive(); }
 });
 $("#fields").addEventListener("click", (e) => {
@@ -354,6 +398,7 @@ const recFiles = (r, when) => [{ name: K.fileName(r, when), text: K.csvOf([r]), 
 function store(r) {
   const now = new Date();
   r.savedAt = now.toISOString(); r.appVersion = `${V.version} (${V.date})`;
+  if (String(r.engineer || "").trim()) keep(ENGINEER, String(r.engineer).trim());   // "last used on this phone" (item 6)
   if (!r.id) r.id = K.fileName(r, now).replace(/\.csv$/, "") + "-" + now.getTime();
   const i = records.findIndex((x) => x.id === r.id);
   if (i >= 0) records[i] = structuredClone(r); else records.unshift(structuredClone(r));
@@ -385,7 +430,7 @@ let qrState = null;
 async function showQr(r) {
   const parts = await K.qrParts(K.kuzoText(r, V.version));
   qrState = { parts, i: 0, auto: true, timer: null, lock: null, title: r.type === "reference" ? r.ref : [r.jobno, r.position].filter(Boolean).join(" – ") };
-  $("#home").hidden = true; $("#about").hidden = true; $("#form").hidden = true; $("#bar").hidden = true; $("#qr").hidden = false;
+  $("#calc").hidden = true; $("#home").hidden = true; $("#about").hidden = true; $("#form").hidden = true; $("#bar").hidden = true; $("#qr").hidden = false;
   $("#where").textContent = "QR for Kuzo";
   try { if (navigator.wakeLock) qrState.lock = await navigator.wakeLock.request("screen"); } catch {}
   drawQr(); qrTimer();
@@ -412,11 +457,19 @@ $("#qrClose").addEventListener("click", closeQr);
 document.addEventListener("visibilitychange", async () => { if (qrState && document.visibilityState === "visible" && navigator.wakeLock) { try { qrState.lock = await navigator.wakeLock.request("screen"); } catch {} } });
 
 // ---------------- home and About ----------------
-function newRecord(type) { rec = { type, date: today(), reasons: {}, ovr: {}, reach: 0 }; cur = 0; popped.clear(); $("#msg").hidden = true; draw(); scrollTo(0, 0); }
+function startRecord(r) {
+  rec = { ...r, date: today(), reasons: {}, ovr: {}, reach: 0, auto: { ...(r.auto || {}) }, changes: {} };
+  const eng = load(ENGINEER, "");
+  if (eng && !rec.engineer) { rec.engineer = eng; rec.auto.engineer = eng; }
+  cur = 0; popped.clear(); $("#msg").hidden = true; $("#calc").hidden = true; $(".banner").textContent = "Site checklist – not a report"; draw(); scrollTo(0, 0);
+}
+// 1.7.0 item 3: one flow - "New record" opens the set-up calculator; its "Start the record" buttons start the record.
+function newRecord() { document.dispatchEvent(new CustomEvent("rr:calc")); }
+document.addEventListener("rr:start", (e) => startRecord(e.detail));
 function home() {
   $("#qr").hidden = true;
   $("#home").hidden = false; $("#about").hidden = true; $("#form").hidden = true; $("#bar").hidden = true; $("#msg").hidden = true; $("#probs").hidden = true;
-  $("#where").textContent = "Acumen MRT – site record";
+  $("#where").textContent = "Acumen MRT – site checklist";
   let d = load(DRAFT, null);
   const strip = (r) => JSON.stringify({ ...r, reach: 0, savedAt: 0 });
   if (d && d.rec && d.rec.id) { const s = records.find((x) => x.id === d.rec.id); if (s && strip(s) === strip(d.rec)) d = null; }
@@ -433,17 +486,17 @@ function about() {
   $("#home").hidden = true; $("#about").hidden = false; $("#form").hidden = true; $("#bar").hidden = true; $("#probs").hidden = true;
   $("#where").textContent = "About";
   const P = K.PROCEDURE;
-  $("#aboutBody").innerHTML = `<p><b>Rope Record ${esc(V.version)}</b> · ${esc(V.date)}</p>
+  $("#aboutBody").innerHTML = `<p><b>Rope Record Checklist ${esc(V.version)}</b> · ${esc(V.date)}</p>
     ${P.confirmedFiled ? "" : `<p class="stop">Procedure copy not confirmed as filed.</p>`}
     <dl class="about"><dt>Procedure followed</dt><dd>${esc(P.doc)}<br><small>${esc(P.file)}<br>SHA-256 ${esc(P.sha256)}</small></dd>
     <dt>LF threshold</dt><dd>Recorded as entered, not checked by Rope Record; Kuzo checks it (owner's ruling D5, 24-Nov-2026). Rule set held for reference: ${esc(K.LF_RULESETS[K.LF_RULESET].name)}</dd>
     <dt>Kuzo link</dt><dd>Save and Share give the CSV and a .kuzo.json file (rope-record-schema-v1); "QR for Kuzo" shows the same record as QR codes.</dd>
     ${K.SOURCES.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl>
-    <p class="note">Records stay on this phone. This is a site record, not a report.</p>`;
+    <p class="note">Records stay on this phone. This is a site checklist, not a report. Files for Kuzo keep the name "Rope Record" (rope-record-schema-v1).</p>`;
   scrollTo(0, 0);
 }
-$("#newsite").addEventListener("click", () => newRecord("site"));
-$("#newref").addEventListener("click", () => newRecord("reference"));
+$("#newsite").addEventListener("click", newRecord);
+$("#newref").addEventListener("click", newRecord);
 $("#aboutBtn").addEventListener("click", about);
 $("#aboutBack").addEventListener("click", home);
 $("#cont").addEventListener("click", () => { const d = load(DRAFT, null); if (!d) return; rec = K.migrate(d.rec); rec.reasons = rec.reasons || {}; rec.ovr = rec.ovr || {}; cur = d.cur || 0; draw(); });
@@ -464,7 +517,7 @@ addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = 
 $("#install").addEventListener("click", async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; $("#install").hidden = true; });
 addEventListener("appinstalled", () => { $("#install").hidden = true; });
 
-$("#ver").textContent = `Rope Record version ${V.version} · ${V.date}${K.PROCEDURE.confirmedFiled ? "" : " · procedure copy not confirmed as filed"}`;
+$("#ver").textContent = `Rope Record Checklist version ${V.version} · ${V.date}${K.PROCEDURE.confirmedFiled ? "" : " · procedure copy not confirmed as filed"}`;
 records = load(STORE, []); if (!Array.isArray(records)) records = []; records = records.map(K.migrate);
 home();
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));

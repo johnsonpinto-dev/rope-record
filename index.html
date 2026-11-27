@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Rope Record</title>
-<meta name="description" content="Site record of rope data and MRT calibration, with mistake checks. Works offline.">
+<title>Rope Record Checklist</title>
+<meta name="description" content="Site checklist of rope data and MRT calibration, with mistake checks. Works offline.">
 <meta name="theme-color" content="#002050">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Rope Record">
+<meta name="apple-mobile-web-app-title" content="Rope Record Checklist">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=no">
 <link rel="stylesheet" href="styles.css">
@@ -21,26 +21,27 @@
 <script type="module" src="calculator.js"></script>
 </head>
 <body>
-<div class="banner" role="note">Site record – not a report</div>
+<div class="banner" role="note">Site checklist – not a report</div>
 <header>
   <button type="button" id="menu" class="menu" aria-label="Records">☰</button>
-  <div class="hd"><img class="logo" src="icons/acumen-logo.png" alt="Acumen Safety" width="1216" height="239"><h1>Rope Record</h1><p id="where">Acumen MRT</p></div>
+  <div class="hd"><img class="logo" src="icons/acumen-logo.png" alt="Acumen Safety" width="1216" height="239"><h1>Rope Record Checklist</h1><p id="where">Acumen MRT</p></div>
 </header>
 
 <main>
   <section id="calc" hidden>
     <div id="cWarn" class="cwarn" role="region" aria-label="Warnings" hidden></div>
     <h2>Set-up calculator</h2>
-    <p class="intro">Rope details in – LMA and LF set-up values out, each with its working and source. Nothing is saved.</p>
+    <p class="intro">Rope details in – LMA and LF set-up values out, each with its working and source. Start the record from here: your answers carry into it and are not asked again.</p>
     <div id="cIn"></div>
     <h2>Results</h2>
     <div id="cOut"></div>
-    <button type="button" id="toForm" class="wide">Full site record (old form)</button>
+    <div class="big2 start"><button type="button" class="p" data-start="site">Start the site record</button><button type="button" class="p alt" data-start="reference">Start a reference-rope record</button></div>
+    <button type="button" id="toForm" class="wide">Records on this phone</button>
   </section>
 
   <section id="home" hidden>
     <h2>New record</h2>
-    <p>Choose the job type.</p>
+    <p>Both open the set-up calculator first; its answers start the record.</p>
     <div class="big2">
       <button type="button" id="newsite" class="p">Site rope</button>
       <button type="button" id="newref" class="p alt">Reference rope</button>

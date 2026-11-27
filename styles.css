@@ -151,3 +151,27 @@ dl.about dt { font-weight: 700; margin-top: 10px; } dl.about dd { margin: 2px 0 
 .big .est { display: inline-block; background: var(--warnbg); color: var(--warn); border: 2px solid #e0a000; border-radius: 6px; padding: 1px 8px; font-weight: 700; font-size: 14px; margin: 2px 0; }
 .big .nextb { display: block; font-weight: 700; color: var(--warn); font-size: 17px; }
 .simopt { border-top: 2px dashed var(--line); margin-top: 4px; padding-top: 6px; }
+
+/* 1.7.0 Rope Record Checklist: filled-in marker, maker card, optional tick, construction note */
+i.filled { font-style: normal; font-weight: 600; font-size: 12px; color: var(--ok); background: #e3f6ea; border-radius: 4px; padding: 0 5px; margin-left: 4px; }
+i.filled.chg { color: var(--warn); background: var(--warnbg); }
+.opt.tick { margin: 0 0 14px; }
+.opt.tick input { accent-color: var(--warn); }
+.cnote { font-size: 14px; color: var(--warn); background: var(--warnbg); border-radius: 6px; padding: 6px 10px; margin: -6px 0 14px; }
+.mcard { border: 2px solid var(--navy); border-radius: 10px; padding: 8px 12px; margin: -4px 0 14px; }
+.mcard.none { border-style: dashed; border-color: var(--line); }
+.mcard > b { display: block; } .mcard small { display: block; color: #444; font-size: 13px; }
+table.mtab { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.mtab td { vertical-align: top; padding: 6px 4px; border-top: 1px solid var(--line); font-size: 15px; }
+.mtab td b { white-space: nowrap; }
+a.btnlink { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 4px 12px; margin-top: 6px; border: 2px solid var(--navy); border-radius: 10px; color: var(--navy); font-weight: 650; font-size: 14px; text-decoration: none; }
+.cres.estbox { background: var(--warnbg); border-left-color: #e0a000; } .cres.estbox > b { color: var(--warn); }
+.cres.sub2 { opacity: .85; }
+b.thr { display: block; font-size: 20px; color: var(--navy); margin: 4px 0 8px; }
+.calc.est { background: var(--warnbg); border-left-color: #e0a000; margin-top: 8px; }
+.big2.start { margin-top: 16px; }
+.big2.start button { min-height: 64px; font-size: 17px; }
+.mgrp { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; }
+.mtab td { vertical-align: middle; padding: 4px; }
+.mtab td:last-child { text-align: right; }
+.mtab button.ovr { margin: 0; }

@@ -1,11 +1,11 @@
-# Rope Record – handover
+# Rope Record Checklist (Rope Record up to 1.6.1) – handover
 
 Facts only. Owner's notes: vault note "Rope Record app (24-Nov-2026)" and MRTreview/notes/slb-review-app.md (24-Nov entries).
 
 ## Where things are
 - Repo on the Mac: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/rope-record` (git remote `origin` = github.com/johnsonpinto-dev/rope-record, branch `main`).
-- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – 1.6.0 (26-Nov-2026). 1.6.1 (27-Nov-2026) built and committed, NOT pushed – waits for the owner's word.
-- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 1290116 (.kuzo.json export + QR) · 1.4.0 bdaa67e set-up calculator (25-Nov-2026) · 1.5.0 breaking-force check + construction note (26-Nov-2026; published on the owner's word – hash in the git log and the vault note) · 1.6.0 4966d0e advisory lines into the .kuzo.json (26-Nov-2026, with Kuzo 0.2.10) · 1.6.1 iPhone update fix (27-Nov-2026, not published – hash in the git log).
+- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – 1.6.0 (26-Nov-2026). 1.6.1 and 1.7.0 (27-Nov-2026) built and committed, NOT pushed – wait for the owner's word.
+- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 1290116 (.kuzo.json export + QR) · 1.4.0 bdaa67e set-up calculator (25-Nov-2026) · 1.5.0 breaking-force check + construction note (26-Nov-2026; published on the owner's word – hash in the git log and the vault note) · 1.6.0 4966d0e advisory lines into the .kuzo.json (26-Nov-2026, with Kuzo 0.2.10) · 1.6.1 iPhone update fix (27-Nov-2026, not published – hash in the git log) · 1.7.0 Rope Record Checklist (27-Nov-2026, not published – hash in the git log).
 - Not published (gitignored): `dev/` (tests `dev/calc.test.mjs`, `dev/export.test.mjs`, `dev/calculator.test.mjs`; test records `dev/examples.mjs`; real-Chrome checks `dev/cdp-check.mjs`, `dev/qr-screen-check.mjs` + `dev/png2rgba.py`; local server `dev/serve.mjs`; icon pages) and `sources/`.
 - `vendor/qrcode.js` = qrcode-generator 1.4.4 (Kazuhiko Arase, MIT licence, header kept), from the npm registry 24-Nov-2026.
 - Local preview: MRTreview/.claude/launch.json entry "rope-record" (node dev/serve.mjs, port 8770).
@@ -25,8 +25,10 @@ Facts only. Owner's notes: vault note "Rope Record app (24-Nov-2026)" and MRTrev
 
 ## sources/ (on the Mac only, not in git)
 SHA-256 of each file: `sources/SHA256.txt`.
-- `PRO-AIC-0608 Magnetic Rope Testing Procedure Rev 00.pdf` – SHA-256 7911383fd839c3cfcdb2ae670db5ad7adf9cd158de81609e1f85a97a3f7f4952 (22-Nov final/ copy; not confirmed as filed)
-- `AIC-0608 MRT Site Sheet Rev 00.pdf`
+- `PRO-AIC-0608 Magnetic Rope Testing Procedure Rev 00.pdf` – SHA-256 37bde04809c4fde624a653b255f1062e0d20d6ca25b43347994d7702e6f42ecb (refiled 27-Nov-2026 from Drive: C5 clean-section route). The 22-Nov copy 7911383f… is kept in `sources/_superseded (held before 27-Nov-2026)/` with the older site sheet, sample and guide.
+- `AIC-0608-E MRT Equipment Register (internal) Rev 00.pdf` (from Drive, 27-Nov-2026); `sources/docx/` – the procedure, site sheet and register .docx and their text
+- `sources/makers/` – Kiswire catalogues (from Drive, Sales / Wire Rope Catalogue) – makers.json is built from them by `dev/makers-build.mjs`
+- `AIC-0608 MRT Site Sheet Rev 00.pdf` (27-Nov set)
 - `AIC-0608 MRT Site Sheet SAMPLE (filled example) Rev 00.pdf`
 - `AIC-0608-G MRT Report Guide to Completion Rev 00.pdf`
 - `MH6-26, 22-45 & 40-70 OPERATING MANUAL version 1.3 (scanned).pdf`
@@ -44,10 +46,14 @@ Folder base: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/MRTre
 
 ## Locked settings (change only on the owner's word)
 - `LF_RULESET = "filed"` – until the 24-Nov LF amendment is filed.
-- `PROCEDURE.confirmedFiled = false` – until the filed procedure PDF replaces the sources/ copy.
-- `REGISTER_LOADED = false` – until register AIC-0608-E is on the Mac.
+- `PROCEDURE.confirmedFiled = false` – the owner decides whether the refiled 27-Nov copy (SHA 37bde048…) counts as filed.
+- `REGISTER_LOADED = true` since 1.7.0 – register AIC-0608-E Rev 00 is on the Mac (sources/, SHA e4de659b…) and the owner's
+  1.7.0 block fills the head serial from it. The 1.1–1.6 register checks ("not loaded", 505134 red) are removed (rule 2).
 
 ## Tests
+- 1.7.0: `node dev/1.7.0.test.mjs` (110 checks: items 3–15, rule 2, check (b) through `dev/kuzo-copy/` – Kuzo's siterecord.js,
+  calroute.js and schema copied out of MRTreview at f8f01b9 – and check (e)); `node dev/screens-1.7.0.mjs <1.6.1 tree> . <out>`
+  (real Chrome 390 x 844, every screen and option, box count before / after). Findings: `dev/1.7.0-findings.md`.
 - `node dev/calc.test.mjs` – rules and checks, all pass at 1.3.0.
 - `node dev/bf.test.mjs` – 1.5.0 breaking-force check and construction note (see 1.5.0 below).
 - `node dev/sw.test.mjs` – release rule: SW_VERSION in sw.js = version.js (see 1.6.1 below).
@@ -67,6 +73,40 @@ Owner's brief: the job-record form is too heavy; the calculator takes the rope d
 - NO outer wire estimate (owner's decision, 25-Nov-2026): tested on the reference ropes it overstated the one-wire share by 16 % on the 48 mm rope – the unsafe direction. Not built.
 - 24 mm reference rope: outer wires per strand not known – the owner will have them counted. Nothing assumed.
 - Tests: `node dev/calculator.test.mjs` – worked example 48 mm 6 × 36 IWRC, MH 40-64, A calculated, δ 2.7 mm measured on a wire (24-Nov record AIC-RR-48-01): A 0.460 × 48² = 1059.8 mm², air 84 % (820–1300), one wire 5.73 mm² = 0.54 % of A, 6d / 30d 0.288 / 1.44 m, 11 / 19 wires; plus A sources, > 60 mm, EN warnings, no-δ, MH-PC, head range, routes 1–3 and the simulated wire; A not known on a 72 mm rope (fibre core S 2036 mm² → 113 %, next band 120 %; steel core S 2646 mm² → 120 %, no next band; no one-wire %, no limits; 72 mm is outside every head with an air table, so the range warning shows too). All pass; `calc.test.mjs` and `export.test.mjs` still pass.
+
+## 1.7.0 Rope Record Checklist (27-Nov-2026) – BUILT AND COMMITTED, NOT PUSHED
+Owner's block 27-Nov-2026 ("only what is mandated, each fact asked once") and ruling the same day (basic unit "" when none;
+Kuzo changes in the version after 0.2.13). Full findings, screenshots and the box count: `dev/1.7.0-findings.md`, `dev/screens-1.7.0/`.
+- Renamed "Rope Record Checklist" (title, header, footer, About, home-screen title, manifest name / short_name). Same address,
+  same storage keys (`rope-record-records`, `rope-record-draft`; new `rope-record-engineer` = engineer last used), same cache
+  prefix. Export unchanged: app.name "Rope Record", format "rope-record", schema v1.
+- One flow: "New record" opens the calculator; its "Start the site record" / "Start a reference-rope record" carry every
+  answer into the record (`recordFromCalc()`).
+- Filled in (`autoValues()`, applied in app.js `applyAuto()`): construction → Annex H / counts / core / ISO class; head serial
+  from the register (`HEAD_SERIALS`; MH 6-26 two serials → choice); liner from the manual's Table 2 (`LINERS`, `linerFor()`; p. 15
+  prints LS 20-24 for 20–26 mm – shown as printed with a note); added-wire diameter from a documented δmax; engineer from the
+  phone. Editable; a change → `rec.changes`, amber `chg-<field>`, CSV `filled_in_changes`, Kuzo log.
+- Removed boxes: ambient temperature, class-difference reason, most negative LMA, counted by, checked by (fields kept in
+  older records, CSV and export). Basic unit = optional drop-down (`BASIC_UNITS`), exported as serial digits or "".
+- Construction list (`CONSTRUCTIONS`, ISO 2408 Tables D.1–D.18) + free text (`parseConstruction()`); class drop-down labels
+  say what each class holds (`ISO_CLASS_OPTS`; stored values unchanged). Cause of the 24 mm 6 × 19M error: the drop-down, not
+  the factors (all re-read, p. 18).
+- Area boxes "A - ISO 2408 factor (broken-wire limits)" / "S - Intron density factor K (air value only)"; 6d and 30d each in
+  its own box.
+- LF route 4 (clean section, refiled C5): calculator route 4 and record C5 method `LF_CLEAN`; export `lf_calibration_route`
+  "clean_section" (Kuzo's id) and the section / reading / estimated keys; amber `lf-route4-h<n>_`.
+- Breaking force: three figures labelled by source, engineer confirms the one used (`bf_used`); exported with labels.
+- Optional "δmax estimated (nominal), based on construction" (EN 12385-4:2002 Tables 5–16 outer wire factor; δa = a × d,
+  EN 12385-2 3.10.27): never the LF limit, own export key.
+- makers.json (Kiswire pp. 18, 21, 23; 317 entries; A null; DSR catalogue still needed), suggestion card with "Use these
+  figures" / "Not this rope" and "Search the maker's site" (plain link). In the offline cache.
+- Kuzo changes for the version after 0.2.13 (owner's ruling): (1) empty basic-unit serial not checked, not red;
+  (2) read the new keys (LF route 4, breaking force with source label, estimated δmax). Listed in the findings §3. MRTreview not edited.
+- Tests: 1.7.0 test 110 checks; calc / calculator / bf / export / sw pass (old assertions changed to 1.7.0 and named);
+  cdp-check and qr-screen-check pass in real Chrome; update 1.6.0 → 1.7.0 passes, records byte for byte unchanged.
+- Fault found and fixed: the QR screen / record could open under the calculator.
+- iPhone home-screen name: stays "Rope Record" until the icon is added again – share all records BEFORE removing the old
+  icon (steps in the findings §5).
 
 ## 1.6.1 iPhone update fix (27-Nov-2026) – BUILT AND COMMITTED, NOT PUSHED
 Owner's "yes" 27-Nov-2026; publish only on the owner's word.

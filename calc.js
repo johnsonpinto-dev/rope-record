@@ -8,23 +8,55 @@ const PI = Math.PI;
 // Documents the app is built from (shown on the About screen).
 // ---------------------------------------------------------------------------------------------
 export const PROCEDURE = {
-  doc: "PRO-AIC-0608 Rev 00 (EIAC), consolidated amendment of 22-Nov-2026",
+  doc: "PRO-AIC-0608 Rev 00 (EIAC), refiled 27-Nov-2026 (C5 clean-section route)",
   file: "PRO-AIC-0608 Magnetic Rope Testing Procedure Rev 00.pdf",
-  sha256: "7911383fd839c3cfcdb2ae670db5ad7adf9cd158de81609e1f85a97a3f7f4952",
-  confirmedFiled: false,           // true only when the filed PDF from Drive replaces this copy
+  sha256: "37bde04809c4fde624a653b255f1062e0d20d6ca25b43347994d7702e6f42ecb",
+  confirmedFiled: false,           // locked setting: true only on the owner's word
 };
 export const SOURCES = [
   ["Procedure", PROCEDURE.doc],
-  ["Site sheet", "AIC-0608 MRT Site Sheet Rev 00 (22-Nov-2026 set)"],
-  ["Report guide", "AIC-0608-G Rev 00 (22-Nov-2026 set)"],
-  ["Equipment register", "AIC-0608-E – NOT LOADED: head and basic-unit serials typed by the engineer; liner and verification checked by hand"],
-  ["Air values", "MH 6-26 / 22-45 / 40-70: INTROS manual v1.3, Table 4 (p. 27). MH 40-64: INTROS MH40-64 with BU-M manual v1.1, Table 4 (p. 21). MH 20-40, MH 80-120: no table in sources/ – air value from the head's own manual, check it"],
-  ["Head rope ranges", "MH 6-26 / 22-45 / 40-70: manual v1.3 p. 4 and Table 1 (p. 12). MH 40-64: manual v1.1 p. 3. MH 20-40, MH 80-120: PRO-AIC-0608 §5.2 (manuals not in sources/)"],
+  ["Site sheet", "AIC-0608 MRT Site Sheet Rev 00 (27-Nov-2026 set)"],
+  ["Report guide", "AIC-0608-G Rev 00 (27-Nov-2026 set)"],
+  ["Equipment register", "AIC-0608-E Rev 00 (15-Nov-2026): head serials, basic units and liner sets"],
+  ["Air values", "MH 6-26 / 22-45 / 40-70: INTROS manual v1.3, Table 4 (p. 27). MH 40-64: INTROS MH40-64 with BU-M manual v1.1, Table 4 (p. 21). MH 20-40, MH 80-120: air value from the head's own manual"],
+  ["Liner sets", "MH 6-26 / 22-45 / 40-70: INTROS manual v1.3, Table 2 (p. 15). MH 40-64: INTROS MH40-64 with BU-M manual v1.1, Table 2 (p. 12). MH 20-40: AIC-0608-E §3. MH 80-120: maker's table (AIC-0608-E §3)"],
+  ["Head rope ranges", "MH 6-26 / 22-45 / 40-70: manual v1.3 p. 4 and Table 1 (p. 12). MH 40-64: manual v1.1 p. 3. MH 20-40, MH 80-120: PRO-AIC-0608 §5.2"],
   ["ISO 4309 tables", "Tables 3 and 4 as copied in PRO-AIC-0608 §9.2.2; Annex H examples checked against ISO 4309:2017 pp. 51–56"],
-  ["ISO 2408 C factors", "ISO 2408:2017 Annex C, Tables C.1 and C.2 (p. 18)"],
+  ["ISO 2408 factors", "ISO 2408:2017 Annex C, Tables C.1 and C.2 (p. 18); class contents Tables D.1–D.18 (pp. 19–36)"],
+  ["Outer wire factor", "EN 12385-4:2002 Tables 5–16 (pp. 9–20); δa = a × d, EN 12385-2:2002+A1:2008 3.10.26–3.10.27 – estimate only"],
 ];
-export const REGISTER_LOADED = false;
-export const REGISTER_TEXT = "register AIC-0608-E not loaded – check by hand";
+// Equipment register AIC-0608-E Rev 00 (15-Nov-2026), read 27-Nov-2026 (sources/, SHA-256 e4de659b…5a00). The owner's
+// 1.7.0 block (27-Nov-2026) fills the head serial from it.
+export const REGISTER_LOADED = true;
+export const REGISTER_SRC = "AIC-0608-E Rev 00 §3 (equipment register)";
+export const HEAD_SERIALS = { "MH 6-26": ["705046", "705075"], "MH 22-45": ["715035"], "MH 40-70": ["725009"], "MH 20-40": ["202715"],
+  "MH 40-64": ["204540"], "MH 80-120": ["230505-1 / 230505-2"] };
+// Basic unit (1.7.0 item 5, owner's ruling 27-Nov-2026): optional; the units on AIC-0608-E §2, plus MH-PC with a computer.
+export const BU_MHPC = "MH-PC + computer";
+export const BASIC_UNITS = ["BU-M 505026", "BU-M 505134", "BU-M 505152", "BU-16 405651", BU_MHPC];
+// Export: the unit's serial digits (Kuzo compares digits with the scan), "" when none is chosen.
+export const buSerial = (v) => { const t = String(v ?? "").trim(); if (!t) return ""; if (t === BU_MHPC) return t; const m = t.match(/(\d{5,})\s*$/); return m ? m[1] : t; };
+// Liner sets: [from mm, to mm, liner as printed]. Read off the page 27-Nov-2026.
+const LT13 = "INTROS MH 6-26 / 22-45 / 40-70 operating manual v1.3, Table 2 (p. 15)";
+export const LINERS = {
+  // p. 15 prints "LS 20-24" for 20–26 mm (AIC-0608-E lists LS20-26) and "65 – 40" for the LS 65-70 row: shown as printed.
+  "MH 6-26": { src: LT13, rows: [[6, 9, "LS 6-9"], [9, 12, "LS 9-12"], [12, 16, "LS 12-16"], [16, 20, "LS 16-20"], [20, 26, "LS 20-24"]],
+    note: "Table 2 prints LS 20-24 for 20–26 mm; the register lists LS20-26 – check the liner marking." },
+  "MH 22-45": { src: LT13, rows: [[22, 25, "LS 22-25"], [25, 30, "LS 25-30"], [30, 35, "LS 30-35"], [35, 40, "LS 35-40"], [40, 45, "LS 40-45"]] },
+  "MH 40-70": { src: LT13, rows: [[40, 45, "LS 40-45"], [45, 50, "LS 45-50"], [50, 55, "LS 50-55"], [55, 60, "LS 55-60"], [60, 65, "LS 60-65"], [65, 70, "LS 65-70"]],
+    note: "Table 2 prints the last row as \"65 – 40\" mm; LS 65-70 read as 65–70 mm." },
+  "MH 40-64": { src: "INTROS MH40-64 with BU-M operating manual v1.1, Table 2 (p. 12)", rows: [[40, 45, "LS40-45"], [45, 50, "LS45-50"], [50, 55, "LS50-55"], [55, 60, "LS55-60"], [60, 64, "LS60-64"]] },
+  "MH 20-40": { src: "AIC-0608-E Rev 00 §3 (INTROS 6-64 BU-16 manual)", rows: [[20, 25, "20-25"], [25, 30, "25-30"], [30, 35, "30-35"], [35, 40, "35-40"]] },
+};
+// Liner proposal for the measured diameter D (incl. coating): the smaller set where two cover it (manual v1.3 2.2.2).
+export function linerFor(model, D) {
+  const t = LINERS[model];
+  if (!t) return model === "MH 80-120" ? { none: true, text: "MH 80-120: liners (CS / LS 91–128) from the maker's table – choose the set.", src: REGISTER_SRC } : null;
+  if (!(D > 0)) return { none: true, text: "Needs the measured diameter (two caliper readings).", src: t.src };
+  const fit = t.rows.filter(([a, b]) => D >= a && D <= b);
+  if (!fit.length) return { none: true, text: `${r1(D, 2)} mm is outside the liner table for ${model}.`, src: t.src };
+  return { value: fit[0][2], also: fit.slice(1).map((x) => x[2]), text: `${r1(D, 2)} mm is in ${fit[0][0]}–${fit[0][1]} mm → ${fit[0][2]}${fit.length > 1 ? ` (also covered by ${fit.slice(1).map((x) => x[2]).join(", ")}; the smaller set is proposed)` : ""}.${t.note ? " " + t.note : ""}`, src: t.src };
+}
 
 // ---------------------------------------------------------------------------------------------
 // LF threshold rule - ONE table. Switch LF_RULESET to "amended" when the 24-Nov-2026 amendment is filed.
@@ -50,7 +82,7 @@ export const lfRule = (h) => (h ? LF_RULESETS[LF_RULESET][h.lfRule] : null);
 // ---------------------------------------------------------------------------------------------
 // Heads - PRO-AIC-0608 §5.2 head limits (p. 4). Serials are typed by the engineer until the register is loaded.
 // sens: LF sensitivity, one wire as % of A (a function of D for the BU-16 heads).
-// rangeSrc: where the rope range comes from. The air value comes from AIR below (a table from a manual in sources/),
+// rangeSrc: where the rope range comes from. The air value comes from AIR below (a table from the head manual),
 // or, where no table is held, "from the head's own manual – check it" (amber), never a guessed figure.
 // ---------------------------------------------------------------------------------------------
 const S52 = "PRO-AIC-0608 §5.2 head limits";
@@ -58,16 +90,14 @@ export const HEADS = [
   { model: "MH 6-26", unit: "BU-M", d: [6, 26], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", rangeSrc: "Intron manual v1.3 p. 4 (MH notation), Table 1 p. 12; PRO-AIC-0608 §5.2" },
   { model: "MH 22-45", unit: "BU-M", d: [22, 45], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", rangeSrc: "Intron manual v1.3 p. 4 (MH notation), Table 1 p. 12; PRO-AIC-0608 §5.2" },
   { model: "MH 40-70", unit: "BU-M", d: [40, 70], speed: "up to 2 m/s", temp: [-25, 55], settle: 0, sound: 0.5, wireLen: 0.3, sens: () => 0.5, sensText: "0.5 %", lfRule: "BU-M", rangeSrc: "Intron manual v1.3 p. 4 (MH notation), Table 1 p. 12; PRO-AIC-0608 §5.2" },
-  { model: "MH 20-40", unit: "BU-16", d: [20, 40], speed: "up to 2 m/s", temp: [-10, 50], settle: 2, sound: 0.5, wireLen: 0.3, sens: (D) => 20 / D, sensText: "20/D %", lfRule: "BU-16", rangeSrc: "PRO-AIC-0608 §5.2 (head manual not in sources)" },
+  { model: "MH 20-40", unit: "BU-16", d: [20, 40], speed: "up to 2 m/s", temp: [-10, 50], settle: 2, sound: 0.5, wireLen: 0.3, sens: (D) => 20 / D, sensText: "20/D %", lfRule: "BU-16", rangeSrc: "PRO-AIC-0608 §5.2" },
   { model: "MH 40-64", unit: "BU-16", d: [40, 64], speed: "up to 2 m/s", temp: [-10, 50], settle: 2, sound: 0.5, wireLen: 0.3, sens: (D) => 32 / D, sensText: "32/D %", lfRule: "BU-16", rangeSrc: "INTROS MH40-64 manual v1.1 p. 3; PRO-AIC-0608 §5.2" },
-  { model: "MH 80-120", unit: "analogue unit + basic unit", d: [80, 120], speed: "0.2–1.5 m/s", temp: [-10, 50], settle: 2, sound: 2, wireLen: 0.6, sens: () => 0.12, sensText: "0.12 %", lfRule: "MH 80-120", rangeSrc: "PRO-AIC-0608 §5.2 (head manual not in sources)" },
+  { model: "MH 80-120", unit: "analogue unit + basic unit", d: [80, 120], speed: "0.2–1.5 m/s", temp: [-10, 50], settle: 2, sound: 2, wireLen: 0.6, sens: () => 0.12, sensText: "0.12 %", lfRule: "MH 80-120", rangeSrc: "PRO-AIC-0608 §5.2" },
 ];
 export const HEAD_CHOICES = HEADS.map((h) => h.model);
 export const headOf = (m) => HEADS.find((h) => h.model === m) || null;
-// Basic unit stated to have no verification certificate on file (Acumen, 24-Nov-2026), until the register is loaded.
-export const BU_NO_CERT = ["505134"];
 
-// Air value tables ("LMA value without rope", %) read from the manuals in sources/: [A from mm², A to mm², air value %].
+// Air value tables ("LMA value without rope", %) read from the head manuals: [A from mm², A to mm², air value %].
 const V13 = "INTROS MH 6-26 / 22-45 / 40-70 operating manual v1.3, Table 4 (p. 27)";
 export const AIR = {
   "MH 6-26": { src: V13, rows: [[19, 70, 105], [70, 180, 106], [180, 450, 107]] },
@@ -77,7 +107,7 @@ export const AIR = {
 };
 export const T4 = Object.fromEntries(Object.entries(AIR).map(([k, v]) => [k, v.rows]));
 export const T4_SRC = "PRO-AIC-0608 C4 route 2";
-export const airSrc = (model) => (AIR[model] ? `${AIR[model].src}; ${T4_SRC}` : `no air value table in sources/ for ${model}; ${T4_SRC}`);
+export const airSrc = (model) => (AIR[model] ? `${AIR[model].src}; ${T4_SRC}` : `air value from the ${model} manual; ${T4_SRC}`);
 export const OWN_MANUAL = "air value from the head's own manual – check it";
 
 // Rope density factor K (A3; manual v1.3 2.4.2): only to choose the air value or S of route 3 when A is not known.
@@ -101,6 +131,98 @@ const ISO2408 = [
 ].map(([table, cls, C1, C2, C3, K1, K2, K3]) => ({ table, cls, C1, C2, C3, K1, K2, K3 }));
 export const ISO_CLASSES = ISO2408.map((r) => `${r.cls} (Table ${r.table})`);
 export const ISO_NONE = "not in ISO 2408 Table C.1 / C.2";
+// 1.7.0 item 7: the class list says what is in each class (ISO 2408:2017 Tables D.1–D.18, "typical construction",
+// read 27-Nov-2026), so 6 × 19 and 6 × 19M cannot be confused. The stored value stays the 1.0–1.6 string (old records open).
+const CLASS_HAS = {
+  "6 × 7": "1-6 strands: 6x7 (D.1)", "6 × 19": "Seale / Filler / Warrington strands: 6x19S, 6x21F, 6x26WS, 6x19W, 6x25F (D.5)",
+  "6 × 24": "fibre-centre strands: 6x24FC (D.3)", "6 × 36": "Warrington-Seale / Filler strands: 6x31WS, 6x29F, 6x36WS, 6x37FS, 6x41WS, 6x41F, 6x43FS, 6x49SWS, 6x46WS, 6x49FS (D.6)",
+  "6 × 19M": "cross-lay strand 1-6/12: 6x19M (D.2)", "6 × 37M": "cross-lay strand 1-6/12/18: 6x37M (D.4)",
+  "8 × 7": "1-6 strands: 8x7 (D.7)", "8 × 19": "8x19S, 8x21F, 8x26WS, 8x19W, 8x25F (D.8)", "8 × 36": "8x31WS, 8x29F, 8x36WS, 8x37FS, 8x41WS, 8x41F, 8x43FS, 8x49SWS, 8x46WS, 8x49FS (D.9)",
+  "4 × 19 / 4 × 36": "4x19S, 4x25F, 4x26WS, 4x31WS, 4x36WS, 4x41WS (D.13)", "18 × 7 / 18 × 19": "17x7, 18x7, 18x19S, 18x19W (D.10)",
+  "34(M) × 7": "34(M)x7, 36(M)x7 (D.11)", "35(W) × 7": "35(W)x7, 40(W)x7 (D.12)",
+  "6 × K7": "compacted: 6xK7 (D.14)", "6 × K19 / 6 × K36": "compacted: 6xK19S, 6xK26WS, 6xK31WS, 6xK36WS, 6xK41WS, 6xK49SWS, 6xK46WS (D.15, D.16)",
+  "8 × K19 / 8 × K36": "compacted: 8xK19S, 8xK26WS, 8xK31WS, 8xK36WS, 8xK41WS, 8xK49SWS, 8xK46WS (D.17, D.18)",
+  "K4 × 35N": "compacted: K4x35N", "15 × K7": "compacted: 15xK7", "18 × K7 / 18 × K19": "compacted: 18xK7, 18xK19", "35(W) × K7": "compacted: 35(W)xK7",
+};
+export const ISO_CLASS_OPTS = ISO2408.map((r) => ({ value: `${r.cls} (Table ${r.table})`, label: `${r.cls} – ${CLASS_HAS[r.cls] || "Table " + r.table}` }));
+export const classOfName = (cls) => ISO_CLASSES.find((x) => x.startsWith(cls + " (Table")) || "";
+
+// 1.7.0 items 6, 7, 12: the construction list. One row per typical construction of ISO 2408:2017 Tables D.1–D.18
+// (strand, outer wires per strand, outer strands = total outer wires ÷ per strand), with its ISO 2408 class, the
+// ISO 4309 Annex H example where one is named the same, and the EN 12385-4:2002 outer wire factor a where its
+// Tables 5–16 give one (pp. 9–20; δa = a × d, EN 12385-2:2002+A1:2008 3.10.27; Warrington: the larger factor, the
+// largest outer wire). Fields: name, class, outer strands, outer wires per strand, Seale (19 wires or fewer), rope type
+// (3 single-layer / 4 rotation-resistant), cores allowed, a, EN table and page.
+const FC_ = "FC", IW_ = "IWRC", WS_ = "WSC";
+const CONSTR_BASE = [
+  ["6x7", "6 × 7", 6, 6, false, 3, [FC_, IW_, WS_], 0.106, "Table 5, p. 9"],
+  ["6x19S", "6 × 19", 6, 9, true, 3, [FC_, IW_], 0.080, "Table 7, p. 11"], ["6x21F", "6 × 19", 6, 10, false, 3, [FC_, IW_], null, ""],
+  ["6x26WS", "6 × 19", 6, 10, false, 3, [FC_, IW_], 0.074, "Table 7, p. 11"], ["6x19W", "6 × 19", 6, 12, false, 3, [FC_, IW_], 0.073, "Table 7, p. 11"],
+  ["6x25F", "6 × 19", 6, 12, false, 3, [FC_, IW_], 0.064, "Table 7, p. 11"],
+  ["6x19M", "6 × 19M", 6, 12, false, 3, [FC_, IW_, WS_], 0.0640, "Table 12, p. 16"], ["6x37M", "6 × 37M", 6, 18, false, 3, [FC_, IW_, WS_], 0.0455, "Table 13, p. 17"],
+  ["6x24FC", "6 × 24", 6, 12, false, 3, [FC_], null, ""],
+  ["6x31WS", "6 × 36", 6, 12, false, 3, [FC_, IW_], 0.064, "Table 9, p. 13"], ["6x29F", "6 × 36", 6, 14, false, 3, [FC_, IW_], null, ""],
+  ["6x36WS", "6 × 36", 6, 14, false, 3, [FC_, IW_], 0.056, "Table 9, p. 13"], ["6x37FS", "6 × 36", 6, 12, false, 3, [FC_, IW_], null, ""],
+  ["6x41WS", "6 × 36", 6, 16, false, 3, [FC_, IW_], 0.050, "Table 9, p. 13"], ["6x49SWS", "6 × 36", 6, 16, false, 3, [FC_, IW_], 0.050, "Table 9, p. 13 (named 6x49WS there, strand 1-8-8-8+8-16)"],
+  ["6x46WS", "6 × 36", 6, 18, false, 3, [FC_, IW_], 0.0455, "Table 9, p. 13"],
+  ["8x7", "8 × 7", 8, 6, false, 3, [FC_, IW_, WS_], 0.087, "Table 6, p. 10"],
+  ["8x19S", "8 × 19", 8, 9, true, 3, [FC_, IW_], 0.0655, "Table 8, p. 12"], ["8x26WS", "8 × 19", 8, 10, false, 3, [FC_, IW_], 0.0600, "Table 8, p. 12"],
+  ["8x19W", "8 × 19", 8, 12, false, 3, [FC_, IW_], 0.0606, "Table 8, p. 12"], ["8x25F", "8 × 19", 8, 12, false, 3, [FC_, IW_], 0.0525, "Table 8, p. 12"],
+  ["8x31WS", "8 × 36", 8, 12, false, 3, [FC_, IW_], 0.0525, "Table 10, p. 14"], ["8x36WS", "8 × 36", 8, 14, false, 3, [FC_, IW_], 0.0460, "Table 10, p. 14"],
+  ["8x41WS", "8 × 36", 8, 16, false, 3, [FC_, IW_], 0.0410, "Table 10, p. 14"], ["8x46WS", "8 × 36", 8, 18, false, 3, [FC_, IW_], 0.0373, "Table 10, p. 14"],
+  ["4x19S", "4 × 19 / 4 × 36", 4, 9, true, 4, [FC_], null, ""], ["4x31WS", "4 × 19 / 4 × 36", 4, 12, false, 4, [FC_, WS_], null, ""],
+  ["17x7", "18 × 7 / 18 × 19", 11, 6, false, 4, [FC_, WS_], 0.070, "Table 14, p. 18"], ["18x7", "18 × 7 / 18 × 19", 12, 6, false, 4, [FC_, WS_], 0.0632, "Table 14, p. 18"],
+  ["34(M)x7", "34(M) × 7", 17, 6, false, 4, [FC_, WS_], 0.0472, "Table 15, p. 19"], ["36(M)x7", "34(M) × 7", 18, 6, false, 4, [FC_, WS_], 0.045, "Table 15, p. 19"],
+  ["35(W)x7", "35(W) × 7", 16, 6, false, 4, [WS_], 0.0461, "Table 16, p. 20"], ["40(W)x7", "35(W) × 7", 18, 6, false, 4, [WS_], null, ""],
+  ["6xK7", "6 × K7", 6, 6, false, 3, [FC_], null, ""], ["6xK19S", "6 × K19 / 6 × K36", 6, 9, true, 3, [FC_, IW_], null, ""],
+  ["6xK26WS", "6 × K19 / 6 × K36", 6, 10, false, 3, [FC_, IW_], null, ""], ["6xK36WS", "6 × K19 / 6 × K36", 6, 14, false, 3, [FC_, IW_], null, ""],
+  ["8xK19S", "8 × K19 / 8 × K36", 8, 9, true, 3, [FC_, IW_], null, ""], ["8xK26WS", "8 × K19 / 8 × K36", 8, 10, false, 3, [FC_, IW_], null, ""],
+  ["8xK36WS", "8 × K19 / 8 × K36", 8, 14, false, 3, [FC_, IW_], null, ""],
+  ["35(W)xK7", "35(W) × K7", 16, 6, false, 4, [WS_], null, ""],
+];
+const CORE_OF = { [FC_]: "fibre core (FC)", [IW_]: "steel core (IWRC)", [WS_]: "wire strand core (WSC)" };
+// Annex H examples named exactly like a list entry (ISO 4309:2017 pp. 51–56, as in ANNEX_H below).
+const ANNEX_SAME = { "6x7-FC": "6x7-FC", "6x19S-IWRC": "6x19S-IWRC", "6x19M-WSC": "6x19M-WSC", "6x25F-IWRC": "6x25F-IWRC", "6x36WS-IWRC": "6x36WS-IWRC",
+  "6x41WS-IWRC": "6x41WS-IWRC", "6x37M-IWRC": "6x37M-IWRC", "8x19S-IWRC": "8x19S-IWRC", "8x25F-IWRC": "8x25F-IWRC", "6xK26WS-IWRC": "6xK26WS-IWRC",
+  "6xK36WS-IWRC": "6xK36WS-IWRC", "8xK26WS-IWRC": "8xK26WS-IWRC", "17x7-FC": "17x7-FC", "18x7-WSC": "18x7-WSC or 19x7", "35(W)x7-WSC": "34(W)x7-WSC or 35(W)x7" };
+export const CONSTRUCTIONS = CONSTR_BASE.flatMap(([name, cls, s, w, seale, type, cores, a, aSrc]) => cores.map((k) => {
+  const key = `${name}-${k}`;
+  return { key, name, cls, isoclass: classOfName(cls), outer: s, wires: w, seale, ropetype: type === 3 ? 0 : 1, core: CORE_OF[k], a, aSrc, annexh: ANNEX_SAME[key] || "" };
+}));
+export const CONSTR_OTHER = "Other – type it below";
+export const constructionByKey = (k) => CONSTRUCTIONS.find((x) => x.key === k) || null;
+// Free text (the certificate's words) -> list entry, or class + core only. "6x19" with no strand letter -> class 6 × 19
+// (Table D.5; owner's 1.7.0 block, item 7), with a note that a cross-lay 1-6/12 strand is class 6 × 19M.
+const norm = (t) => String(t ?? "").toLowerCase().replace(/×/g, "x").replace(/\s+/g, "").replace(/\+/g, "-");
+export function parseConstruction(text) {
+  const t = norm(text); if (!t) return null;
+  const core = /iwrc|ipc|steelcore/.test(t) ? CORE_OF[IW_] : /wsc|wirestrand/.test(t) ? CORE_OF[WS_] : /fc|fibre|fiber|sisal|pp/.test(t) ? CORE_OF[FC_] : "";
+  const tail = (r) => /^(-|iwrc|ipc|wsc|fc|steel|fibre|fiber|$)/.test(r);
+  const byName = [...CONSTR_BASE].sort((a, b) => b[0].length - a[0].length).find(([n]) => t.startsWith(norm(n)) && tail(t.slice(norm(n).length)));
+  if (byName) {
+    const kk = Object.keys(CORE_OF).find((x) => CORE_OF[x] === core);
+    const k = core ? kk : (byName[6].length === 1 ? byName[6][0] : null);
+    const e = k && byName[6].includes(k) ? constructionByKey(`${byName[0]}-${k}`) : null;
+    if (e) return { entry: e };
+    return { cls: byName[1], isoclass: classOfName(byName[1]), core, outer: byName[2], note: core ? `ISO 2408 gives ${byName[0]} no ${core} column.` : "" };
+  }
+  const m = t.match(/^(\d+)x(k?)(\d+)(m?)(.*)$/);
+  if (!m || !tail(m[5])) return core ? { core } : null;
+  const s = +m[1], cls = `${s} × ${m[2] ? "K" : ""}${m[3]}${m[4] ? "M" : ""}`;
+  const iso = ISO_CLASSES.find((x) => x.split(" (Table")[0].split(" / ").includes(cls)) || "";
+  return { cls, isoclass: iso, core, outer: s, note: cls === "6 × 19" ? "\"6x19\" with no strand letter: class 6 × 19 (Seale / Filler / Warrington, ISO 2408 Table D.5). A cross-lay 1-6/12 strand is class 6 × 19M – check the strand." : "" };
+}
+// 1.7.0 item 12: δmax estimated (nominal), based on construction - optional, never the default, never sets the LF limit.
+export const DMAX_EST_LABEL = "δmax estimated (nominal), based on construction";
+export function dmaxEstimate(entry, d) {
+  const D = pos(num(d));
+  if (!entry) return { why: "Pick the construction from the list (strand type needed): EN 12385-4 gives the outer wire factor per strand type." };
+  if (entry.a == null) return { why: `EN 12385-4:2002 gives no outer wire factor for ${entry.name}.` };
+  if (!D) return { why: "Needs the nominal diameter." };
+  const v = Math.round(entry.a * D * 100) / 100;
+  return { value: v, a: entry.a, text: `δa = a × d = ${entry.a} × ${D} = ${v.toFixed(2)} mm (EN 12385-4:2002 ${entry.aSrc}, ${entry.name}; EN 12385-2 3.10.27). Estimated – information only; it never sets the LF limit (PRO-AIC-0608 A3: δmax is never assumed from the construction for the limit).`,
+    src: `EN 12385-4:2002 ${entry.aSrc}; EN 12385-2:2002+A1:2008 3.10.26–3.10.27` };
+}
 
 // ISO 4309 Table 3 / Table 4 as copied in PRO-AIC-0608 §9.2.2 (p. 13). A ordinary / B Lang on sheaves or
 // single-layer drum; C multi-layer drum. M5-M8 doubling not applied (§9.2.2).
@@ -143,18 +265,34 @@ export const DMAX_SOURCES = ["measured on a wire taken from the rope", "certific
 export const LAYS = ["ordinary", "Lang", "not known"];
 export const RUNS = ["steel sheaves / single-layer drum", "multi-layer drum"];
 export const LMA_ROUTES = ["Route 1 – reference rope", "Route 2 – on the rope", "Route 3 – added wires"];
-export const LF_METHODS = ["base-trace configuration file loaded (repeat test)", "reference rope fault", "known break in the rope", "two added wires"];
+export const LF_METHODS = ["base-trace configuration file loaded (repeat test)", "reference rope fault", "known break in the rope", "two added wires",
+  "clean section – last resort (no reference rope, no known break, no calibration wires on site)"];
+export const LF_CLEAN = LF_METHODS[4];
+// Kuzo's own LF route ids (app/src/jobs/calroute.js LF_ROUTES; route 4 = ROUTE4_ID "clean_section", Kuzo 0.2.10).
+const KZ_LF_ROUTE = { [LF_METHODS[0]]: "base_trace", [LF_METHODS[1]]: "local_fault", [LF_METHODS[2]]: "broken_wire", [LF_METHODS[3]]: "two_wires", [LF_METHODS[4]]: "clean_section" };
+// PRO-AIC-0608 C5 as refiled 27-Nov-2026: the clean-section route (last resort).
+export const CLEAN_SRC = "PRO-AIC-0608 C5 (refiled 27-Nov-2026): clean section, last resort";
+export function cleanRule(h) {
+  if (!h) return "Choose the head.";
+  return h.lfRule === "BU-M" ? "BU-M: set the LF threshold at the clean-section reading." : `${h.lfRule === "MH 80-120" ? "MH 80-120" : "BU-16"}: set the LF threshold 1 to 2 mV below the clean-section reading.`;
+}
+export const CLEAN_TEXT = "Only where there is no reference rope, no known broken wire and no calibration wires on site. Run the head at least twice over a section checked to be sound and read the highest LF signal on it (mV). Every LF pulse above the threshold is checked on the trace of both passes and, where it can be reached, on the rope. No one-wire signal: each pulse counts as one wire, or the pulse divided by an estimated one-wire signal; the wire count is marked 'estimated'. This route alone does not make the result LIMITED.";
+// Breaking force (1.7.0 item 11): every figure labelled by its source; the engineer confirms which is used. Not mandatory.
+export const BF_CERT = "rope certificate", BF_MAKER = "maker's data / manual", BF_ISO = "calculated from ISO 2408";
+export const BF_SOURCES = [BF_CERT, BF_MAKER, BF_ISO];
 export const YESNO = ["yes", "no"];
 export const ACUMEN = "Acumen criterion, derived from ISO 4309 (R08)";
 
 // ---------------------------------------------------------------------------------------------
 // Record fields = CSV columns, in this order.
 // ---------------------------------------------------------------------------------------------
+// 1.7.0: "temp" and "lmaneg" are no longer asked (owner's 1.7.0 block, item 4) but stay in the record and the CSV, so
+// records from 1.0–1.6.1 lose nothing. New head fields (route 4) are added at the end.
 const HEAD_FIELDS = ["head", "head_sn", "bu_sn", "liner", "temp", "settled", "selftest", "counter",
   "route", "r1_id", "r1_zero", "r1_known", "r1_seg2", "r2_from", "r2_to", "r2_passes", "air", "air_auto", "r2_zero",
   "r3_n", "r3_dw", "r3_set", "r3_zero", "cal_time",
   "lfm", "lf_at", "lfwd", "lflen", "lfgap", "sig", "thr", "alarm", "speedcomp", "config", "scanstep",
-  "c6_done", "c6_zero", "c6_len", "c6_known", "lmaneg"];
+  "c6_done", "c6_zero", "c6_len", "c6_known", "lmaneg", "cs_from", "cs_to", "cs_mv", "sig_est"];
 export const HEAD_KEYS = HEAD_FIELDS;
 export const FIELDS = [
   "type", "ref", "jobno", "client", "position", "date", "engineer", "location", "length",
@@ -164,6 +302,9 @@ export const FIELDS = [
   ...HEAD_FIELDS.map((f) => "h1_" + f), "h2on", ...HEAD_FIELDS.map((f) => "h2_" + f),
   "datum", "A_from", "A_to", "A_w", "A_gap", "B_from", "B_to", "B_w", "B_gap", "C_from", "C_to", "C_w", "C_gap",
   "counted", "checked", "notes",
+  // 1.7.0 (added at the end): construction picked from the list, rope maker, maker's breaking force and where it came
+  // from, the breaking force used, the optional estimated δmax.
+  "ckey", "maker", "bf_maker", "bf_maker_ref", "bf_used", "dmax_est",
 ];
 export const SECTIONS = ["A", "B", "C"];
 // Automatic values the engineer may override (only with a reason; saved with the time).
@@ -257,6 +398,26 @@ export function bfCheck({ d, isoclass, core, bf, grade }) {
   return out;
 }
 
+// ISO 2408 Fmin for the class, core and grade on their own (1.7.0 item 11: figure (3), "calculated from ISO 2408").
+export function fminFor({ d, isoclass, core, grade }) {
+  const D = pos(num(d)), R = pos(num(grade));
+  const need = [D == null && "the nominal diameter", R == null && "the rope grade (N/mm²)", !isoclass && "the ISO 2408 class", !core && "the core"].filter(Boolean);
+  if (need.length) return { why: `Needs ${need.join(", ")}.` };
+  if (isoclass === ISO_NONE) return { why: "Class not in ISO 2408 Table C.1 / C.2: no K." };
+  const row = rowOf(isoclass); if (!row) return { why: "ISO 2408 class not chosen." };
+  if (D < 2 || D > 60) return { why: `d ${D} mm is outside 2–60 mm: ISO 2408 Annex C (C.1) does not cover it.` };
+  const k = kFactor(row, core, R); if (k.why) return { why: `${k.why}: no K.` };
+  const F = fminOf(D, R, k.K);
+  return { value: F, text: `Fmin = d² × Rr × K ÷ 1000 = ${D}² × ${R} × ${k.K.toFixed(3)} ÷ 1000 = ${r1(F, 1)} kN (Table ${row.table}, ${row.cls}, ${k.col}${k.note ? "; " + k.note : ""})`, src: BF_SRC };
+}
+// Every breaking-force figure with its source label; the one the engineer confirms (bf_used), or none.
+export function bfFigures(rec) {
+  const cert = pos(num(rec.bf)), maker = pos(num(rec.bf_maker)), iso = fminFor({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, grade: rec.grade });
+  const figs = [cert != null && { source: BF_CERT, kN: cert }, maker != null && { source: BF_MAKER, kN: maker, ref: String(rec.bf_maker_ref || "").trim() || null },
+    iso.value != null && { source: BF_ISO, kN: Math.round(iso.value * 10) / 10, working: iso.text }].filter(Boolean);
+  return { cert, maker, iso, figs, used: figs.find((f) => f.source === rec.bf_used) || null };
+}
+
 export function airFromT4(model, A) {
   const t = T4[model];
   if (!t || A == null) return null;
@@ -325,6 +486,8 @@ function lfLimit(rec, c) {
 // ---------------------------------------------------------------------------------------------
 // compute(rec): every automatic value, with its working and source.
 // ---------------------------------------------------------------------------------------------
+export const S_LABEL = "S - Intron density factor K (air value only)";
+export const aLabel = (src) => (src === A_ISO ? "A - ISO 2408 factor (broken-wire limits)" : src ? `A - ${src} (broken-wire limits)` : "A - metallic area (broken-wire limits)");
 export function compute(rec) {
   const g = (k) => pos(num(rec[k]));
   const dn = g("dnom");
@@ -347,11 +510,16 @@ export function compute(rec) {
     l6: dn ? 6 * dn / 1000 : null, l30: dn ? 30 * dn / 1000 : null };
   c.lf = lfLimit(rec, c);
   c.bf = bfCheck({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, bf: rec.bf, grade: rec.grade });
+  c.bfFig = bfFigures(rec);
+  c.entry = constructionByKey(rec.ckey);
+  c.dEst = rec.dmax_est === "yes" ? dmaxEstimate(c.entry, rec.dnom) : null;
   c.heads = activeHeads(rec).map((i) => {
     const h = headOf(rec[`h${i}_head`]);
     const out = { i, h };
     if (!h) return out;
     out.rule = lfRule(h);
+    out.liner = linerFor(h.model, D);
+    out.serials = HEAD_SERIALS[h.model] || [];
     out.sens = D ? h.sens(D) : null;
     out.hasTable = !!AIR[h.model];
     if (out.hasTable) {
@@ -361,7 +529,7 @@ export function compute(rec) {
       out.airWorking = Aair == null ? "A not known yet" : t && t.value != null
         ? `${h.model} table: ${A != null ? "A" : "A estimate (Intron k)"} = ${r1(Aair)} mm² is in ${t.from}–${t.to} mm² → ${t.value} %`
         : `A ${r1(Aair)} mm² is outside the ${h.model} table (${t.lo}–${t.hi} mm²) – ${OWN_MANUAL}`;
-    } else out.airWorking = `${h.model}: no air value table in sources/ – ${OWN_MANUAL}`;
+    } else out.airWorking = `${h.model}: ${OWN_MANUAL}`;
     out.air = ovr(rec, `air${i}`) ?? out.airAuto ?? null;
     const route3 = rec[`h${i}_route`] === LMA_ROUTES[2];
     if (route3) {
@@ -372,18 +540,19 @@ export function compute(rec) {
   });
   c.working = [
     ["Measured diameter (mean of the two readings)", D ? `${r1(D, 2)} mm` : "–", da && db ? `(${da} + ${db}) ÷ 2, two readings at 90° at the widest point${c.dcert ? `; certificate: ${c.dcert} mm` : ""}` : "", "PRO-AIC-0608 B2, C2; owner's ruling D2 (24-Nov-2026)"],
-    ["Metallic area A used", A != null ? `${r1(A)} mm²` : "not known", A != null ? `source: ${Asrc}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
-    ["Metallic area – Intron k estimate", S ? `${r1(S, 0)} mm² (estimate)` : "–", S ? `k × π × d² ÷ 4 = ${k} × π × ${dn}² ÷ 4 (k: ${rec.core}). Estimate – used only to choose the air value / route 3 S when A is not known; not reported and no limit is calculated from it` : "needs nominal d and core", "PRO-AIC-0608 A3; manual v1.3 2.4.2 (p. 27)"],
+    [aLabel(Asrc), A != null ? `${r1(A)} mm²` : "not known", A != null ? `source: ${Asrc}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
+    [S_LABEL, S ? `${r1(S, 0)} mm²` : "–", S ? `S = K × π × d² ÷ 4 = ${k} × π × ${dn}² ÷ 4 (K: ${rec.core}). Used only to choose the air value / route 3 S when A is not known; not reported and no limit is calculated from it` : "needs nominal d and core", "PRO-AIC-0608 A3; manual v1.3 2.4.2 (p. 27)"],
     ["One-wire area", wireArea ? `${r1(wireArea, 2)} mm²` : "–", wireArea ? `π × δmax² ÷ 4 = π × ${dmax}² ÷ 4` : "δmax not available", "PRO-AIC-0608 A3"],
     ["Single-wire share", c.share ? `${r1(c.share, 2)} % of A` : "–", c.share ? "(π × δmax² ÷ 4) ÷ A × 100, compared with the head's LF sensitivity" : "needs A and δmax", "PRO-AIC-0608 A3"],
     ["D ÷ δmax", dn && dmax ? r1(dn / dmax, 1) : "–", dn && dmax ? `${dn} ÷ ${dmax}` : "", "nominal d"],
     ["Load-bearing outer wires n", n ?? "–", n ? `${outer} strands × ${wires} wires, fillers excluded` : "", "PRO-AIC-0608 §9.2.2"],
-    ["6d / 30d", dn ? `${r1(c.l6, 3)} m / ${r1(c.l30, 2)} m` : "–", dn ? `6 × ${dn} mm and 30 × ${dn} mm, nominal d` : "", "ISO 4309 Table C.1; site sheet"],
+    ["6d", dn ? `${r1(c.l6, 3)} m${c.lf.ok ? ` – LF limit ${c.lf.l6} wires` : ""}` : "–", dn ? `6 × ${dn} mm, nominal d` : "", "ISO 4309 Table C.1; site sheet"],
+    ["30d", dn ? `${r1(c.l30, 2)} m${c.lf.ok ? ` – LF limit ${c.lf.l30} wires` : ""}` : "–", dn ? `30 × ${dn} mm, nominal d` : "", "ISO 4309 Table C.1; site sheet"],
     ["RCN", c.lf.rcn ?? (rcnFor(rec).ok ? rcnFor(rec).rcn ?? "> 300 wires" : "–"), rcnFor(rec).ok ? rcnFor(rec).how : rcnFor(rec).why, "ISO 4309 Annex H (pp. 51–56); PRO-AIC-0608 §9.2.2"],
     ["LF limit 6d / 30d", c.lf.ok ? `${c.lf.l6} / ${c.lf.l30} wires${c.lf.drum6 != null ? ` (multi-layer drum ${c.lf.drum6} / ${c.lf.drum30})` : ""}${ovr(rec, "lf6") != null || ovr(rec, "lf30") != null ? " (overridden)" : ""}` : "not calculated", c.lf.ok ? `${c.lf.route}. ${c.lf.working}` : c.lf.why, c.lf.src],
   ];
-  const note = String(rec.class_note ?? "").trim();
-  if (note) c.working.push(["Construction note", note, "reason, if the class differs from the certificate", "engineer"]);
+  if (c.dEst) c.working.push([DMAX_EST_LABEL, c.dEst.value != null ? `${c.dEst.value.toFixed(2)} mm (estimated)` : "not given", c.dEst.value != null ? c.dEst.text : c.dEst.why, c.dEst.src || "EN 12385-4:2002"]);
+  for (const f of c.bfFig.figs) c.working.push([`Breaking force – ${f.source}`, `${r1(f.kN, 1)} kN${c.bfFig.used === f ? " – used" : ""}`, f.working || f.ref || "", f.source === BF_ISO ? BF_SRC : f.source]);
   if (c.bf) c.working.push(["Breaking-force check (ISO 2408)", c.bf.ok ? `Fmin ${r1(c.bf.Fmin, 1)} kN – certificate ${r1(c.bf.bf, 1)} kN, ${aboveBelow(c.bf.pct)}` : "no check",
     c.bf.ok ? `${c.bf.full} Advice only – nothing is changed.` : c.bf.why, BF_SRC]);
   for (const hc of c.heads) if (hc.h) {
@@ -403,7 +572,12 @@ const HEAD_ZERO = { air: "Air value", lfwd: "Wire diameter", lflen: "Wire length
 const SCREEN_OF = { length: "job", A_gap: "sections", B_gap: "sections", C_gap: "sections" };
 const HSCREEN = { head: "c1", head_sn: "c1", bu_sn: "c1", liner: "c2", temp: "c2", settled: "c3", selftest: "c3", counter: "c3",
   route: "c4", r1_zero: "c4", r1_known: "c4", r1_seg2: "c4", r2_from: "c4", r2_to: "c4", r2_passes: "c4", air: "c4air", r2_zero: "c4air", r3_n: "c4", r3_dw: "c4", r3_set: "c4", r3_zero: "c4",
-  lfm: "c5", lfwd: "c5", lflen: "c5", lfgap: "c5", sig: "c5sig", thr: "c5thr", alarm: "c5thr", c6_zero: "c6", c6_len: "c6", c6_known: "c6", lmaneg: "c6", c6_done: "c6" };
+  lfm: "c5", lfwd: "c5", lflen: "c5", lfgap: "c5", sig: "c5sig", thr: "c5thr", alarm: "c5thr", c6_zero: "c6", c6_len: "c6", c6_known: "c6", lmaneg: "c6", c6_done: "c6",
+  cs_from: "c5", cs_to: "c5", cs_mv: "c5", sig_est: "c5" };
+// Filled-in fields (1.7.0 rule 1): field -> label and screen, for the "changed by the engineer" line.
+export const FILLED = { engineer: ["Engineer", "job"], construction: ["Construction", "rope"], annexh: ["ISO 4309 Annex H construction", "rope"], ropetype: ["Rope type", "rope"],
+  seale: ["Seale outer strands", "rope"], outer: ["Outer strands", "rope"], wires: ["Wires per outer strand", "rope"], core: ["Core", "rope"], isoclass: ["ISO 2408 class", "rope"],
+  head_sn: ["Head serial No.", "c1"], liner: ["Liner set", "c2"], lfwd: ["Added wire diameter (LF)", "c5"], r3_dw: ["Added wire diameter (LMA route 3)", "c4"] };
 
 export function checks(rec, c = compute(rec)) {
   const out = [];
@@ -437,14 +611,12 @@ export function checks(rec, c = compute(rec)) {
     const A2 = (lev, id, f, text, want, src) => add(lev, `${id}-${p}`, p + f, scr(f), `${name}: ${text}`, want, src);
     for (const [k, lab] of Object.entries(HEAD_ZERO)) if (isZero(p + k)) A2("red", "zero-" + k, k, `${lab}: 0 typed.`, "Leave the box blank if the value is not available – never type 0.", ZSRC);
     // C1 equipment status
-    if (h && !REGISTER_LOADED) A2("amber", "reg", "bu_sn", `verification status of head S/N ${raw(p + "head_sn") || "?"} and basic unit S/N ${raw(p + "bu_sn") || "?"} – ${REGISTER_TEXT}.`, "Both on the register and verified within the last 12 months.", "PRO-AIC-0608 C1, §5.4");
-    if (BU_NO_CERT.includes(raw(p + "bu_sn"))) A2("red", "bucert", "bu_sn", `basic unit S/N ${raw(p + "bu_sn")} has no verification certificate on file.`, "Basic unit verified within the last 12 months; otherwise not used.", "PRO-AIC-0608 C1, §5.4");
+    // 1.7.0: the register checks of 1.1–1.6 ("register not loaded", basic unit 505134 "no certificate ... otherwise not used")
+    // are removed - the basic unit is optional (owner's ruling 27-Nov-2026) and rule 2 (no "do not use until" wording).
     if (!h) continue;
     // C2 head range, liner, temperature
     if (c.D && (c.D < h.d[0] || c.D > h.d[1])) A2("red", "range", "head", `rope ${r1(c.D, 2)} mm (measured) is outside the head's range.`, `${h.model} takes ${h.d[0]}–${h.d[1]} mm including coating; choose a head that covers the rope: ${HEADS.filter((x) => c.D >= x.d[0] && c.D <= x.d[1]).map((x) => x.model).join(", ") || "none – rope not tested (C2, §1.5)"}.`, `${h.rangeSrc}; C2`);
-    if (raw(p + "liner")) A2("amber", "liner", "liner", `liner ${raw(p + "liner")} – ${REGISTER_TEXT}.`, `Liner range must cover ${c.D ? r1(c.D, 2) + " mm" : "the measured diameter"} (maker's liner table).`, "PRO-AIC-0608 C2 (AIC-0608-E §3)");
-    const t = num(rec[p + "temp"]);
-    if (t != null && (t < h.temp[0] || t > h.temp[1])) A2("red", "temp", "temp", `air temperature ${t} °C is outside the head's range.`, `${h.temp[0]} to +${h.temp[1]} °C; not tested until it is inside.`, `${S52}; C2`);
+    // 1.7.0: no ambient temperature box (owner's ruling 27-Nov-2026, PRO-AIC-0608 C2 / §8 step 5 amended at Rev 01) - no check.
     if (hc.sens != null && c.share != null && c.share < hc.sens) A2("amber", "share", "head", `single-wire share ${r1(c.share, 2)} % of A is below the head's LF sensitivity ${r1(hc.sens, 2)} % (${h.sensText}).`, "LF trace reported, LF not evaluated: LIMITED (R06) – use the head with the lowest LF sensitivity limit.", "PRO-AIC-0608 A3, C2");
     // C3
     if (rec[p + "settled"] === "no") A2("red", "settle", "settled", `instrument not settled ${h.settle} h as the manual states.`, "Not calibrated until the settling time is met.", `${S52}; C3`);
@@ -470,7 +642,7 @@ export function checks(rec, c = compute(rec)) {
     if (route === LMA_ROUTES[1]) {
       zchk("r2_zero", "zero check reads");
       const air = num(rec[p + "air"]);
-      if (!hc.hasTable) A2("amber", "airman", "air", `${OWN_MANUAL}.`, `No air value table for ${h.model} in sources/ – the app gives no figure.`, airSrc(h.model));
+      if (!hc.hasTable) A2("amber", "airman", "air", `${OWN_MANUAL}.`, `Take the air value for ${h.model} from its manual – the app gives no figure.`, airSrc(h.model));
       else if (hc.t4 && hc.t4.out) A2("amber", "airout", "air", `A ${r1(c.Aair)} mm² is outside the ${h.model} table (${hc.t4.lo}–${hc.t4.hi} mm²): ${OWN_MANUAL}.`, "The app gives no figure outside the table.", airSrc(h.model));
       else if (air != null && air !== 0 && rec[p + "air_auto"] !== "yes" && hc.air != null && air !== hc.air) A2("red", "air", "air", `air value entered ${air} %.`, `Must be ${hc.air} % – ${hc.airWorking}.`, airSrc(h.model));
     }
@@ -487,15 +659,19 @@ export function checks(rec, c = compute(rec)) {
       if (wd && gap && (gap < wd || gap > 3 * wd)) A2("red", "gap", "lfgap", `gap ${gap} mm between the added wires.`, `1 to 3 wire diameters: ${r1(wd, 2)}–${r1(3 * wd, 2)} mm.`, "PRO-AIC-0608 C5 (manual v1.3 2.4.2.9)");
       if (len && len < h.wireLen) A2("red", "wlen", "lflen", `added wires ${len} m long.`, `Each at least ${h.wireLen} m for ${h.model}.`, "PRO-AIC-0608 C5, §5.2");
     }
-    if ((c.dmax == null || c.A == null) && m && m !== LF_METHODS[3] && m !== LF_METHODS[0]) A2("amber", "lfadd", "lfm", "δmax or A not available.", "LF is calibrated with added wires of known diameter; record the wire diameter and the one-wire signal.", "PRO-AIC-0608 A3, §9.2.2");
+    if (m === LF_CLEAN) {
+      const a = num(rec[p + "cs_from"]), b = num(rec[p + "cs_to"]), mv = pos(num(rec[p + "cs_mv"])), est = pos(num(rec[p + "sig_est"]));
+      A2("amber", "lf-route4", "lfm", `LF calibrated by the clean-section route (last resort): section ${a ?? "?"} to ${b ?? "?"} m, highest LF reading ${mv ?? "?"} mV${est ? `, estimated one-wire signal ${est} mV` : ""}; the wire count is marked 'estimated'.`,
+        `${cleanRule(h)} Every LF pulse above the threshold checked on both passes. Only where there is no reference rope, no known break and no calibration wires on site.`, CLEAN_SRC);
+    }
+    if ((c.dmax == null || c.A == null) && m && m !== LF_METHODS[3] && m !== LF_METHODS[0] && m !== LF_CLEAN) A2("amber", "lfadd", "lfm", "δmax or A not available.", "LF is calibrated with added wires of known diameter; record the wire diameter and the one-wire signal.", "PRO-AIC-0608 A3, §9.2.2");
     // C6 closing check, E1
     if (rec[p + "c6_done"] === "no") A2("amber", "c6", "c6_done", "closing check not recorded yet.", "After the recording: zero 0 ± 0.5 %, recorded length within 1 % of a known length.", "PRO-AIC-0608 C6");
     const cz = num(rec[p + "c6_zero"]);
     if (cz != null && Math.abs(cz) > 0.5) A2("red", "c6zero", "c6_zero", `closing zero ${cz} %.`, "0 ± 0.5 % – find the cause; correct with the software shift and record it, or repeat the recording.", "PRO-AIC-0608 C6");
     const L = pos(num(rec[p + "c6_len"])), Lk = pos(num(rec[p + "c6_known"]));
     if (L && Lk && Math.abs(L - Lk) / Lk > 0.01) A2("red", "c6len", "c6_len", `recorded length ${L} m vs known ${Lk} m (${r1(Math.abs(L - Lk) / Lk * 100, 2)} %).`, "Within 1 % – otherwise positions are written as approximate.", "PRO-AIC-0608 C6");
-    const neg = num(rec[p + "lmaneg"]);
-    if (neg != null && neg < -1) A2("red", "lmaneg", "lmaneg", `negative LMA ${neg} %.`, "Not more than 1 % negative – find the cause (zero section not sound, steel nearby, magnetic mark); re-reference or repeat.", "PRO-AIC-0608 E1");
+    // 1.7.0: most negative LMA is no longer asked - Kuzo reads it from the trace (E1) - no check.
   }
   if (rec.type === "reference") {
     const L = pos(num(rec.length));
@@ -511,6 +687,12 @@ export function checks(rec, c = compute(rec)) {
     }
   }
   if (!c.lf.ok && rec.annexh) add("amber", "lf", null, "results", c.lf.why, "Enter A and δmax, or the construction / counts, lay and how the rope runs.", c.lf.src);
+  // 1.7.0 rule 1: a filled-in value the engineer changed is recorded (amber, with the time): CSV and Kuzo log.
+  for (const [f, ch] of Object.entries(rec.changes || {})) {
+    if (!ch) continue;
+    const base = f.replace(/^h\d_/, ""), lab = FILLED[base] || [f, "rope"], hi = f.match(/^h(\d)_/);
+    add("amber", "chg-" + f, f, hi ? `h${hi[1]}-${lab[1]}` : lab[1], `${hi ? `Head ${hi[1]}: ` : ""}${lab[0]} filled in as "${ch.from}" was changed to "${ch.to}" (${ch.time}).`, "Filled-in value replaced by the engineer – check it.", "Rope Record Checklist: filled-in values are editable; a change is recorded");
+  }
   for (const [k, o] of Object.entries(rec.ovr || {})) if (o && String(o.value ?? "").trim() !== "") add("amber", "ovr-" + k, null, "results", `${OVERRIDABLE[k.replace(/\d$/, "")] || k} overridden to ${o.value} (reason: ${o.reason}).`, "Automatic value replaced by the engineer.", "Rope Record: override with a reason, saved with the time");
   return out;
 }
@@ -524,7 +706,8 @@ export const unresolved = (list, rec) => list.filter((x) => x.level === "red" &&
 const CALC_COLS = ["D_measured_mm", "A_used_mm2", "A_source", "S_K_mm2", "wire_area_mm2", "single_wire_share_pct", "n_outer_wires", "RCN",
   "len_6d_m", "len_30d_m", "lf_route", "lf_6d", "lf_30d", "lf_drum_6d", "lf_drum_30d", "lf_working",
   "h1_air_to_type", "h2_air_to_type", "procedure_copy", "bf_Fmin_kN", "bf_check"];
-export const CSV_HEAD = ["record_id", "saved_at", "app_version", ...FIELDS, ...CALC_COLS, "problems_red", "problems_amber", "reasons_with_time", "overrides_with_time"];
+export const CSV_HEAD = ["record_id", "saved_at", "app_version", ...FIELDS, ...CALC_COLS, "problems_red", "problems_amber", "reasons_with_time", "overrides_with_time",
+  "filled_in_changes", "dmax_estimated_mm", "bf_figures"];
 const q = (x) => { const t = String(x ?? ""); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
 const fx = (x, d) => (x == null || !isFinite(x) ? "" : Number(x.toFixed(d)));
 export function csvLine(rec) {
@@ -541,6 +724,9 @@ export function csvLine(rec) {
     ch.filter((x) => x.level === "amber").map(fmt).join(" | "),
     ch.filter((x) => x.level === "red" && reasonOf(rec, x.id)).map((x) => `${x.text} REASON (${reasonOf(rec, x.id).time}): ${reasonOf(rec, x.id).text}`).join(" | "),
     Object.entries(rec.ovr || {}).filter(([, o]) => o && String(o.value ?? "").trim() !== "").map(([k, o]) => `${k} = ${o.value} (${o.time}): ${o.reason}`).join(" | "),
+    Object.entries(rec.changes || {}).filter(([, x]) => x).map(([k, x]) => `${k}: ${x.from} -> ${x.to} (${x.time})`).join(" | "),
+    c.dEst && c.dEst.value != null ? c.dEst.value : "",
+    c.bfFig.figs.map((f) => `${f.source} ${f.kN} kN${f.ref ? ` (${f.ref})` : ""}${c.bfFig.used === f ? " USED" : ""}`).join(" | "),
   ].map(q).join(",");
 }
 export const csvOf = (list) => "﻿" + [CSV_HEAD.map(q).join(","), ...list.map(csvLine)].join("\r\n") + "\r\n";
@@ -592,10 +778,11 @@ export function kuzoRecord(rec, appVersion) {
     const p = `h${i}_`, hc = c.heads.find((x) => x.i === i) || {}, route = rec[p + "route"];
     const lmaRoute = route === LMA_ROUTES[1] ? (rec[p + "air_auto"] === "yes" ? "auto" : "air") : KZ_ROUTE[route] || null;
     const zero = route === LMA_ROUTES[0] ? rec[p + "r1_zero"] : route === LMA_ROUTES[1] ? rec[p + "r2_zero"] : route === LMA_ROUTES[2] ? rec[p + "r3_zero"] : null;
-    const onRope = route === LMA_ROUTES[1] || route === LMA_ROUTES[2];
+    const onRope = route === LMA_ROUTES[1] || route === LMA_ROUTES[2], clean = rec[p + "lfm"] === LF_CLEAN;
     return {
-      head_model: String(rec[p + "head"] || ""), head_serial: String(rec[p + "head_sn"] || "").trim(), basic_unit_serial: String(rec[p + "bu_sn"] || "").trim(),
-      liner: KZ_TXT(rec[p + "liner"]), liner_proposed: null, scan_step_mm: KZ_NUM(rec[p + "scanstep"]),
+      // basic unit (1.7.0 item 5): the chosen unit's serial digits, "" when none is chosen (owner's ruling 27-Nov-2026)
+      head_model: String(rec[p + "head"] || ""), head_serial: String(rec[p + "head_sn"] || "").trim(), basic_unit_serial: buSerial(rec[p + "bu_sn"]),
+      liner: KZ_TXT(rec[p + "liner"]), liner_proposed: hc.liner && hc.liner.value ? hc.liner.value : null, scan_step_mm: KZ_NUM(rec[p + "scanstep"]),
       air_temperature_c: num(rec[p + "temp"]),
       sound_section_from_m: onRope ? num(rec[p + "r2_from"]) : null, sound_section_to_m: onRope ? num(rec[p + "r2_to"]) : null,
       air_value_proposed_pct: hc.airAuto ?? null,
@@ -605,7 +792,12 @@ export function kuzoRecord(rec, appVersion) {
       lf_calibrated_on: KZ_LF[rec[p + "lfm"]] || null,
       lf_wire_diameter_mm: rec[p + "lfm"] === LF_METHODS[3] ? KZ_NUM(rec[p + "lfwd"]) : null,
       lf_gap_mm: rec[p + "lfm"] === LF_METHODS[3] ? KZ_NUM(rec[p + "lfgap"]) : null,
-      one_wire_lf_mv: KZ_NUM(rec[p + "sig"]), lf_threshold_mv: KZ_NUM(rec[p + "thr"]), lf_alarm_mv: KZ_NUM(rec[p + "alarm"]),
+      one_wire_lf_mv: clean ? null : KZ_NUM(rec[p + "sig"]), lf_threshold_mv: KZ_NUM(rec[p + "thr"]), lf_alarm_mv: KZ_NUM(rec[p + "alarm"]),
+      // 1.7.0 (new keys, schema v1 unchanged in version: extra keys are ignored by Kuzo's validate()): the LF route as
+      // Kuzo's own id (calroute.js), and route 4's section, reading and estimated count - read by the next Kuzo version.
+      lf_calibration_route: KZ_LF_ROUTE[rec[p + "lfm"]] || null,
+      ...(clean ? { lf_clean_section_from_m: num(rec[p + "cs_from"]), lf_clean_section_to_m: num(rec[p + "cs_to"]), lf_clean_section_reading_mv: KZ_NUM(rec[p + "cs_mv"]),
+        one_wire_lf_estimated_mv: KZ_NUM(rec[p + "sig_est"]), lf_count_estimated: true } : {}),
     };
   });
   // Owner's rule 28 (26-Nov-2026), with Kuzo 0.2.10: the breaking-force ambers (bf-fits, bf-below) ARE exported in checks[] -
@@ -634,6 +826,13 @@ export function kuzoRecord(rec, appVersion) {
       dmax_mm: c.dmax ?? null, dmax_source: KZ_DMAX_SRC[rec.dmaxsrc] || "not available",
       // rule 28: the construction note - an optional key (schema v1 unchanged in version; older files have no such key)
       ...(String(rec.class_note ?? "").trim() ? { class_note: String(rec.class_note).trim() } : {}),
+      // 1.7.0 new keys (only when entered, so older files keep their shape): rope maker; every breaking-force figure with
+      // its source label and the one the engineer confirms (item 11); the estimated δmax, never used for the limit (item 12).
+      ...(KZ_TXT(rec.maker) ? { maker: KZ_TXT(rec.maker) } : {}),
+      ...(c.bfFig.figs.length ? { breaking_force_figures: c.bfFig.figs.map((f) => ({ source: f.source, kN: f.kN, ...(f.ref ? { reference: f.ref } : {}), ...(f.working ? { working: f.working } : {}) })),
+        breaking_force_kn: c.bfFig.used ? c.bfFig.used.kN : null, breaking_force_source: c.bfFig.used ? c.bfFig.used.source : null,
+        rope_grade_n_mm2: KZ_NUM(rec.grade) } : {}),
+      ...(c.dEst && c.dEst.value != null ? { dmax_estimated_mm: c.dEst.value, dmax_estimated_source: `${DMAX_EST_LABEL}: ${c.dEst.src} – estimated, never used for the LF limit` } : {}),
     },
     heads,
     reference_sections: isRef ? { datum: KZ_TXT(rec.datum), sections: SECTIONS.map((s) => ({ name: s, from_m: num(rec[s + "_from"]), to_m: num(rec[s + "_to"]), wires_cut: KZ_INT(rec[s + "_w"]), gap_mm: KZ_NUM(rec[s + "_gap"]) })).filter((x) => x.from_m != null || x.to_m != null || x.wires_cut != null || x.gap_mm != null) } : null,
@@ -675,7 +874,7 @@ export async function qrParts(text, size = 1000) {
 // CALCULATOR (1.4.0) - rope details in, LMA and LF set-up values out, each with its working and source.
 // No job, no record, nothing saved. Reuses compute() above; changes nothing in it.
 // =============================================================================================
-export const MH_PC = "MH-PC";                     // name only: no manual held (owner, 25-Nov-2026)
+export const MH_PC = "MH-PC";                     // name only (owner, 25-Nov-2026)
 export const CALC_HEADS = [...HEAD_CHOICES, MH_PC];
 export const CALC_A_SOURCES = ["rope certificate", "rope maker's own data", "calculated"];
 export const CALC_W_SOURCES = ["rope certificate", "rope maker's own data", "measured on a wire"];
@@ -685,9 +884,10 @@ export const LF_ROUTES = [
   "A real broken wire on the rope",
   "Acumen's recorded one-wire value for this head on a similar rope",
   "An indication found by running the head over the rope",
+  "Clean section – last resort (PRO-AIC-0608 C5, refiled 27-Nov-2026)",
 ];
 export const LF_SIM = "Simulated wire (two added wires, as the Intron manual describes) – ready for when the wires arrive";
-// Manuals held in sources/, cited by head and version.
+// Head manuals, cited by head and version.
 const M13 = "Intron MH 6-26 / 22-45 / 40-70 operating manual v1.3";
 const M64 = "Intron MH 40-64 operating manual v1.1";
 const V13_HEADS = ["MH 6-26", "MH 22-45", "MH 40-70"];
@@ -703,7 +903,7 @@ export const acumenOneWire = (head, d) => ACUMEN_ONE_WIRE.find((x) => x.head ===
 // LF threshold rule shown by the calculator. MH 40-64 from the held manual (owner, 25-Nov-2026); the others as the app holds them (LF_RULESET).
 export function calcLfRule(model) {
   if (!model) return null;
-  if (model === MH_PC) return { words: `${OWN_MANUAL}.`, src: "no MH-PC manual in sources/", own: true };
+  if (model === MH_PC) return { words: `${OWN_MANUAL}.`, src: "MH-PC manual", own: true };
   if (model === "MH 40-64") return {
     words: "LF threshold = the one-wire LF value minus 2 to 3. The manual does not state the unit for \"2-3\".",
     src: `${M64}, 2.5.1.7 item 5 (p. 19)`,
@@ -718,7 +918,7 @@ export function calcRoute(n, model, d, A) {
   if (n === 1) return { n, label: "route 1", title: LF_ROUTES[0], text: "Set the LF channel on the broken wire. Record the one-wire LF signal.", src: "PRO-AIC-0608 C5" };
   if (n === "sim") {
     const len = model === "MH 80-120" ? 0.6 : 0.3;
-    const src = manualRef(model, "2.4.2.9", 28, "2.5.2.9", 21) || (model === MH_PC ? OWN_MANUAL : "PRO-AIC-0608 C5 (head manual not in sources/)");
+    const src = manualRef(model, "2.4.2.9", 28, "2.5.2.9", 21) || (model === MH_PC ? OWN_MANUAL : "PRO-AIC-0608 C5");
     return { n, label: "simulated wire (separate option)", title: LF_SIM, src, len,
       text: `Two steel wires of known diameter, each at least ${len} m long, fixed along the rope axis one after the other, with a gap of 1 to 3 wire diameters, on a sound section. Set the LF channel on them as on a broken wire.`,
       note: "The engineers do not carry these wires yet." };
@@ -731,51 +931,129 @@ export function calcRoute(n, model, d, A) {
   }
   if (n === 3) return { n, label: "route 3", title: LF_ROUTES[2], warn: true, src: "Acumen practice – not a PRO-AIC-0608 C5 method",
     text: "This value is NOT tied to a known broken wire. A single broken wire may not be detected." };
+  if (n === 4) return { n, label: "route 4", title: LF_ROUTES[3], src: CLEAN_SRC, text: CLEAN_TEXT, rule: cleanRule(h) };
   return null;
 }
 
-// inp: { d, cls, core, head, asrc, a, wsrc, w, route, airIn, zero, addW, note, bf, grade }
+// =============================================================================================
+// 1.7.0 "only what is mandated, each fact asked once" (owner's block, 27-Nov-2026)
+// =============================================================================================
+// Filled in from an earlier answer (rule 1): field -> { value, src }. Still editable; a change is recorded (app.js).
+export function autoValues(rec) {
+  const out = {}, put = (f, v, src) => { if (v != null && String(v) !== "") out[f] = { value: String(v), src }; };
+  const fromEntry = (e) => {
+    const S = `construction list: ${e.name} (ISO 2408 class ${e.cls}, Table D)`;
+    put("construction", e.key, S); put("core", e.core, S); put("isoclass", e.isoclass, S);
+    put("annexh", e.annexh || ANNEX_OTHER, e.annexh ? "ISO 4309 Annex H (pp. 51–56)" : S);
+    put("outer", e.outer, S); put("wires", e.wires, S);
+    if (!e.annexh) { put("ropetype", ROPE_TYPES[e.ropetype], S); if (e.ropetype === 0) put("seale", e.seale ? "yes" : "no", S); }
+  };
+  const e = constructionByKey(rec.ckey);
+  if (e) fromEntry(e);
+  else {
+    const pc = parseConstruction(rec.construction);
+    if (pc && pc.entry) { const x = pc.entry, S = `construction "${String(rec.construction).trim()}" read as ${x.name}`; put("core", x.core, S); put("isoclass", x.isoclass, S); put("annexh", x.annexh || ANNEX_OTHER, S); put("outer", x.outer, S); put("wires", x.wires, S);
+      if (!x.annexh) { put("ropetype", ROPE_TYPES[x.ropetype], S); if (x.ropetype === 0) put("seale", x.seale ? "yes" : "no", S); } }
+    else if (pc) {
+      const S = `construction "${String(rec.construction).trim()}"`; put("core", pc.core, S); put("isoclass", pc.isoclass, S); put("outer", pc.outer, S);
+      const types = [...new Set(CONSTR_BASE.filter((x) => x[1] === pc.cls).map((x) => x[5]))];   // the class's rope type (ISO 2408 Table C.1 / C.2 grouping)
+      if (types.length === 1) put("ropetype", ROPE_TYPES[types[0] === 3 ? 0 : 1], `ISO 2408 class ${pc.cls}`);
+    }
+  }
+  const c = compute(rec);
+  for (const hc of c.heads) {
+    if (!hc.h) continue;
+    const p = `h${hc.i}_`;
+    if (hc.serials.length === 1) put(p + "head_sn", hc.serials[0], REGISTER_SRC);
+    if (hc.liner && hc.liner.value) put(p + "liner", hc.liner.value, hc.liner.src);
+    if (c.dmax) { put(p + "lfwd", c.dmax, "δmax (same wire size) – change it if the wires differ"); put(p + "r3_dw", c.dmax, "δmax (same wire size) – change it if the wires differ"); }
+  }
+  return out;
+}
+
+// Maker's figures held offline (item 13): makers.json, loaded by the page; a suggestion only.
+let MAKERS = { entries: [] };
+export const setMakers = (m) => { MAKERS = m && Array.isArray(m.entries) ? m : { entries: [] }; };
+export const makersData = () => MAKERS;
+export const makerNames = () => [...new Set(MAKERS.entries.map((e) => e.maker))];
+const family = (t) => { const m = norm(t).match(/^(\d+x\d+)/); return m ? m[1] : ""; };
+export function makerMatches({ maker, d, construction, isoclass, core }) {
+  const M = String(maker || "").trim().toLowerCase(), D = pos(num(d)), fam = family(construction);
+  if (!M || !D) return [];
+  return MAKERS.entries.filter((e) => e.maker.toLowerCase() === M && e.d === D && (!core || !e.core || e.core === core)
+    && (e.class ? e.class === isoclass : !!fam && family(e.construction) === fam));
+}
+// "Search the maker's site": a plain link that opens the phone's browser; the app reads nothing from it.
+export const makerSearchUrl = ({ maker, construction, d }) => "https://www.google.com/search?q=" + encodeURIComponent([maker, construction, d ? `${d} mm` : "", "wire rope minimum breaking force"].filter((x) => String(x || "").trim()).join(" "));
+
+// Calculator answers -> a new record (item 3: one flow; the calculator's answers start the record).
+const CALC_A_MAP = { calculated: A_ISO, [CALC_A_SOURCES[0]]: A_CERT, [CALC_A_SOURCES[1]]: A_MAKER };
+const CALC_W_MAP = { "rope certificate": DMAX_SOURCES[1], "rope maker's own data": DMAX_SOURCES[1], "measured on a wire": DMAX_SOURCES[0] };
+export function recordFromCalc(inp, type = "site") {
+  const r = { type, reasons: {}, ovr: {}, reach: 0, auto: {}, changes: {} };
+  const set = (k, v) => { if (v != null && String(v).trim() !== "") r[k] = String(v).trim(); };
+  set("dnom", inp.d); set("ckey", inp.ckey); set("construction", inp.construction); set("isoclass", inp.cls); set("core", inp.core); set("maker", inp.maker);
+  set("asrc", CALC_A_MAP[inp.asrc]); if (A_TYPED.includes(r.asrc)) set("a", inp.a);
+  if (inp.wsrc) { set("dmaxsrc", CALC_W_MAP[inp.wsrc]); set("dmax", inp.w); }
+  if (inp.dmaxEst === "yes") r.dmax_est = "yes";
+  set("bf", inp.bf); set("bf_maker", inp.bfMaker); set("bf_maker_ref", inp.bfMakerRef); set("grade", inp.grade); set("bf_used", inp.bfUsed);
+  if (headOf(inp.head)) r.h1_head = inp.head;
+  if (num(inp.airIn) != null) { r.h1_route = LMA_ROUTES[1]; set("h1_air", inp.airIn); set("h1_r2_zero", inp.zero); }
+  const rt = inp.route === "sim" ? "sim" : Number(inp.route) || 0;
+  if (rt === 1) r.h1_lfm = LF_METHODS[2];
+  if (rt === "sim") { r.h1_lfm = LF_METHODS[3]; set("h1_lfwd", inp.addW); }
+  if (rt === 4) { r.h1_lfm = LF_CLEAN; set("h1_cs_from", inp.csFrom); set("h1_cs_to", inp.csTo); set("h1_cs_mv", inp.csMv); set("h1_sig_est", inp.sigEst); }
+  return r;
+}
+
+// inp: { d, ckey, construction, cls, core, maker, head, asrc, a, wsrc, w, dmaxEst, bf, bfMaker, bfMakerRef, grade, bfUsed,
+//        route, airIn, zero, addW, csFrom, csTo, csMv, sigEst }
 export function calculator(inp) {
   const d = pos(num(inp.d)), head = inp.head || "", h = headOf(head);
   const warn = [];
   const W = (level, text, src) => warn.push({ level, text, src });
   const asrc = inp.asrc || "";
-  const rec = { dnom: inp.d, isoclass: inp.cls, core: inp.core, h1_head: h ? head : "", dmaxsrc: "",
+  const rec = { dnom: inp.d, ckey: inp.ckey, construction: inp.construction, isoclass: inp.cls, core: inp.core, h1_head: h ? head : "", dmaxsrc: "",
     asrc: asrc === "calculated" ? A_ISO : asrc === CALC_A_SOURCES[0] ? A_CERT : asrc === CALC_A_SOURCES[1] ? A_MAKER : "",
-    a: inp.a, dmax: inp.wsrc ? inp.w : "", bf: inp.bf, grade: inp.grade };
+    a: inp.a, dmax: inp.wsrc ? inp.w : "", dmax_est: inp.dmaxEst, bf: inp.bf, bf_maker: inp.bfMaker, bf_maker_ref: inp.bfMakerRef, grade: inp.grade, bf_used: inp.bfUsed };
   const c = compute(rec);
   const out = { d, head, warn };
 
-  // 1. Metallic area A
-  if (!asrc) out.A = { value: null, text: "Choose where A comes from: certificate, rope maker's own data, or calculated." };
+  // Construction (item 7): from the list, or the certificate's words read as a class
+  out.entry = c.entry;
+  out.parsed = c.entry ? null : parseConstruction(inp.construction);
+
+  // 1. Two area boxes, each labelled by its source (item 8)
+  if (!asrc) out.A = { value: null, label: aLabel(""), text: "Choose where A comes from: certificate, rope maker's own data, or calculated." };
   else if (asrc === "calculated") {
     out.A = c.iso.ok
-      ? { value: c.A, text: `A = C × d² = ${c.iso.C.toFixed(3)} × ${d}² = ${r1(c.A)} mm² (Table ${c.iso.row.table}, ${c.iso.row.cls}, ${c.iso.col})`, src: ISO_SRC }
-      : { value: null, text: `A cannot be calculated: ${c.iso.why}. Take A from the certificate or the rope maker.`, src: ISO_SRC };
+      ? { value: c.A, label: aLabel(A_ISO), text: `A = C × d² = ${c.iso.C.toFixed(3)} × ${d}² = ${r1(c.A)} mm² (Table ${c.iso.row.table}, ${c.iso.row.cls}, ${c.iso.col})`, src: ISO_SRC }
+      : { value: null, label: aLabel(A_ISO), text: `A cannot be calculated: ${c.iso.why}. Take A from the certificate or the rope maker.`, src: ISO_SRC };
     if (c.iso.ok && inp.core === CORES[2] && c.iso.row.cls === "6 × 7") W("amber", "6 × 7 with wire strand core: EN 12385-4:2002 Table B.1 gives C3 = 0.432, ISO 2408 gives 0.441. Take A from the certificate or the rope maker where possible.", "EN 12385-4:2002 Table B.1 (p. 23); ISO 2408:2017 Table C.1 (p. 18)");
     if (c.iso.ok && inp.core === CORES[2] && c.iso.row.cls === "8 × 7") W("red", "8 × 7 with wire strand core: the standards disagree – EN 12385-4:2002 Table 6 gives C3 = 0.379, ISO 2408 gives 0.520. The calculated area is NOT reliable. Use the certificate or the rope maker.", "EN 12385-4:2002 Table 6 (p. 10); ISO 2408:2017 Table C.1 (p. 18)");
   } else {
-    out.A = c.A != null ? { value: c.A, text: `A = ${r1(c.A)} mm², as given`, src: asrc } : { value: null, text: `Type A from the ${asrc}.` };
+    out.A = c.A != null ? { value: c.A, label: aLabel(asrc), text: `A = ${r1(c.A)} mm², as given`, src: asrc } : { value: null, label: aLabel(asrc), text: `Type A from the ${asrc}.` };
     if (c.A != null && d && c.A >= PI * d * d / 4) W("red", `A ${r1(c.A)} mm² is not less than the circle area π × d² ÷ 4 = ${r1(PI * d * d / 4)} mm² – the circle area is never A.`, "PRO-AIC-0608 A3, §9.2.1");
   }
   const A = out.A.value;
+  const K3 = "PRO-AIC-0608 A3 (p. 8): rope density factor K, S = K × π × d² ÷ 4 – air value only";
+  out.S = c.S ? { value: c.S, label: S_LABEL, text: `S = K × π × d² ÷ 4 = ${c.k} × π × ${d}² ÷ 4 = ${r1(c.S, 0)} mm² (K for ${inp.core}). ${A == null ? "Used for the air value, because A is not known." : "Not used: A is known."} Never reported; no limit is calculated from it.`, src: K3 }
+    : { value: null, label: S_LABEL, text: "Needs the nominal diameter and the core.", src: K3 };
 
   // head range (nominal diameter)
   if (h && d && (d < h.d[0] || d > h.d[1])) W("red", `${d} mm is outside the ${head} range ${h.d[0]}–${h.d[1]} mm.`, `${h.rangeSrc}; C2`);
-  if (head === MH_PC) W("amber", `MH-PC: ${OWN_MANUAL} – no rope range, air value or LF rule held.`, "no MH-PC manual in sources/");
+  if (head === MH_PC) W("amber", `MH-PC: rope range, air value and LF rule from the MH-PC manual – ${OWN_MANUAL}.`, "MH-PC manual");
 
   // 2. Air value and zero
   const tbl = h && AIR[head];
   const airSrcC = manualRef(head, "Table 4", 27, "Table 4", 21);
   if (!head) out.air = { value: null, text: "Choose the head." };
-  else if (!tbl) out.air = { value: null, own: true, text: `${head}: ${OWN_MANUAL}.`, src: `no air value table in sources/ for ${head}` };
+  else if (!tbl) out.air = { value: null, own: true, text: `${head}: ${OWN_MANUAL}.`, src: `air value from the ${head} manual` };
   else if (A == null) {
-    // A not known: PRO-AIC-0608 A3 allows S = K × π × d² ÷ 4 to choose the air value only (not reported, no limit from it).
-    const K3 = "PRO-AIC-0608 A3 (p. 8): rope density factor K, S = K × π × d² ÷ 4 – air value only";
     if (!c.S) out.air = { value: null, text: "A not known. An estimate from K needs the nominal diameter and the core.", src: K3 };
     else {
       const t = airFromT4(head, c.S);
-      const base = `A not known. S = K × π × d² ÷ 4 = ${c.k} × π × ${d}² ÷ 4 = ${r1(c.S, 0)} mm² (K for ${inp.core})`;
+      const base = `A not known. S = ${r1(c.S, 0)} mm² (box S)`;
       if (t.value == null) out.air = { value: null, own: true, estimate: true, S: c.S, text: `${base}; outside the ${head} table (${t.lo}–${t.hi} mm²): ${OWN_MANUAL}.`, src: `${K3}; ${airSrcC}` };
       else {
         const rows = AIR[head].rows, i = rows.findIndex((x) => x[0] === t.from && x[1] === t.to), nx = rows[i + 1] || null;
@@ -785,8 +1063,7 @@ export function calculator(inp) {
       }
       W("amber", `Air value: estimate - air value only, not reported (A not known; S from the density factor K). Confirm the zero on the rope before relying on this value.`, K3);
     }
-  }
-  else {
+  } else {
     const t = airFromT4(head, A);
     out.air = t.value != null
       ? { value: t.value, text: `A ${r1(A)} mm² is in ${t.from}–${t.to} mm² → ${t.value} %`, src: `${airSrcC}; ${T4_SRC}` }
@@ -796,27 +1073,34 @@ export function calculator(inp) {
   if (airIn != null && out.air.value != null && airIn !== out.air.value && !(out.air.next && airIn === out.air.next.value)) W("amber", `Air value entered ${airIn} % – the table gives ${out.air.value} %. Correct it, or go on with this warning.`, out.air.src);
   if (zero != null && Math.abs(zero) > 0.5) W("amber", `Zero reading ${zero} % is outside 0 ± 0.5 %. Repeat the calibration; still outside → head withdrawn.`, "PRO-AIC-0608 C4");
 
-  // 3. One outer wire as % of A (no estimate of the outer wire, ever - owner, 25-Nov-2026)
+  // 3. One outer wire as % of A - documented δ only (the estimate never feeds it)
   const w = inp.wsrc ? pos(num(inp.w)) : null;
-  if (!w) out.wire = { value: null, text: pos(num(inp.w)) && !inp.wsrc ? "Choose where the outer wire diameter comes from." : "No outer wire diameter available: one outer wire as a percentage of A cannot be given." };
+  if (!w) out.wire = { value: null, text: pos(num(inp.w)) && !inp.wsrc ? "Choose where the outer wire diameter comes from." : "No documented outer wire diameter: one outer wire as a percentage of A cannot be given." };
   else if (A == null) out.wire = { value: null, text: "One outer wire as a percentage of A needs A." };
   else out.wire = { value: c.share, area: c.wireArea, text: `π × ${w}² ÷ 4 = ${r1(c.wireArea, 2)} mm²; ÷ ${r1(A)} × 100 = ${r1(c.share, 2)} % of A`, src: `outer wire δ: ${inp.wsrc}; PRO-AIC-0608 A3` };
+  // δmax estimated (nominal), based on construction - optional (item 12)
+  out.dEst = inp.dmaxEst === "yes" ? dmaxEstimate(c.entry || (out.parsed && out.parsed.entry) || null, inp.d) : null;
 
   // 4. LF threshold rule; 5. LF route
   out.lfRule = calcLfRule(head);
   const rn = inp.route === "sim" ? "sim" : Number(inp.route) || 0;
   out.route = rn ? calcRoute(rn, head, d, A) : null;
   if (out.route && rn === "sim") { const dw = pos(num(inp.addW)); if (dw) { out.route.gap = [dw, 3 * dw]; if (A != null) out.route.share = PI * dw * dw / 4 / A * 100; } }
+  if (out.route && rn === 4) {
+    const mv = pos(num(inp.csMv));
+    if (mv && h) out.route.thr = h.lfRule === "BU-M" ? `LF threshold ${r1(mv, 1)} mV (= the reading)` : `LF threshold ${r1(Math.max(0, mv - 2), 1)} to ${r1(Math.max(0, mv - 1), 1)} mV (1 to 2 mV below the reading)`;
+  }
   if (rn === 3) W("red", "LF set from an indication found by running the head: not tied to a known broken wire – a single broken wire may not be detected.", out.route.src);
 
-  // 6. 6d / 30d and broken-wire limits (existing calculation, unchanged)
-  out.len = d ? { l6: c.l6, l30: c.l30, text: `6 × ${d} mm = ${r1(c.l6, 3)} m; 30 × ${d} mm = ${r1(c.l30, 2)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
+  // 6. 6d and 30d, each in its own box (item 9)
+  out.len6 = d ? { l: c.l6, lf: c.lf.ok ? c.lf.l6 : null, text: `6 × ${d} mm = ${r1(c.l6, 3)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
+  out.len30 = d ? { l: c.l30, lf: c.lf.ok ? c.lf.l30 : null, text: `30 × ${d} mm = ${r1(c.l30, 2)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
   out.lf = c.lf.ok ? { l6: c.lf.l6, l30: c.lf.l30, text: `${c.lf.route}. ${c.lf.working}`, src: c.lf.src }
-    : { l6: null, text: "Broken-wire limits not calculated here: they need A and the outer wire diameter (the calculator does not ask for the ISO 4309 Annex H construction and lay)." };
+    : { l6: null, text: "Broken-wire limits need A and a documented outer wire diameter here; otherwise the record gives the ISO 4309 Table 3 / 4 limit by RCN (construction and lay)." };
 
-  // 7. Breaking-force check (1.5.0) - advice only; construction note shown with it
-  out.bf = c.bf;
+  // 7. Breaking force - every figure with its source; the engineer confirms the one used (item 11). Advice only.
+  out.bf = c.bf; out.bfFig = c.bfFig;
   if (c.bf && c.bf.amber) W("amber", `${c.bf.amber.text} Advice only – nothing is changed.`, BF_SRC);
-  out.note = String(inp.note ?? "").trim();
+  out.makers = makerMatches({ maker: inp.maker, d: inp.d, construction: inp.construction || (c.entry && c.entry.key), isoclass: inp.cls, core: inp.core });
   return out;
 }
