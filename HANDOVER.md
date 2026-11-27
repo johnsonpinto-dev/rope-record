@@ -111,7 +111,7 @@ Kuzo changes in the version after 0.2.13). Full findings, screenshots and the bo
   the rope certificate, with the source named, on screen and in the .kuzo.json. SC-45 certificate (Hylift K16S 19 mm,
   361.9 kN) differs from the catalogue's Hylift 16 (353.2 kN). Findings §8.
 - C6 recorded / known length removed (owner 27-Nov-2026): the recorded length is the odometer's (scan), the actual length is
-  the client's rope length on the Job screen; the 1 % check becomes Kuzo's (Kuzo change 3). C6 = done? + closing zero.
+  the Job screen's "Installed rope length (when known)" (not mandatory; shown read-only on C6); the 1 % check becomes Kuzo's (Kuzo change 3). C6 = done? + closing zero.
 - iPhone home-screen name: stays "Rope Record" until the icon is added again – share all records BEFORE removing the old
   icon (steps in the findings §5).
 
