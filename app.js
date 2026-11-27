@@ -134,8 +134,8 @@ const SCREENS = (r) => [
       F("isoclass", "ISO 2408 class (for the C and K factors)", "select", { opts: [...K.ISO_CLASS_OPTS, K.ISO_NONE], req: () => rec.asrc === K.A_ISO,
         hint: "needed when A is calculated, and for the ISO 2408 breaking force" }),
       F("maker", "Rope maker", "text", { hint: "optional – site sheet \"Rope maker\"" }),
-      F("bf", "Breaking force – rope certificate", "num", { unit: "kN", hint: "optional – every figure is labelled by its source", group: "Breaking force (optional)" }),
-      F("bf_maker", "Breaking force – maker's data / manual", "num", { unit: "kN", hint: () => rec.bf_maker_ref ? `from ${rec.bf_maker_ref}` : "", group: "Breaking force (optional)" }),
+      F("bf", "Breaking force – rope certificate", "num", { unit: "kN", hint: "optional – every figure is labelled by its source", group: "Breaking force (optional)", tag: () => (K.num(rec.bf) ? K.bfNoIsoNote(rec) : "") }),
+      F("bf_maker", "Breaking force – maker's data / manual", "num", { unit: "kN", hint: () => rec.bf_maker_ref ? `from ${rec.bf_maker_ref}` : "", group: "Breaking force (optional)", tag: () => (K.num(rec.bf_maker) ? K.bfNoIsoNote(rec) : "") }),
       F("grade", "Rope grade", "num", { unit: "N/mm²", hint: "for the ISO 2408 figure, e.g. 1960, 2160", group: "Breaking force (optional)" }),
       F("bf_used", "Figure used (engineer confirms)", "radio", { opts: () => K.bfFigures(rec).figs.map((f) => f.source), labels: () => K.bfFigures(rec).figs.map((f) => `${f.estimated ? K.ESTIMATED + " – " : ""}${f.source} – ${K.r1(f.kN, 1)} kN`),
         show: () => K.bfFigures(rec).figs.length > 0, group: "Breaking force (optional)" }),
@@ -178,11 +178,12 @@ function input(f) {
   const v = rec[f.id] ?? "";
   const unit = f.unit ? `<span class="unit">${esc(f.unit)}</span>` : "";
   const ht = typeof f.hint === "function" ? f.hint() : f.hint;
-  const hint = ht ? `<small>${esc(ht)}</small>` : "";
+  const tg = typeof f.tag === "function" ? f.tag() : f.tag;   // 1.8.1: an information tag shown beside the box (never red)
+  const hint = (ht ? `<small>${esc(ht)}</small>` : "") + (tg ? `<p class="infotag">ℹ ${esc(tg)}</p>` : "");
   const star = required(f) ? ' <i class="req">required</i>' : "";
   const filled = rec.auto && rec.auto[f.id] != null && String(rec[f.id] ?? "") === rec.auto[f.id] ? ' <i class="filled">filled in</i>' : rec.changes && rec.changes[f.id] ? ' <i class="filled chg">changed – recorded</i>' : "";
   const opts = typeof f.opts === "function" ? f.opts() : f.opts, labels = typeof f.labels === "function" ? f.labels() : f.labels;
-  if (f.kind === "radio") return `<fieldset class="radio fw" data-f="${f.id}"><legend>${esc(f.label)}${star}${filled}</legend>${ht ? hint : ""}${opts.map((o, k) =>
+  if (f.kind === "radio") return `<fieldset class="radio fw" data-f="${f.id}"><legend>${esc(f.label)}${star}${filled}</legend>${hint}${opts.map((o, k) =>
     `<label class="opt"><input type="radio" name="${f.id}" value="${esc(o)}" ${v === o ? "checked" : ""}><span>${esc(labels ? labels[k] : o)}</span></label>`).join("")}</fieldset>`;
   const lab = `<span class="lab">${esc(f.label)}${star}${filled}</span>${hint}`;
   const ov = (o) => (typeof o === "object" ? o.value : o), ol = (o) => (typeof o === "object" ? o.label : o);
@@ -203,7 +204,7 @@ function pairHTML(c) {
 
 function resultsHTML(c) {
   const ovBtn = { "LF limit 6d / 30d": "lf" };
-  return pairHTML(c) + `<table class="work">${c.working.map(([a, b, w, src]) => `<tr><th>${esc(a)}</th><td><b>${esc(b)}</b>${w ? `<small>${esc(w)}</small>` : ""}<i class="src">${esc(src)}</i>
+  return pairHTML(c) + (c.bfNote ? `<p class="infotag">ℹ ${esc(c.bfNote)}</p>` : "") + `<table class="work">${c.working.map(([a, b, w, src]) => `<tr><th>${esc(a)}</th><td><b>${esc(b)}</b>${w ? `<small>${esc(w)}</small>` : ""}<i class="src">${esc(src)}</i>
     ${ovBtn[a] === "lf" && c.lf.ok ? `<button type="button" class="ovr" data-ovr="lf6">Change 6d</button> <button type="button" class="ovr" data-ovr="lf30">Change 30d</button>` : ""}</td></tr>`).join("")}</table>`;
 }
 
@@ -370,7 +371,7 @@ $("#fields").addEventListener("input", (e) => { const t = e.target; if (t.matche
 $("#fields").addEventListener("focusout", (e) => { const t = e.target; if (t.matches("input:not([type=radio]), textarea") && t.id) { if (t.id === "dnom") { const f = screens[cur].fields.find((x) => x.id === "asrc"), el = document.querySelector('[data-f="asrc"]'); if (f && el) el.outerHTML = input(f); } liveCheck(t.id); } });
 // a typed box changes what is filled in (construction text -> class / core; caliper readings -> liner): redraw when the
 // engineer leaves the box for something outside the form, keeping the other boxes as typed
-$("#fields").addEventListener("change", (e) => { const t = e.target; if (t.matches("input[type=text]") && ["construction", "da", "db", "dmax", "dnom"].includes(t.id))
+$("#fields").addEventListener("change", (e) => { const t = e.target; if (t.matches("input[type=text]") && ["construction", "da", "db", "dmax", "dnom", "bf", "bf_maker"].includes(t.id))
   setTimeout(() => { const y = scrollY, a = document.activeElement, id = a && a.id; draw(); scrollTo(0, y); const f = id && document.getElementById(id); if (f) f.focus(); }, 0); });
 $("#fields").addEventListener("change", (e) => {
   const t = e.target;

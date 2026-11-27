@@ -187,3 +187,5 @@ b.thr { display: block; font-size: 20px; color: var(--navy); margin: 4px 0 8px; 
 .pair small, .pair .cnote, .pair .src { font-size: 12.5px; }
 .calc.amberbox { background: var(--warnbg); border-left-color: #e0a000; }
 .calc.amberbox b { color: var(--warn); }
+/* 1.8.1: information tag (e.g. breaking force on a rope not made to ISO 2408) - not a warning */
+.infotag { margin: 6px 0; padding: 6px 10px; background: #e6eefb; color: var(--navy); border-left: 4px solid var(--navy); border-radius: 6px; font-size: 14px; font-weight: 600; }

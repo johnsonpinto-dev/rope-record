@@ -119,6 +119,7 @@ function results(r) {
   const bfBox = res(7, "Breaking force – by source", ff.used ? `${K.r1(ff.used.kN, 1)} kN – ${ff.used.estimated ? K.ESTIMATED + " – " : ""}${ff.used.source}` : "",
     `${bfLines || "Enter the certificate or maker's figure, and the grade for the ISO 2408 figure."}${!ff.iso.value && (ff.cert || ff.maker || num0(inp.grade)) ? ` ISO 2408: ${ff.iso.why}` : ""}${bf && bf.ok ? ` Check: ${bf.amber ? "⚠ " + bf.amber.text + " " : ""}${bf.full}` : bf && !bf.ok && ff.cert ? ` ${bf.why}` : ""} Advice only – nothing is changed by the app.`,
     K.BF_SRC, bf && bf.amber ? "bfamber" : ff.figs.length ? "" : "none");
+  const bfBoxN = r.bfNote ? bfBox.replace("</h3>", `</h3><p class="infotag">ℹ ${esc(r.bfNote)}</p>`) : bfBox;   // 1.8.1: beside the figures
   const dEst = r.dEst ? res("3b", K.DMAX_EST_LABEL, r.dEst.value != null ? `${r.dEst.value.toFixed(2)} mm – estimated` : "", r.dEst.value != null ? r.dEst.text : r.dEst.why, r.dEst.src || "", "estbox") : "";
   const len = (n, title, x) => res(n, title, x ? `${K.r1(x.l, n === "6a" ? 3 : 2)} m` : "", x ? x.text : "Needs the nominal diameter.", x && x.src);
   const m = r.mrt, v = r.vis;
@@ -137,7 +138,7 @@ function results(r) {
     route,
     len("6a", "6d", r.len6), len("6b", "30d", r.len30),
     `<div class="pair">${boxA}${boxB}</div>`,
-    bfBox,
+    bfBoxN,
   ].join("");
 }
 const num0 = (v) => K.num(v);

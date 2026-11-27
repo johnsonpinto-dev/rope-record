@@ -5,7 +5,7 @@ Facts only. Owner's notes: vault note "Rope Record app (24-Nov-2026)" and MRTrev
 ## Where things are
 - Repo on the Mac: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/rope-record` (git remote `origin` = github.com/johnsonpinto-dev/rope-record, branch `main`).
 - Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – 1.8.0 published 27-Nov-2026 on the owner's word, 30ccec4. 1.8.1 (27-Nov-2026 night) built and committed locally, NOT pushed – publish only on the owner's word.
-- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 1290116 (.kuzo.json export + QR) · 1.4.0 bdaa67e set-up calculator (25-Nov-2026) · 1.5.0 breaking-force check + construction note (26-Nov-2026; published on the owner's word – hash in the git log and the vault note) · 1.6.0 4966d0e advisory lines into the .kuzo.json (26-Nov-2026, with Kuzo 0.2.10) · 1.6.1 iPhone update fix (27-Nov-2026, published with 1.7.0) · 1.7.0 470c320 Rope Record Checklist (27-Nov-2026, published on the owner's word) · 1.8.0 RCN / visible breaks / made to / d_ref – published 27-Nov-2026 on the owner's word, 30ccec4 (its commit message says "NOT pushed, NOT published": written before the owner's word; the history is not rewritten) · 1.8.1 nominal-diameter amber back (27-Nov-2026 night, not published – hash in the git log).
+- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 1290116 (.kuzo.json export + QR) · 1.4.0 bdaa67e set-up calculator (25-Nov-2026) · 1.5.0 breaking-force check + construction note (26-Nov-2026; published on the owner's word – hash in the git log and the vault note) · 1.6.0 4966d0e advisory lines into the .kuzo.json (26-Nov-2026, with Kuzo 0.2.10) · 1.6.1 iPhone update fix (27-Nov-2026, published with 1.7.0) · 1.7.0 470c320 Rope Record Checklist (27-Nov-2026, published on the owner's word) · 1.8.0 RCN / visible breaks / made to / d_ref – published 27-Nov-2026 on the owner's word, 30ccec4 (its commit message says "NOT pushed, NOT published": written before the owner's word; the history is not rewritten) · 1.8.1 nominal-diameter amber back + breaking-force note on a non-ISO-2408 rope (27-Nov-2026 night, not published – hash in the git log).
 - Not published (gitignored): `dev/` (tests `dev/calc.test.mjs`, `dev/export.test.mjs`, `dev/calculator.test.mjs`; test records `dev/examples.mjs`; real-Chrome checks `dev/cdp-check.mjs`, `dev/qr-screen-check.mjs` + `dev/png2rgba.py`; local server `dev/serve.mjs`; icon pages) and `sources/`.
 - `vendor/qrcode.js` = qrcode-generator 1.4.4 (Kazuhiko Arase, MIT licence, header kept), from the npm registry 24-Nov-2026.
 - Local preview: MRTreview/.claude/launch.json entry "rope-record" (node dev/serve.mjs, port 8770).
@@ -51,7 +51,7 @@ Folder base: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/MRTre
   1.7.0 block fills the head serial from it. The 1.1–1.6 register checks ("not loaded", 505134 red) are removed (rule 2).
 
 ## Tests
-- 1.8.1: `node dev/1.8.1.test.mjs` (43 checks: nominal amber exactly as 1.7.0 when there is no base; none when d_ref / certificate entered).
+- 1.8.1: `node dev/1.8.1.test.mjs` (60 checks: nominal amber exactly as 1.7.0 when there is no base; none when d_ref / certificate entered; breaking-force note on a non-ISO-2408 rope, ISO 2408 rope unchanged).
 - 1.8.0: `node dev/1.8.0.test.mjs` (115 checks; expected figures typed from the BS ISO 4309:2017 page images); `node dev/screens-1.8.0.mjs . <out>` (real Chrome 390 x 844, 11 checks, wording check). Findings: `dev/1.8.0-findings.md`.
 - 1.7.0: `node dev/1.7.0.test.mjs` (110 checks: items 3–15, rule 2, check (b) through `dev/kuzo-copy/` – Kuzo's siterecord.js,
   calroute.js and schema copied out of MRTreview at f8f01b9 – and check (e)); `node dev/screens-1.7.0.mjs <1.6.1 tree> . <out>`
@@ -80,7 +80,12 @@ Owner's brief: the job-record form is too heavy; the calculator takes the rope d
 Owner's ruling 27-Nov-2026 (night, voice). No d_ref AND no certificate (as-made) diameter: the 1.7.0 amber against the nominal is back,
 word for word (5 % above – any core but fibre – / 10 % fibre core; any value below the nominal), base labelled "nominal diameter (no d_ref
 or certificate diameter)"; Rope data screen, results row, CSV. Amber only. With d_ref or the certificate diameter: 1.8.0 unchanged.
-No new .kuzo.json keys. Tests: `node dev/1.8.1.test.mjs` (43 checks, compared with 1.7.0's own checks()); screenshots `dev/screens-1.8.1/`.
+Addition, same build (owner's ruling 27-Nov-2026, night; findings 1.8.0 §4 item 3): 1.8.0 kept – a rope made to EN 12385-4 / JIS /
+API 9A / other gets no ISO 2408 Fmin check and no ISO 2408 breaking-force figure. A breaking force entered for such a rope (certificate
+or maker) is shown with its source and an information tag beside it: "Rope made to <standard> – not an ISO 2408 rope; no ISO 2408
+minimum applied." (calculator box 7, Rope data screen beside the figure, results screen, CSV column `bf_standard_note` – 191 columns).
+Not red, never blocks Save. ISO 2408 / not stated: unchanged.
+No new .kuzo.json keys. Tests: `node dev/1.8.1.test.mjs` (60 checks, compared with 1.7.0's own code); screenshots `dev/screens-1.8.1/` (17 checks).
 `dev/export.test.mjs` expectation updated: Kuzo 0.2.14 (MRTreview 41974a2) reads 1.7.0's lf_calibration_route, so the 48 mm
 reference-rope record now ticks LF "local_fault" in Kuzo's fill plan (was null before 0.2.14). Rope Record code unchanged by that.
 

@@ -261,6 +261,9 @@ export const ROPE_TYPES = ["single-layer / parallel-closed (Table 3)", "rotation
 export const MADE_TO = ["ISO 2408", "EN 12385-4", "JIS", "API 9A", "other", "not stated"];
 export const isoAllowed = (m) => !m || m === MADE_TO[0] || m === MADE_TO[5];   // blank (records before 1.8.0) = not stated
 export const RULING_D1 = "owner's ruling D1 (27-Nov-2026); PRO-AIC-0608 §1.3";
+// 1.8.1 addition (owner's ruling 27-Nov-2026, night, findings 1.8.0 §4 item 3): a breaking force entered for a rope not made to
+// ISO 2408 is shown with its source and this note beside it. Information only - not red, never blocks Save.
+export const bfNoIsoNote = (rec) => (!isoAllowed(rec.madeto) && bfFigures(rec).figs.length ? `Rope made to ${rec.madeto} – not an ISO 2408 rope; no ISO 2408 minimum applied.` : "");
 export const noIsoWhy = (m) => `rope made to ${m}: no ISO 2408 factor on a rope not made to ISO 2408 – A not known, broken wires judged on Table 3 / 4 by RCN`;
 // Two boxes side by side, never merged (item 2).
 export const MRT_LABEL = "(a) MRT – ISO 4309 Table C.1 from A and δmax";
@@ -624,6 +627,7 @@ export function compute(rec) {
   c.dia = diameterChange(rec, c);
   c.bf = isoOk ? bfCheck({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, bf: rec.bf, grade: rec.grade }) : null;
   c.bfFig = bfFigures(rec);
+  c.bfNote = bfNoIsoNote(rec);
   c.entry = constructionByKey(rec.ckey);
   c.dEst = rec.dmax_est === "yes" ? dmaxEstimate(c.entry, rec.dnom) : null;
   c.heads = activeHeads(rec).map((i) => {
@@ -671,6 +675,7 @@ export function compute(rec) {
     [c.dia.text, c.dia.nomText].filter(Boolean).join(" · "), c.dia.src]);
   if (c.dEst) c.working.push([DMAX_EST_LABEL, c.dEst.value != null ? `${c.dEst.value.toFixed(2)} mm (estimated)` : "not given", c.dEst.value != null ? c.dEst.text : c.dEst.why, c.dEst.src || "EN 12385-4:2002"]);
   for (const f of c.bfFig.figs) c.working.push([`Breaking force – ${f.source}`, `${r1(f.kN, 1)} kN${f.estimated ? " – " + ESTIMATED : ""}${c.bfFig.used === f ? " – used" : ""}`, f.working || f.ref || "", f.source === BF_ISO ? BF_SRC : f.source]);
+  if (c.bfNote) c.working.push(["Breaking force – rope standard", c.bfNote, "No ISO 2408 Fmin check and no ISO 2408 breaking-force figure; each figure above is shown with its source. Information only.", "owner's ruling 27-Nov-2026 (1.8.1); " + RULING_D1]);
   if (c.bf) c.working.push(["Breaking-force check (ISO 2408)", c.bf.ok ? `Fmin ${r1(c.bf.Fmin, 1)} kN – certificate ${r1(c.bf.bf, 1)} kN, ${aboveBelow(c.bf.pct)}` : "no check",
     c.bf.ok ? `${c.bf.full} Advice only – nothing is changed.` : c.bf.why, BF_SRC]);
   for (const hc of c.heads) if (hc.h) {
@@ -832,7 +837,9 @@ export const CSV_HEAD = ["record_id", "saved_at", "app_version", ...FIELDS, ...C
   "filled_in_changes", "dmax_estimated_mm", "bf_figures",
   // 1.8.0 item 2 / 4: the two boxes side by side, never merged; the diameter change against d_ref (or as-made).
   "a_mrt_tableC1_6d", "a_mrt_tableC1_30d", "a_mrt_working", "b_visible_table", "b_visible_RCN", "b_visible_sheave_6d_30d", "b_visible_multilayer_6d_30d", "b_visible_working",
-  "diameter_base", "diameter_base_mm", "diameter_change_pct", "diameter_change_working"];
+  "diameter_base", "diameter_base_mm", "diameter_change_pct", "diameter_change_working",
+  // 1.8.1: the note beside a breaking force on a rope not made to ISO 2408
+  "bf_standard_note"];
 const q = (x) => { const t = String(x ?? ""); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
 const fx = (x, d) => (x == null || !isFinite(x) ? "" : Number(x.toFixed(d)));
 export function csvLine(rec) {
@@ -857,6 +864,7 @@ export function csvLine(rec) {
     c.vis.ok ? `${c.vis.drum.l6} / ${c.vis.drum.l30}` : "", c.vis.ok ? c.vis.working : c.vis.why,
     c.dia && c.dia.base ? c.dia.base.label : "", c.dia && c.dia.base ? c.dia.base.v : "", c.dia && c.dia.pct != null ? fx(c.dia.kind === "decrease" ? -c.dia.pct : c.dia.pct, 2) : "",
     c.dia ? [c.dia.text, c.dia.nomText].filter(Boolean).join(" · ") : "",
+    c.bfNote,
   ].map(q).join(",");
 }
 export const csvOf = (list) => "﻿" + [CSV_HEAD.map(q).join(","), ...list.map(csvLine)].join("\r\n") + "\r\n";
@@ -1239,7 +1247,7 @@ export function calculator(inp) {
   out.lfFrom = c.mrt.ok ? "a" : c.vis.ok ? "b" : "";
 
   // 7. Breaking force - every figure with its source; the engineer confirms the one used (item 11). Advice only.
-  out.bf = c.bf; out.bfFig = c.bfFig;
+  out.bf = c.bf; out.bfFig = c.bfFig; out.bfNote = c.bfNote;
   if (c.bf && c.bf.amber) W("amber", `${c.bf.amber.text} Advice only – nothing is changed.`, BF_SRC);
   out.makers = makerMatches({ maker: inp.maker, d: inp.d, construction: inp.construction || (c.entry && c.entry.key), isoclass: inp.cls, core: inp.core });
   return out;
