@@ -6,6 +6,9 @@ working shown and mistakes stopped before the record is saved. **Site checklist 
 
 Open: https://johnsonpinto-dev.github.io/rope-record/
 
+**1.8.1 (published 28-Nov-2026):** with no d_ref and no certificate diameter, the diameter is checked against the nominal
+(amber, as 1.7.0); a breaking force on a rope not made to ISO 2408 carries the note "not an ISO 2408 rope; no ISO 2408 minimum applied".
+
 **1.8.0 (published 27-Nov-2026):** RCN in the calculator as in the record; two boxes side by side – (a) MRT, ISO 4309
 Table C.1 from A and δmax, and (b) visible broken wires, Table 3 / 4 by RCN (sheaves / single-layer drum and multi-layer drum
 cross-over zones); "Rope made to" – never an ISO 2408 factor on a rope not made to ISO 2408; optional reference diameter d_ref
