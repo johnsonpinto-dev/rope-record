@@ -4,11 +4,24 @@ Facts only. Owner's notes: vault note "Rope Record app (24-Nov-2026)" and MRTrev
 
 ## Where things are
 - Repo on the Mac: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/rope-record` (git remote `origin` = github.com/johnsonpinto-dev/rope-record, branch `main`).
-- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – see version.js (1.5.0 from 26-Nov-2026).
-- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 1290116 (.kuzo.json export + QR) · 1.4.0 bdaa67e set-up calculator (25-Nov-2026) · 1.5.0 breaking-force check + construction note (26-Nov-2026; published on the owner's word – hash in the git log and the vault note) · 1.6.0 advisory lines into the .kuzo.json (26-Nov-2026, with Kuzo 0.2.10).
+- Live (GitHub Pages): https://johnsonpinto-dev.github.io/rope-record/ – 1.6.0 (26-Nov-2026). 1.6.1 (27-Nov-2026) built and committed, NOT pushed – waits for the owner's word.
+- Versions: 1.0.0 cdabb4c · 1.0.1 12c53de · 1.1.0 ab65485 · 1.2.0 230cded · 1.3.0 1290116 (.kuzo.json export + QR) · 1.4.0 bdaa67e set-up calculator (25-Nov-2026) · 1.5.0 breaking-force check + construction note (26-Nov-2026; published on the owner's word – hash in the git log and the vault note) · 1.6.0 4966d0e advisory lines into the .kuzo.json (26-Nov-2026, with Kuzo 0.2.10) · 1.6.1 iPhone update fix (27-Nov-2026, not published – hash in the git log).
 - Not published (gitignored): `dev/` (tests `dev/calc.test.mjs`, `dev/export.test.mjs`, `dev/calculator.test.mjs`; test records `dev/examples.mjs`; real-Chrome checks `dev/cdp-check.mjs`, `dev/qr-screen-check.mjs` + `dev/png2rgba.py`; local server `dev/serve.mjs`; icon pages) and `sources/`.
 - `vendor/qrcode.js` = qrcode-generator 1.4.4 (Kazuhiko Arase, MIT licence, header kept), from the npm registry 24-Nov-2026.
 - Local preview: MRTreview/.claude/launch.json entry "rope-record" (node dev/serve.mjs, port 8770).
+
+## Release rule (owner, 27-Nov-2026)
+- **Every release changes the version in BOTH `version.js` (`RR_VERSION`) and `sw.js` (`SW_VERSION`)**, equal to each other.
+  `node dev/sw.test.mjs` fails if they differ, and checks that sw.js differs from the published one (origin/main).
+  Reason: iOS Safari updates the service worker only when the bytes of sw.js itself change; a change to the imported
+  version.js alone left Johnson's iPhone on 1.5.0 after 1.6.0 was published (found 27-Nov-2026).
+- Checking a phone's version: read the footer at the bottom of the app ("Rope Record version x.y.z · date"). It shows the
+  copy the phone is actually running. **Do NOT use `.../rope-record/version.js?v=…`** – the 25/26-Nov check was wrong:
+  the phone's own service worker answers that address from its cache (sw.js `caches.match(…, { ignoreSearch: true })`), so it
+  cannot tell a stuck phone from the site. To check the SITE, fetch version.js from a Mac (curl), not from the phone.
+- After publishing: engineers open Rope Record from the home-screen icon while online, wait 15 s, close it and open it again;
+  the footer then shows the new version. **Never tell anyone to clear site data unless their records are shared first** –
+  records live only in the phone's localStorage.
 
 ## sources/ (on the Mac only, not in git)
 SHA-256 of each file: `sources/SHA256.txt`.
@@ -37,6 +50,8 @@ Folder base: `/Volumes/mm4 samsung 4tb/johnsonmini/Downloads/developer MRT/MRTre
 ## Tests
 - `node dev/calc.test.mjs` – rules and checks, all pass at 1.3.0.
 - `node dev/bf.test.mjs` – 1.5.0 breaking-force check and construction note (see 1.5.0 below).
+- `node dev/sw.test.mjs` – release rule: SW_VERSION in sw.js = version.js (see 1.6.1 below).
+- `node dev/sw-update-check.mjs <old tree> <new tree> <outdir>` – real Chrome: an older release updates to the new one by itself, records unchanged (see 1.6.1 below).
 - `node dev/export.test.mjs` – .kuzo.json and QR against Kuzo's own code (MRTreview, read only): schema validation with Kuzo's `validate()`, structure against Kuzo's sample `AIC-RR-48-01_2026-11-23_1030.kuzo.json` (every key present, same values), Kuzo's `crossCheck()` / `targets()` fill plan, QR round trip (qrcode-generator → jsQR → Kuzo `QrCollector` → CRC → inflate → valid), damaged code refused, missing part named. All pass at 1.3.0. 24-Nov-2026: D3 lines updated for Kuzo K1 / K2 (7d8fd12) - route 1 and route 3 exports now valid in Kuzo, Kuzo ticks the route from the file, a route 2 air-value record without an air value is refused; all pass (test file is in dev/, not published).
 - `node dev/qr-screen-check.mjs <url> <outdir>` – real Chrome at Android size: the QR screen photographed code by code, pictures read by jsQR, joined by Kuzo's `QrCollector`, record valid. Passed at 1.3.0.
 - `node dev/cdp-check.mjs <url> <outdir>` – headless Chrome at Android size: service worker, installability, airplane mode, full 22 mm record saved with both files. Passed at 1.3.0.
@@ -52,6 +67,30 @@ Owner's brief: the job-record form is too heavy; the calculator takes the rope d
 - NO outer wire estimate (owner's decision, 25-Nov-2026): tested on the reference ropes it overstated the one-wire share by 16 % on the 48 mm rope – the unsafe direction. Not built.
 - 24 mm reference rope: outer wires per strand not known – the owner will have them counted. Nothing assumed.
 - Tests: `node dev/calculator.test.mjs` – worked example 48 mm 6 × 36 IWRC, MH 40-64, A calculated, δ 2.7 mm measured on a wire (24-Nov record AIC-RR-48-01): A 0.460 × 48² = 1059.8 mm², air 84 % (820–1300), one wire 5.73 mm² = 0.54 % of A, 6d / 30d 0.288 / 1.44 m, 11 / 19 wires; plus A sources, > 60 mm, EN warnings, no-δ, MH-PC, head range, routes 1–3 and the simulated wire; A not known on a 72 mm rope (fibre core S 2036 mm² → 113 %, next band 120 %; steel core S 2646 mm² → 120 %, no next band; no one-wire %, no limits; 72 mm is outside every head with an air table, so the range warning shows too). All pass; `calc.test.mjs` and `export.test.mjs` still pass.
+
+## 1.6.1 iPhone update fix (27-Nov-2026) – BUILT AND COMMITTED, NOT PUSHED
+Owner's "yes" 27-Nov-2026; publish only on the owner's word.
+- Cause: sw.js never changed between versions (the version lived only in `importScripts("./version.js")`), and iOS Safari
+  does not treat a changed imported script as an update – the old service worker kept serving its 1.5.0 cache. Johnson
+  cleared Safari's site data on his own phone on 27-Nov and now has 1.6.0.
+- Fix: `sw.js` carries `const SW_VERSION = "1.6.1";` at the top, equal to version.js, so its bytes change every release.
+  Everything else in sw.js is as it was (cache name `rope-record-<version.js version>`, install / activate / fetch).
+  `version.js` → 1.6.1, 27-Nov-2026 (and its first-line comment no longer says it is the only place the version lives).
+  No other app change. Records (localStorage) are not touched by a service-worker update.
+- Tests: `node dev/sw.test.mjs` (SW_VERSION = version.js; sw.js differs from the published 1.6.0; a mismatched copy fails it);
+  calc, calculator, export, bf all pass.
+- Real Chrome: `node dev/sw-update-check.mjs <1.6.0 tree> . dev/screens-1.6.1` (old tree from `git archive 4966d0e`; one
+  address serves 1.6.0, then 1.6.1, with Pages' max-age=600). Holding 1.6.0 with two seeded test records and a draft → open
+  online, wait 15 s, close, reopen → footer 1.6.1; localStorage byte for byte unchanged; airplane mode opens 1.6.1 with the
+  records; only the rope-record-1.6.1 cache left; no console errors. All pass.
+  Seen: 15 s after the first open the new worker is active and its cache holds the 1.6.1 files, but that cache can still be
+  NAMED rope-record-1.6.0 – the new worker's importScripts("./version.js") can come from the browser's HTTP cache (Pages
+  max-age=600). Chrome renames it at the next open. Files and footer are right either way. Option for the owner (not built –
+  the brief said keep the cache name as is): `const CACHE = "rope-record-" + SW_VERSION;` – same name, taken from sw.js's own
+  text, so it can never be stale.
+- NOT tested on an iPhone (no Safari automation, no iOS Simulator on the Mac): Chrome updates on an imported-script change
+  anyway, so the Chrome check proves the update path and that records survive; that sw.js now differs between releases
+  (the iOS trigger) is proven by dev/sw.test.mjs.
 
 ## 1.6.0 advisory lines into the .kuzo.json (26-Nov-2026) – PUBLISHED with Kuzo 0.2.10 on "first"
 Owner's rule 28, built together with Kuzo 0.2.10 and published on the owner's word together with it (26-Nov-2026).

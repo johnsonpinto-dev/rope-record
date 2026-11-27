@@ -65,9 +65,16 @@ Follows **PRO-AIC-0608 as filed** and fills in what it can, so the engineer ente
 ## Files
 
 `index.html`, `styles.css`, `calculator.js` (set-up calculator, opens first), `app.js` (full site record), `calc.js` (rules with their sources, calculations and checks), `version.js` (version and
-date, shown in the app and naming the offline cache), `sw.js` (offline cache), `manifest.webmanifest`, `icons/`.
+date, shown in the app and naming the offline cache), `sw.js` (offline cache; carries the same version as `SW_VERSION`), `manifest.webmanifest`, `icons/`.
 
-To publish a new version: change `version.js`, then push. Phones pick it up the next time the app opens with signal.
+To publish a new version: change the version in **both** `version.js` and `sw.js` (`SW_VERSION`, the same number), then push.
+iPhones update the app only when `sw.js` itself changes, so a release that changes `version.js` alone is not picked up on an
+iPhone (found 27-Nov-2026).
+
+After a release: open Rope Record from the home-screen icon while online, wait 15 seconds, close it and open it again. The
+version at the bottom of the app (the footer) shows the copy the phone is running – check that, not `version.js?v=…` in the
+browser, which the phone answers from its own saved copy. Never clear the browser's site data for the app unless the
+phone's records have been shared first: the records live only on the phone.
 
 Every figure was checked against its source page: ISO 4309 Tables 3 / 4 as copied in PRO-AIC-0608 §9.2.2; Annex H
 examples (ISO 4309 pp. 51–56); ISO 2408 Tables C.1 / C.2 (p. 18); Intron manual v1.3 Table 4 (p. 27). The procedure

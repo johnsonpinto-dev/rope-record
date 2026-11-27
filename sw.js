@@ -1,5 +1,9 @@
 // Offline: every app file is cached on install, and the app is served from the cache, so it opens
 // and saves with no signal. A new version (version.js) makes a new cache and drops the old one.
+// SW_VERSION: the release version, kept equal to version.js (dev/sw.test.mjs fails if they differ). It is here so that the
+// bytes of sw.js change with every release: iOS Safari updates a service worker only when sw.js itself changes, not when
+// only an imported script (version.js) changes (found 27-Nov-2026). Every release changes the version in BOTH files.
+const SW_VERSION = "1.6.1";
 importScripts("./version.js");
 const CACHE = "rope-record-" + self.RR_VERSION.version;
 const FILES = ["./", "./index.html", "./styles.css", "./version.js", "./calc.js", "./app.js", "./calculator.js", "./manifest.webmanifest",

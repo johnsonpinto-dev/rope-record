@@ -1,2 +1,2 @@
-// The one place the version lives: shown at the bottom of the app and names the offline cache (sw.js).
-self.RR_VERSION = { version: "1.6.0", date: "26-Nov-2026" };
+// The release version: shown at the bottom of the app and names the offline cache (sw.js). Kept equal to SW_VERSION in sw.js.
+self.RR_VERSION = { version: "1.6.1", date: "27-Nov-2026" };
