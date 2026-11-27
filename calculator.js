@@ -2,18 +2,21 @@
 // 1.7.0 (owner's block 27-Nov-2026): one flow - the calculator's answers start the record ("Start the record" buttons);
 // construction list + free text; the class, core and construction details filled from it; two area boxes labelled by
 // source; 6d and 30d each in its own box; LF route 4 (clean section); breaking force labelled by source; optional
-// estimated δmax; maker's figures held offline (makers.json) with "Use these figures" / "Not this rope".
+// estimated δmax; maker's figures kept offline (makers.json) with "Use these figures" / "Not this rope".
+// 1.8.0 (owner's block 27-Nov-2026): RCN as in the full record (Annex H, or "Other - use the counts"); the rope's standard
+// ("made to"); boxes (a) MRT Table C.1 and (b) visible broken wires Table 3 / 4 side by side, never merged.
 import * as K from "./calc.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const inp = { d: "", ckey: "", construction: "", cls: "", core: "", maker: "", head: "", asrc: "", a: "", wsrc: "", w: "", dmaxEst: "",
-  aRef: "", bf: "", bfMaker: "", bfMakerRef: "", grade: "", bfUsed: "", route: "", airIn: "", zero: "", addW: "", csFrom: "", csTo: "", csMv: "", sigEst: "" };
+  aRef: "", bf: "", bfMaker: "", bfMakerRef: "", grade: "", bfUsed: "", route: "", airIn: "", zero: "", addW: "", csFrom: "", csTo: "", csMv: "", sigEst: "",
+  madeto: "", annexh: "", ropetype: "", outer: "", wires: "", seale: "", lay: "" };
 const auto = {};          // values filled in from the construction (rule 1): kept while the engineer has not changed them
 let notThis = "";          // "Not this rope": the maker card stays closed for this maker / d / construction
 
 const num = (id, label, unit, hint = "") => `<label class="f"><span class="lab">${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ""}
-  <span class="in"><input id="c_${id}" data-k="${id}" type="text" inputmode="decimal" autocomplete="off" value="${esc(inp[id])}"><span class="unit">${esc(unit)}</span></span></label>`;
+  <span class="in"><input id="c_${id}" data-k="${id}" type="text" inputmode="decimal" autocomplete="off" value="${esc(inp[id])}">${unit ? `<span class="unit">${esc(unit)}</span>` : ""}</span></label>`;
 const txt = (id, label, hint = "", list = "") => `<label class="f"><span class="lab">${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ""}
   <span class="in"><input id="c_${id}" data-k="${id}" type="text" autocomplete="off" ${list ? `list="${list}"` : ""} value="${esc(inp[id])}"></span></label>`;
 const optHtml = (o, v) => { const val = typeof o === "object" ? o.value : o, lab = typeof o === "object" ? o.label : o; return `<option value="${esc(val)}" ${v === val ? "selected" : ""}>${esc(lab)}</option>`; };
@@ -46,11 +49,13 @@ function inputs(r) {
   <label class="f"><span class="lab">ISO 2408 class${fill("cls")}</span><small>filled in from the construction – what each class holds is in the list</small><select id="c_cls" data-k="cls"><option value="">– choose –</option>
     ${[...K.ISO_CLASS_OPTS, { value: K.ISO_NONE, label: K.ISO_NONE }].map((o) => optHtml(o, inp.cls)).join("")}</select></label>
   <label class="f"><span class="lab">Core${fill("core")}</span><select id="c_core" data-k="core"><option value="">– choose –</option>${K.CORES.map((o) => optHtml(o, inp.core)).join("")}</select></label>
-  ${txt("maker", "Rope maker", "optional – the maker's figures held on this phone are shown when they match", "makerList")}
+  ${sel("madeto", "Rope made to (from the certificate)", K.MADE_TO, "the rope's own standard – decides whether an ISO 2408 factor may be used")}
+  ${rcnInputs(r)}
+  ${txt("maker", "Rope maker", "optional – the maker's figures on this phone are shown when they match", "makerList")}
   <datalist id="makerList">${K.makerNames().map((m) => `<option value="${esc(m)}">`).join("")}</datalist>
   ${makerCard(r)}
   ${sel("head", "Magnetic head", K.CALC_HEADS)}
-  ${radio("asrc", "Metallic area A from", K.CALC_A_SOURCES)}
+  ${radio("asrc", "Metallic area A from", K.calcASources(inp.madeto))}${K.isoAllowed(inp.madeto) ? "" : `<p class="cnote">"Calculated" (ISO 2408) is not offered: the rope is made to ${esc(inp.madeto)}. With no certificate, maker's or written area, A is not known and broken wires are judged on (b) – ${esc(K.RULING_D1)}.</p>`}
   ${inp.asrc && inp.asrc !== "calculated" ? num("a", `Metallic area A from the ${inp.asrc}`, "mm²") : ""}
   ${radio("wsrc", "Outer wire diameter δmax from (documented)", K.CALC_W_SOURCES)}
   ${inp.wsrc ? num("w", "Outer wire diameter δmax", "mm", "leave blank if not available") : ""}
@@ -62,14 +67,29 @@ function inputs(r) {
   ${bfu.length ? radio("bfUsed", "Figure used (engineer confirms)", bfu.map((s) => { const f = r.bfFig.figs.find((x) => x.source === s); return `${f.estimated ? K.ESTIMATED + " – " : ""}${s} – ${K.r1(f.kN, 1)} kN`; }), bfu) : ""}</div>`;
 }
 
+// RCN as in the full record (item 1): the Annex H construction, or "Other – use the counts".
+function rcnInputs(r) {
+  const other = inp.annexh === K.ANNEX_OTHER, v = r.vis;
+  const t3 = v.ok ? v.table === 3 : other && inp.ropetype === K.ROPE_TYPES[0];
+  return `<div class="sec"><h3>RCN – ISO 4309 Annex H</h3>
+  <label class="f"><span class="lab">ISO 4309 Annex H construction${fill("annexh")}</span><small>or "Other" and give the counts</small><select id="c_annexh" data-k="annexh"><option value="">– choose –</option>
+    ${[...K.ANNEX_H_CHOICES, K.ANNEX_OTHER].map((o) => optHtml(o, inp.annexh)).join("")}</select></label>
+  ${other ? `<label class="f"><span class="lab">Rope type${fill("ropetype")}</span><select id="c_ropetype" data-k="ropetype"><option value="">– choose –</option>${K.ROPE_TYPES.map((o) => optHtml(o, inp.ropetype)).join("")}</select></label>
+    ${num("outer", "Number of outer strands", "")}
+    ${num("wires", "Load-bearing wires per outer strand", "", "fillers left out")}
+    ${radio("seale", "Seale outer strands, 19 wires or fewer?", ["yes", "no"])}` : ""}
+  ${t3 || !v.ok ? radio("lay", "Lay (Table 3: ordinary / Lang column)", K.LAYS) : ""}
+  <p class="cnote">${esc(v.ok ? `n and RCN: ${v.how}` : v.why)}</p></div>`;
+}
+
 function makerCard(r) {
   const key = `${inp.maker}|${inp.d}|${inp.construction}|${inp.cls}`;
   const search = inp.maker.trim() ? `<a class="btnlink" href="${esc(K.makerSearchUrl({ maker: inp.maker, construction: inp.construction, d: inp.d }))}" target="_blank" rel="noopener">Search the maker's site</a>` : "";
   if (!inp.maker.trim()) return "";
-  if (notThis === key || !r.makers.length) return `<div class="mcard none"><small>${notThis === key ? "Not this rope – maker's figures not used." : "No maker's figures held on this phone for this maker, diameter and construction – take them from the certificate or ask the office."}</small>${search}</div>`;
+  if (notThis === key || !r.makers.length) return `<div class="mcard none"><small>${notThis === key ? "Not this rope – maker's figures not used." : "No maker's figures on this phone for this maker, diameter and construction – take them from the certificate or ask the office."}</small>${search}</div>`;
   const e0 = r.makers[0];
-  return `<div class="mcard"><b>Maker's figures held: ${esc(e0.maker)} ${esc(e0.d)} mm</b>
-    <small>Suggestion only – the engineer accepts or rejects it. A figure used from here is labelled ${K.ESTIMATED} (not the rope's certificate). A: ${e0.A_mm2 != null ? `${esc(e0.A_mm2)} mm² (${esc(e0.A_basis || "maker")})` : "not given by the maker"}.</small>
+  return `<div class="mcard"><b>Maker's figures: ${esc(e0.maker)} ${esc(e0.d)} mm</b>
+    <small>Suggestion only – the engineer accepts or rejects it. A figure used from here is labelled ${K.ESTIMATED} (not the rope's certificate). A: ${e0.A_mm2 != null ? `${esc(e0.A_mm2)} mm² (${esc(e0.A_basis || "maker")})` : "not given by the maker"}.${e0.n_outer_wires ? ` Outer strands ${esc(e0.outer_strands)}, load-bearing outer wires n = ${esc(e0.n_outer_wires)} (${esc(e0.n_basis || "maker")}).` : ""}</small>
     ${[...new Set(r.makers.map((e) => `${e.product}|${e.page}`))].map((g) => { const rows = r.makers.map((e, i) => [e, i]).filter(([e]) => `${e.product}|${e.page}` === g), e1 = rows[0][0];
       return `<div class="mgrp"><b>${esc(e1.product)}</b><small>${esc(e1.class ? "ISO 2408 class " + e1.class : e1.construction)} · ${esc(e1.document)}, p. ${esc(e1.page)}, read ${esc(e1.date_read)}${e1.note ? " · " + esc(e1.note) : ""}</small>
       <table class="mtab">${rows.map(([e, i]) => `<tr><td>${esc(e.grade)}</td><td><b>${esc(K.r1(e.MBF_kN, 1))} kN</b></td><td><button type="button" class="ovr" data-use="${i}">Use these figures</button></td></tr>`).join("")}</table></div>`; }).join("")}
@@ -100,7 +120,13 @@ function results(r) {
     `${bfLines || "Enter the certificate or maker's figure, and the grade for the ISO 2408 figure."}${!ff.iso.value && (ff.cert || ff.maker || num0(inp.grade)) ? ` ISO 2408: ${ff.iso.why}` : ""}${bf && bf.ok ? ` Check: ${bf.amber ? "⚠ " + bf.amber.text + " " : ""}${bf.full}` : bf && !bf.ok && ff.cert ? ` ${bf.why}` : ""} Advice only – nothing is changed by the app.`,
     K.BF_SRC, bf && bf.amber ? "bfamber" : ff.figs.length ? "" : "none");
   const dEst = r.dEst ? res("3b", K.DMAX_EST_LABEL, r.dEst.value != null ? `${r.dEst.value.toFixed(2)} mm – estimated` : "", r.dEst.value != null ? r.dEst.text : r.dEst.why, r.dEst.src || "", "estbox") : "";
-  const len = (n, title, x) => res(n, title, x ? `${K.r1(x.l, n === "6a" ? 3 : 2)} m${x.lf != null ? ` – LF limit ${x.lf} wires` : ""}` : "", x ? x.text : "Needs the nominal diameter.", x && x.src);
+  const len = (n, title, x) => res(n, title, x ? `${K.r1(x.l, n === "6a" ? 3 : 2)} m` : "", x ? x.text : "Needs the nominal diameter.", x && x.src);
+  const m = r.mrt, v = r.vis;
+  const boxA = `<div class="cres pbox${m.ok ? "" : " none"}"><h3>8a. ${esc(K.MRT_LABEL)}</h3>${m.ok ? `<b>${m.l6} / ${m.l30}</b><small class="clab">over 6d / over 30d${m.estimated ? ` – ${K.ESTIMATED}` : ""}</small>` : "<b>not given</b>"}
+    <small>${esc(m.ok ? m.working : m.why + ".")}${r.lfFrom === "b" ? " The record's LF limit then comes from (b) (PRO-AIC-0608 A3, §9.2.2)." : ""}</small><i class="src">${esc(m.src)}</i></div>`;
+  const boxB = `<div class="cres pbox${v.ok ? "" : " none"}"><h3>8b. ${esc(K.VIS_LABEL)}</h3>${v.ok ? `<small class="clab">${esc(K.VIS_SHEAVE)}</small>${v.sheave.map((x) => `<b>${x.lay ? esc(x.lay) + ": " : ""}${x.l6} / ${x.l30}</b>`).join("")}
+    <small class="clab">${esc(K.VIS_DRUM)}</small><b>${v.drum.l6} / ${v.drum.l30}</b><small class="clab">over 6d / over 30d</small>` : "<b>not given</b>"}
+    <small>${esc(v.ok ? `RCN ${v.rcnText} (Table ${v.table}). ${v.layNote ? v.layNote + ". " : ""}` : v.why)}</small><p class="cnote">${esc(K.VIS_NOTE)}</p><i class="src">${esc(v.src)}</i></div>`;
   return [
     res("1a", r.A.label, r.A.value != null ? `${K.r1(r.A.value)} mm²${r.A.estimated ? " – " + K.ESTIMATED : ""}` : "", r.A.text, r.A.src, r.A.estimated ? "estlab" : ""),
     res("1b", r.S.label, r.S.value != null ? `${K.r1(r.S.value, 0)} mm²` : "", r.S.text, r.S.src, r.A.value == null ? "" : "sub2"),
@@ -110,7 +136,7 @@ function results(r) {
     lr ? res(4, "LF threshold rule for this head", "", `${lr.words}${lr.example ? " " + lr.example : ""}`, lr.src, lr.own ? "none" : "") : res(4, "LF threshold rule for this head", "", "Choose the head."),
     route,
     len("6a", "6d", r.len6), len("6b", "30d", r.len30),
-    `<div class="cres sub"><small>${esc(r.lf.text)}</small>${r.lf.src ? `<i class="src">${esc(r.lf.src)}</i>` : ""}</div>`,
+    `<div class="pair">${boxA}${boxB}</div>`,
     bfBox,
   ].join("");
 }
@@ -131,10 +157,12 @@ $("#cWarn").addEventListener("click", (e) => { if (!e.target.closest(".cwtog")) 
 
 // Filled in from the construction (rule 1): set when the box is empty or still holds the earlier filled-in value.
 function autoFill() {
-  const e = K.constructionByKey(inp.ckey);
-  const pc = e ? { entry: e } : K.parseConstruction(inp.construction);
-  const want = pc ? (pc.entry ? { cls: pc.entry.isoclass, core: pc.entry.core } : { cls: pc.isoclass || "", core: pc.core || "" }) : {};
-  if (e) want.construction = e.key;
+  const want = {};
+  for (const [f, x] of Object.entries(K.autoValues({ ckey: inp.ckey, construction: inp.construction }))) {
+    const k = f === "isoclass" ? "cls" : f;
+    if (["cls", "core", "construction", "annexh", "ropetype", "outer", "wires", "seale"].includes(k)) want[k] = x.value;
+  }
+  if (inp.asrc === "calculated" && !K.isoAllowed(inp.madeto)) inp.asrc = "";
   for (const [k, v] of Object.entries(want)) {
     if (!v) continue;
     if (inp[k] === "" || inp[k] === auto[k]) { inp[k] = v; auto[k] = v; }
@@ -169,7 +197,14 @@ $("#calc").addEventListener("focusout", (e) => { if (e.target.dataset && e.targe
 $("#calc").addEventListener("click", (e) => {
   const u = e.target.closest("[data-use]");
   if (u) { const m = K.calculator(inp).makers[+u.dataset.use]; if (m) { inp.bfMaker = String(m.MBF_kN); inp.bfMakerRef = `${m.maker} ${m.product}, ${m.d} mm, ${m.grade}: ${m.document}, p. ${m.page}, read ${m.date_read}`; if (m.A_mm2 != null) { inp.asrc = K.CALC_A_SOURCES[1]; inp.a = String(m.A_mm2); inp.aRef = `${m.maker} ${m.product}, ${m.d} mm: ${m.A_basis || "metallic area"}; ${m.document}, p. ${m.page}, read ${m.date_read}`; }
-    if (m.grade_n_mm2 && !inp.grade) inp.grade = String(m.grade_n_mm2); draw(); } return; }
+    if (m.grade_n_mm2 && !inp.grade) inp.grade = String(m.grade_n_mm2);
+    // 1.8.0 item 1: where the maker gives them, n and the outer strands (-> "Other - use the counts")
+    if (m.n_outer_wires && m.outer_strands && Number.isInteger(m.n_outer_wires / m.outer_strands)) {
+      inp.annexh = K.ANNEX_OTHER; inp.outer = String(m.outer_strands); inp.wires = String(m.n_outer_wires / m.outer_strands);
+      if (m.rope_type) inp.ropetype = m.rope_type === "rotation-resistant" ? K.ROPE_TYPES[1] : K.ROPE_TYPES[0];
+      if (m.seale === false) inp.seale = "no";
+    }
+    draw(); } return; }
   if (e.target.closest("[data-notthis]")) { notThis = `${inp.maker}|${inp.d}|${inp.construction}|${inp.cls}`; draw(); return; }
   const s = e.target.closest("[data-start]");
   if (s) document.dispatchEvent(new CustomEvent("rr:start", { detail: K.recordFromCalc(inp, s.dataset.start) }));
@@ -194,7 +229,7 @@ back.type = "button"; back.className = "wide p"; back.textContent = "Set-up calc
 back.addEventListener("click", showCalc);
 $("#home").prepend(back);
 
-// maker's figures held offline (in the app's cache); none -> an empty list, the card says so
+// maker's figures kept offline (in the app's cache); none -> an empty list, the card says so
 fetch("./makers.json").then((r) => (r.ok ? r.json() : null)).then((m) => { K.setMakers(m); draw(); }).catch(() => {});
 draw();
 showCalc();

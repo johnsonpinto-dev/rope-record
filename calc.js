@@ -255,6 +255,30 @@ export const ANNEX_H_CHOICES = ANNEX_H.map((x) => x.c);
 export const ANNEX_OTHER = "Other (not in Annex H) – use the counts";
 export const ROPE_TYPES = ["single-layer / parallel-closed (Table 3)", "rotation-resistant (Table 4)"];
 
+// 1.8.0 (owner's block 27-Nov-2026): the standard the rope is made to, from the certificate. Ruling D1 (27-Nov-2026):
+// a rope made to another standard with no certificate / maker / written area -> A not known, no Table C.1 limit, broken
+// wires judged on Table 3 / 4 by RCN (PRO-AIC-0608 §1.3). Never an ISO 2408 factor on a non-ISO-2408 rope.
+export const MADE_TO = ["ISO 2408", "EN 12385-4", "JIS", "API 9A", "other", "not stated"];
+export const isoAllowed = (m) => !m || m === MADE_TO[0] || m === MADE_TO[5];   // blank (records before 1.8.0) = not stated
+export const RULING_D1 = "owner's ruling D1 (27-Nov-2026); PRO-AIC-0608 §1.3";
+export const noIsoWhy = (m) => `rope made to ${m}: no ISO 2408 factor on a rope not made to ISO 2408 – A not known, broken wires judged on Table 3 / 4 by RCN`;
+// Two boxes side by side, never merged (item 2).
+export const MRT_LABEL = "(a) MRT – ISO 4309 Table C.1 from A and δmax";
+export const VIS_LABEL = "(b) Visible broken wires – ISO 4309 Table 3 / 4 by RCN";
+export const VIS_SHEAVE = "Steel sheaves / single-layer drum";
+export const VIS_DRUM = "Multi-layer drum cross-over zones";
+export const VIS_NOTE = "ISO 4309 6.3 – MRT breaks confirmed visually as outer breaks may be judged on (b)";
+export const MRT_SRC = "ISO 4309:2017 Annex C, Table C.1 (6 % over 6d, 10 % over 30d, nearest whole wire); PRO-AIC-0608 §9.2.1, E3";
+export const VIS_SRC = "ISO 4309:2017 Table 3 (pp. 17–18) / Table 4 (p. 19), Annex H (pp. 51–56), 6.3 (pp. 19–20); PRO-AIC-0608 §9.2.2";
+// Diameter against d_ref (item 4): advice only (amber), never red, never blocks Save.
+export const DREF_LABEL = "Reference diameter d_ref (measured after running in the new rope, ISO 4309 3.3)";
+export const AS_MADE = "as-made diameter, not d_ref";
+export const DIA_SRC = "ISO 4309:2017 3.3 (p. 2); 6.4.2 Formula (1), Table 5 (pp. 20–21); 6.7.6 (p. 23)";
+// Table 5 (p. 20): uniform decrease, % of nominal d, at which each severity starts (20 / 40 / 60 / 80 % / discard).
+const T5 = { fc: [6, 7, 8, 9, 10], steel: [3.5, 4.5, 5.5, 6.5, 7.5], rr: [1, 2, 3, 4, 5] };
+const T5_TYPE = { fc: "single-layer rope with fibre core", steel: "single-layer rope with steel core or parallel-closed rope", rr: "rotation-resistant rope" };
+const T5_WORDS = ["Slight (20 %)", "Medium (40 %)", "High (60 %)", "Very high (80 %)", "Discard (100 %)"];
+
 // Choice lists use exactly Kuzo's words (Kuzo is the master, 24-Nov-2026): Kuzo app/src/index.html rope form,
 // engine/lftable.py SOURCES. A source blank = A not known (Kuzo "— not chosen —"); nothing extra (ruling D4).
 export const CONSTR_SOURCES = ["rope certificate", "client advice", "counted on the rope"];
@@ -310,6 +334,8 @@ export const FIELDS = [
   // 1.7.0 (added at the end): construction picked from the list, rope maker, maker's breaking force and where it came
   // from, the breaking force used, the optional estimated δmax.
   "ckey", "maker", "bf_maker", "bf_maker_ref", "bf_used", "dmax_est", "a_ref",
+  // 1.8.0 (added at the end): the standard the rope is made to (certificate); the reference diameter d_ref.
+  "madeto", "d_ref",
 ];
 export const SECTIONS = ["A", "B", "C"];
 // Automatic values the engineer may override (only with a reason; saved with the time).
@@ -417,7 +443,8 @@ export function fminFor({ d, isoclass, core, grade }) {
 }
 // Every breaking-force figure with its source label; the one the engineer confirms (bf_used), or none.
 export function bfFigures(rec) {
-  const cert = pos(num(rec.bf)), maker = pos(num(rec.bf_maker)), iso = fminFor({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, grade: rec.grade });
+  const cert = pos(num(rec.bf)), maker = pos(num(rec.bf_maker));
+  const iso = isoAllowed(rec.madeto) ? fminFor({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, grade: rec.grade }) : { why: `Rope made to ${rec.madeto}: no ISO 2408 figure (${RULING_D1}).` };
   const figs = [cert != null && { source: BF_CERT, kN: cert }, maker != null && { source: BF_MAKER, kN: maker, ref: String(rec.bf_maker_ref || "").trim() || null },
     iso.value != null && { source: BF_ISO, kN: Math.round(iso.value * 10) / 10, working: iso.text }].filter(Boolean)
     .map((f) => ({ ...f, estimated: f.source !== BF_CERT, label: sourceLabel(f.source !== BF_CERT, f.source, f.ref || (f.working ? "ISO 2408 Annex C" : "")) }));
@@ -456,7 +483,14 @@ function rcnFor(rec) {
     return okS && n >= r.lo && n <= (r.hi ?? 1e9);
   });
   if (fits.length !== 1) return { ok: false, why: fits.length ? `n = ${n} fits RCN ${fits.map((r) => r.rcn).join(" and ")} – Table 4 as printed overlaps; choose the Annex H construction` : `no Table 4 row for ${s} outer strands and n = ${n}` };
-  return { ok: true, table: 4, row: fits[0], rcn: fits[0].rcn, n, how: how + ` → RCN ${fits[0].rcn ?? "(over 300)"}` };
+  let row = fits[0];
+  // Table 4 NOTE (p. 19), as Table 3: Seale outer strands of 19 wires or fewer go two rows above (e.g. 18 × 19 Seale - WSC;
+  // Annex H 18xK19S-WSC = RCN 26). Within the "at least 11 outer strands" rows only (23-1 is the first).
+  if (rec.seale === "yes" && w <= 19 && row.strands === "11+") {
+    const i = T4R.indexOf(row), first = T4R.findIndex((r) => r.strands === "11+");
+    row = T4R[Math.max(first, i - 2)]; how += "; Seale outer strands, 19 wires or fewer: two rows above (Table 4 NOTE)";
+  }
+  return { ok: true, table: 4, row, rcn: row.rcn, n, how: how + ` → RCN ${row.rcn ?? "(over 300)"}` };
 }
 const tableFigures = (r, col) => (r.above300 ? T3_ABOVE_300[col].map((f) => nearest(f * r.n)) : r.row[col]);
 
@@ -489,6 +523,61 @@ function lfLimit(rec, c) {
   return out;
 }
 
+// 1.8.0 item 2: box (a) MRT - Table C.1 from A and δmax. Shown only when both are known.
+function mrtLimits(c) {
+  if (c.A == null || !c.dmax) return { ok: false, why: c.A == null ? (c.aWhy ? `A not known (${c.aWhy})` : "A not known") : "δmax not available", src: MRT_SRC };
+  const wires = c.A * 4 / (PI * c.dmax * c.dmax), x6 = 0.06 * wires, x30 = 0.10 * wires;
+  return { ok: true, l6: nearest(x6), l30: nearest(x30), estimated: aEstimated(c.Asrc), src: MRT_SRC,
+    working: `wires = A × 4 ÷ (π × δmax²) = ${r1(c.A)} × 4 ÷ (π × ${c.dmax}²) = ${r1(wires, 1)}; 6 % = ${r1(x6, 2)} → ${nearest(x6)} over 6d; 10 % = ${r1(x30, 2)} → ${nearest(x30)} over 30d (nearest whole wire)${aEstimated(c.Asrc) ? `; A ${ESTIMATED} (${c.Asrc})` : ""}` };
+}
+// 1.8.0 item 2: box (b) visible broken wires - Table 3 / 4 by RCN, both columns. Shown even when A and δmax are known.
+export function visLimits(rec) {
+  const r = rcnFor(rec);
+  if (!r.ok) return { ok: false, why: r.why, src: VIS_SRC };
+  const out = { ok: true, table: r.table, rcn: r.rcn, n: r.n ?? null, how: r.how, above300: !!r.above300, src: VIS_SRC };
+  if (r.table === 3) {
+    const lays = rec.lay === "ordinary" ? [["A", "ordinary lay"]] : rec.lay === "Lang" ? [["B", "Lang lay"]] : [["A", "ordinary lay"], ["B", "Lang lay"]];
+    out.sheave = lays.map(([col, lay]) => { const [l6, l30] = tableFigures(r, col); return { lay, l6, l30 }; });
+    if (lays.length === 2) out.layNote = "lay not given – both lay columns shown";
+  } else { const [l6, l30] = tableFigures(r, "A"); out.sheave = [{ lay: "", l6, l30 }]; }
+  const [d6, d30] = tableFigures(r, "C");
+  out.drum = { l6: d6, l30: d30 };
+  out.rcnText = r.rcn ?? (r.table === 3 ? "> 300 wires" : "n > 300");
+  out.working = `Table ${r.table}, RCN ${out.rcnText}: ${r.how}; M5–M8 doubling not applied${r.above300 ? "; > 300 wires: factor × n, nearest whole wire" : ""}`;
+  return out;
+}
+export const visWords = (v) => v && v.ok ? [`${VIS_SHEAVE}: ${v.sheave.map((s) => `${s.lay ? s.lay + " " : ""}${s.l6} / ${s.l30}`).join(", ")}`, `${VIS_DRUM}: ${v.drum.l6} / ${v.drum.l30}`] : [];
+
+// 1.8.0 item 4: measured diameter against d_ref (or the as-made diameter on the certificate). Amber advice only.
+function ropeTypeT5(rec) {
+  const r = rcnFor(rec);
+  if ((r.ok && r.table === 4) || (rec.annexh === ANNEX_OTHER && rec.ropetype === ROPE_TYPES[1])) return "rr";
+  if (rec.core === CORES[0]) return "fc";
+  if (rec.core === CORES[1] || rec.core === CORES[2]) return "steel";
+  return null;
+}
+export function diameterChange(rec, c) {
+  const D = c.D, dn = c.dn, ref = pos(num(rec.d_ref)), cert = c.dcert;
+  if (!D) return null;
+  const base = ref ? { v: ref, label: "d_ref" } : cert ? { v: cert, label: AS_MADE } : null;
+  const out = { D, base, nominal: dn ? (D - dn) / dn * 100 : null, src: DIA_SRC };
+  out.nomText = dn ? `nominal ${dn} mm: ${out.nominal >= 0 ? "+" : ""}${r1(out.nominal, 1)} % – for information only` : "";
+  if (!base) { out.text = "No d_ref and no measured diameter on the certificate – the change cannot be worked out."; return out; }
+  const steel = rec.core === CORES[1] || rec.core === CORES[2], fc = rec.core === CORES[0];
+  if (D > base.v) {
+    const p = (D - base.v) / base.v * 100, lim = steel ? 5 : fc ? 10 : null;
+    Object.assign(out, { kind: "increase", pct: p, limit: lim, amber: lim != null && p >= lim - EPS,
+      text: `+${r1(p, 1)} % on the ${base.label} ${base.v} mm: (${r1(D, 2)} − ${base.v}) ÷ ${base.v} × 100. ISO 4309 6.7.6: ${lim != null ? `${lim} % or more (${steel ? "steel" : "fibre"} core) – investigate, consider discard` : "no figure for this core"}.` });
+  } else if (D < base.v) {
+    const t = ropeTypeT5(rec);
+    if (!dn) { Object.assign(out, { kind: "decrease", text: "Decrease needs the nominal diameter (Formula (1))." }); return out; }
+    const p = (base.v - D) / dn * 100, band = t ? T5[t].filter((x) => p >= x - EPS).length : null;
+    Object.assign(out, { kind: "decrease", pct: p, band, amber: !!band,
+      text: `−${r1(p, 2)} % of nominal d: (${base.v} − ${r1(D, 2)}) ÷ ${dn} × 100 (Formula (1), from the ${base.label}). ${t ? `Table 5, ${T5_TYPE[t]}: ${band ? T5_WORDS[band - 1] : `less than ${T5[t][0]} % – no rating`}` : "Table 5: rope type not known"}. Table 5 does not apply at multi-layer drum cross-over zones.` });
+  } else Object.assign(out, { kind: "same", pct: 0, text: `Same as the ${base.label} ${base.v} mm.` });
+  return out;
+}
+
 // ---------------------------------------------------------------------------------------------
 // compute(rec): every automatic value, with its working and source.
 // ---------------------------------------------------------------------------------------------
@@ -502,8 +591,9 @@ export function compute(rec) {
   const k = K[rec.core] ?? null;
   const S = dn && k ? k * PI * dn * dn / 4 : null;               // A3: S = K × π × d² ÷ 4, d nominal - air value / route 3 only
   const iso = isoFactor(rec, dn);
-  let Aauto = null, Asrc = rec.asrc || "", Aestimate = false;
-  if (rec.asrc === A_ISO) { Aauto = iso.ok ? iso.A : null; Aestimate = true; }
+  let Aauto = null, Asrc = rec.asrc || "", Aestimate = false, aWhy = "";
+  const isoOk = isoAllowed(rec.madeto);
+  if (rec.asrc === A_ISO) { if (isoOk) { Aauto = iso.ok ? iso.A : null; Aestimate = true; } else aWhy = noIsoWhy(rec.madeto); }
   else if (A_TYPED.includes(rec.asrc)) Aauto = g("a");
   const A = Aauto;
   const Aair = A ?? S;
@@ -511,11 +601,14 @@ export function compute(rec) {
   const wireArea = dmax ? PI * dmax * dmax / 4 : null;
   const outer = g("outer"), wires = g("wires");
   const n = outer && wires ? outer * wires : null;
-  const c = { dn, da, db, D, dcert: g("d_cert"), k, S, iso, Aauto, A, Asrc, Aestimate, Aair, dmax, wireArea, n,
+  const c = { dn, da, db, D, dcert: g("d_cert"), k, S, iso, isoOk, aWhy, Aauto, A, Asrc, Aestimate, Aair, dmax, wireArea, n,
     share: wireArea && A ? wireArea / A * 100 : null,
     l6: dn ? 6 * dn / 1000 : null, l30: dn ? 30 * dn / 1000 : null };
   c.lf = lfLimit(rec, c);
-  c.bf = bfCheck({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, bf: rec.bf, grade: rec.grade });
+  c.mrt = mrtLimits(c);
+  c.vis = visLimits(rec);
+  c.dia = diameterChange(rec, c);
+  c.bf = isoOk ? bfCheck({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, bf: rec.bf, grade: rec.grade }) : null;
   c.bfFig = bfFigures(rec);
   c.entry = constructionByKey(rec.ckey);
   c.dEst = rec.dmax_est === "yes" ? dmaxEstimate(c.entry, rec.dnom) : null;
@@ -546,7 +639,7 @@ export function compute(rec) {
   });
   c.working = [
     ["Measured diameter (mean of the two readings)", D ? `${r1(D, 2)} mm` : "–", da && db ? `(${da} + ${db}) ÷ 2, two readings at 90° at the widest point${c.dcert ? `; certificate: ${c.dcert} mm` : ""}` : "", "PRO-AIC-0608 B2, C2; owner's ruling D2 (24-Nov-2026)"],
-    [aLabel(Asrc), A != null ? `${r1(A)} mm²${aEstimated(Asrc) ? " – " + ESTIMATED : ""}` : "not known", A != null ? `source: ${Asrc}${String(rec.a_ref || "").trim() && Asrc === A_MAKER ? ` (${String(rec.a_ref).trim()})` : ""}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
+    [aLabel(Asrc), A != null ? `${r1(A)} mm²${aEstimated(Asrc) ? " – " + ESTIMATED : ""}` : "not known", A != null ? `source: ${Asrc}${String(rec.a_ref || "").trim() && Asrc === A_MAKER ? ` (${String(rec.a_ref).trim()})` : ""}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : aWhy ? `${aWhy} (${RULING_D1})` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
     [S_LABEL, S ? `${r1(S, 0)} mm²` : "–", S ? `S = K × π × d² ÷ 4 = ${k} × π × ${dn}² ÷ 4 (K: ${rec.core}). Used only to choose the air value / route 3 S when A is not known; not reported and no limit is calculated from it` : "needs nominal d and core", "PRO-AIC-0608 A3; manual v1.3 2.4.2 (p. 27)"],
     ["One-wire area", wireArea ? `${r1(wireArea, 2)} mm²` : "–", wireArea ? `π × δmax² ÷ 4 = π × ${dmax}² ÷ 4` : "δmax not available", "PRO-AIC-0608 A3"],
     ["Single-wire share", c.share ? `${r1(c.share, 2)} % of A` : "–", c.share ? "(π × δmax² ÷ 4) ÷ A × 100, compared with the head's LF sensitivity" : "needs A and δmax", "PRO-AIC-0608 A3"],
@@ -557,6 +650,11 @@ export function compute(rec) {
     ["RCN", c.lf.rcn ?? (rcnFor(rec).ok ? rcnFor(rec).rcn ?? "> 300 wires" : "–"), rcnFor(rec).ok ? rcnFor(rec).how : rcnFor(rec).why, "ISO 4309 Annex H (pp. 51–56); PRO-AIC-0608 §9.2.2"],
     ["LF limit 6d / 30d", c.lf.ok ? `${c.lf.l6} / ${c.lf.l30} wires${c.lf.drum6 != null ? ` (multi-layer drum ${c.lf.drum6} / ${c.lf.drum30})` : ""}${ovr(rec, "lf6") != null || ovr(rec, "lf30") != null ? " (overridden)" : ""}` : "not calculated", c.lf.ok ? `${c.lf.route}. ${c.lf.working}` : c.lf.why, c.lf.src],
   ];
+  const m = c.mrt, v = c.vis;
+  c.working.push([MRT_LABEL, m.ok ? `${m.l6} over 6d / ${m.l30} over 30d${m.estimated ? " – " + ESTIMATED : ""}` : "not given", m.ok ? m.working : m.why, m.src]);
+  c.working.push([VIS_LABEL, v.ok ? visWords(v).join(" · ") : "not given", v.ok ? `${v.working}${v.layNote ? "; " + v.layNote : ""}. ${VIS_NOTE}.` : v.why, v.src]);
+  if (c.dia) c.working.push(["Diameter change", c.dia.base && c.dia.pct != null ? `${c.dia.kind === "increase" ? "+" : c.dia.kind === "decrease" ? "−" : ""}${r1(c.dia.pct, c.dia.kind === "decrease" ? 2 : 1)} % on the ${c.dia.base.label}${c.dia.amber ? " – check" : ""}` : "–",
+    [c.dia.text, c.dia.nomText].filter(Boolean).join(" · "), c.dia.src]);
   if (c.dEst) c.working.push([DMAX_EST_LABEL, c.dEst.value != null ? `${c.dEst.value.toFixed(2)} mm (estimated)` : "not given", c.dEst.value != null ? c.dEst.text : c.dEst.why, c.dEst.src || "EN 12385-4:2002"]);
   for (const f of c.bfFig.figs) c.working.push([`Breaking force – ${f.source}`, `${r1(f.kN, 1)} kN${f.estimated ? " – " + ESTIMATED : ""}${c.bfFig.used === f ? " – used" : ""}`, f.working || f.ref || "", f.source === BF_ISO ? BF_SRC : f.source]);
   if (c.bf) c.working.push(["Breaking-force check (ISO 2408)", c.bf.ok ? `Fmin ${r1(c.bf.Fmin, 1)} kN – certificate ${r1(c.bf.bf, 1)} kN, ${aboveBelow(c.bf.pct)}` : "no check",
@@ -571,7 +669,7 @@ export function compute(rec) {
 // checks(rec, c): every rule broken, with what is wrong, the correct value or range, and the clause.
 // level red = fix, or give a reason (saved with the time); amber = warning, can continue.
 // ---------------------------------------------------------------------------------------------
-const ZERO_FIELDS = { length: "Rope length", dnom: "Nominal diameter", d_cert: "Measured diameter (certificate)", da: "Diameter reading 1", db: "Diameter reading 2",
+const ZERO_FIELDS = { length: "Rope length", dnom: "Nominal diameter", d_cert: "Measured diameter (certificate)", d_ref: "Reference diameter d_ref", da: "Diameter reading 1", db: "Diameter reading 2",
   outer: "Outer strands", wires: "Wires per strand", a: "Metallic area A", bf: "Breaking force (certificate)", grade: "Rope grade", dmax: "δmax", A_gap: "Section A gap", B_gap: "Section B gap", C_gap: "Section C gap" };
 // LF threshold and alarm are recorded with no check of Rope Record's own; Kuzo checks them (ruling D5, 24-Nov-2026).
 const HEAD_ZERO = { air: "Air value", lfwd: "Wire diameter", lflen: "Wire length", lfgap: "Gap", sig: "One-wire LF signal", r3_dw: "Added wire diameter", r1_known: "Known LMA of segment 2", scanstep: "Scan step" };
@@ -593,14 +691,15 @@ export function checks(rec, c = compute(rec)) {
   const ZSRC = "Rope Record rule: blank = not available (PRO-AIC-0608 A3: a value is never assumed)";
 
   for (const [k, lab] of Object.entries(ZERO_FIELDS)) if (isZero(k)) add("red", "zero-" + k, k, SCREEN_OF[k] || "rope", `${lab}: 0 typed.`, "Leave the box blank if the value is not available – never type 0.", ZSRC);
-  // diameter (B2)
-  const dn = c.dn;
-  if (c.D && dn) {
-    const p = (c.D - dn) / dn * 100;
-    const lim = rec.core === CORES[0] ? 10 : 5;
-    if (p >= lim) add("amber", "dia-up", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${r1(p, 1)} % above the nominal ${dn} mm.`, `An increase of ${lim} % or more (${rec.core === CORES[0] ? "fibre" : "steel"} core) is investigated and discard considered; check the nominal size.`, "PRO-AIC-0608 B2, §9.3 (ISO 4309 6.7.6)");
-    if (p < 0) add("amber", "dia-down", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is below the nominal ${dn} mm.`, "Decrease is evaluated against the reference diameter, never the nominal – record the reference diameter if known.", "PRO-AIC-0608 B2, §9.3 (ISO 4309 Table 5)");
+  // diameter (B2) - 1.8.0 item 4: against d_ref, or the as-made diameter on the certificate; the nominal for information
+  // only. Amber advice only - never red, never blocks Save.
+  const dn = c.dn, dd = c.dia;
+  if (dd && dd.amber) {
+    const b = dd.base, pc = r1(dd.pct, dd.kind === "decrease" ? 2 : 1);
+    if (dd.kind === "increase") add("amber", "dia-up", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${pc} % above the ${b.label} ${b.v} mm.`, `ISO 4309 6.7.6: an increase of ${dd.limit} % or more (${dd.limit === 10 ? "fibre" : "steel"} core) is investigated and discard considered.`, DIA_SRC);
+    else add("amber", "dia-down", "da", "rope", `Measured diameter ${r1(c.D, 2)} mm is ${pc} % of nominal d below the ${b.label} ${b.v} mm.`, dd.text, DIA_SRC);
   }
+  if (rec.asrc === A_ISO && !c.isoOk) add("amber", "a-madeto", "asrc", "rope", `A source "${A_ISO}" on a rope made to ${rec.madeto}.`, `Never an ISO 2408 factor on a rope not made to ISO 2408: A not known – take A from the certificate, the maker's data or written confirmation; broken wires are judged on Table 3 / 4 by RCN.`, RULING_D1);
   if (dn && dn > 63.5) add("amber", "over635", "dnom", "rope", `Rope ${dn} mm is over 63.5 mm.`, "Tested only by client agreement recorded on the Job Order.", "PRO-AIC-0608 §1.2, A1 (ASTM E1571-21 1.1.1)");
   // A and δmax (A3)
   if (rec.asrc === A_ISO && !c.iso.ok) add("red", "iso", "isoclass", "rope", `A cannot be calculated from ISO 2408: ${c.iso.why}.`, "Use the certificate, maker's data or written confirmation, or leave the source blank (A not known).", "PRO-AIC-0608 A3; ISO 2408 Annex C (2–60 mm only)");
@@ -712,7 +811,10 @@ const CALC_COLS = ["D_measured_mm", "A_used_mm2", "A_source", "S_K_mm2", "wire_a
   "len_6d_m", "len_30d_m", "lf_route", "lf_6d", "lf_30d", "lf_drum_6d", "lf_drum_30d", "lf_working",
   "h1_air_to_type", "h2_air_to_type", "procedure_copy", "bf_Fmin_kN", "bf_check"];
 export const CSV_HEAD = ["record_id", "saved_at", "app_version", ...FIELDS, ...CALC_COLS, "problems_red", "problems_amber", "reasons_with_time", "overrides_with_time",
-  "filled_in_changes", "dmax_estimated_mm", "bf_figures"];
+  "filled_in_changes", "dmax_estimated_mm", "bf_figures",
+  // 1.8.0 item 2 / 4: the two boxes side by side, never merged; the diameter change against d_ref (or as-made).
+  "a_mrt_tableC1_6d", "a_mrt_tableC1_30d", "a_mrt_working", "b_visible_table", "b_visible_RCN", "b_visible_sheave_6d_30d", "b_visible_multilayer_6d_30d", "b_visible_working",
+  "diameter_base", "diameter_base_mm", "diameter_change_pct", "diameter_change_working"];
 const q = (x) => { const t = String(x ?? ""); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
 const fx = (x, d) => (x == null || !isFinite(x) ? "" : Number(x.toFixed(d)));
 export function csvLine(rec) {
@@ -732,6 +834,11 @@ export function csvLine(rec) {
     Object.entries(rec.changes || {}).filter(([, x]) => x).map(([k, x]) => `${k}: ${x.from} -> ${x.to} (${x.time})`).join(" | "),
     c.dEst && c.dEst.value != null ? c.dEst.value : "",
     c.bfFig.figs.map((f) => `${f.source} ${f.kN} kN${f.ref ? ` (${f.ref})` : ""}${c.bfFig.used === f ? " USED" : ""}`).join(" | "),
+    c.mrt.ok ? c.mrt.l6 : "", c.mrt.ok ? c.mrt.l30 : "", c.mrt.ok ? c.mrt.working : c.mrt.why,
+    c.vis.ok ? c.vis.table : "", c.vis.ok ? c.vis.rcnText : "", c.vis.ok ? c.vis.sheave.map((x) => `${x.lay ? x.lay + " " : ""}${x.l6} / ${x.l30}`).join("; ") : "",
+    c.vis.ok ? `${c.vis.drum.l6} / ${c.vis.drum.l30}` : "", c.vis.ok ? c.vis.working : c.vis.why,
+    c.dia && c.dia.base ? c.dia.base.label : "", c.dia && c.dia.base ? c.dia.base.v : "", c.dia && c.dia.pct != null ? fx(c.dia.kind === "decrease" ? -c.dia.pct : c.dia.pct, 2) : "",
+    c.dia ? [c.dia.text, c.dia.nomText].filter(Boolean).join(" · ") : "",
   ].map(q).join(",");
 }
 export const csvOf = (list) => "﻿" + [CSV_HEAD.map(q).join(","), ...list.map(csvLine)].join("\r\n") + "\r\n";
@@ -825,7 +932,7 @@ export function kuzoRecord(rec, appVersion) {
       seale_19_or_fewer: rec.annexh === ANNEX_OTHER && (rec.seale === "yes" || rec.seale === "no") ? rec.seale : null,
       core: rec.core, outer_strands: KZ_INT(rec.outer), wires_per_strand: KZ_INT(rec.wires),
       lay: LAYS.includes(rec.lay) ? rec.lay : null, runs_on: rec.runs === RUNS[0] ? "steel sheaves" : rec.runs === RUNS[1] ? "multi-layer drum" : null,
-      iso2408_class: rec.asrc === A_ISO && c.iso.ok ? rec.isoclass : null,
+      iso2408_class: rec.asrc === A_ISO && c.iso.ok && c.isoOk ? rec.isoclass : null,
       metallic_area_mm2: c.A != null ? c.A : null,
       metallic_area_source: c.A != null ? (KZ_A_SRC[rec.asrc] || "not known") : "not known",
       dmax_mm: c.dmax ?? null, dmax_source: KZ_DMAX_SRC[rec.dmaxsrc] || "not available",
@@ -884,7 +991,10 @@ export async function qrParts(text, size = 1000) {
 // =============================================================================================
 export const MH_PC = "MH-PC";                     // name only (owner, 25-Nov-2026)
 export const CALC_HEADS = [...HEAD_CHOICES, MH_PC];
-export const CALC_A_SOURCES = ["rope certificate", "rope maker's own data", "calculated"];
+// 1.8.0 item 3: area order rope certificate -> maker's data -> client or maker written confirmation; "calculated" (ISO 2408)
+// only when the rope is made to ISO 2408 or the standard is not stated.
+export const CALC_A_SOURCES = ["rope certificate", "rope maker's own data", "client or maker written confirmation", "calculated"];
+export const calcASources = (madeto) => (isoAllowed(madeto) ? CALC_A_SOURCES : CALC_A_SOURCES.filter((x) => x !== "calculated"));
 export const CALC_W_SOURCES = ["rope certificate", "rope maker's own data", "measured on a wire"];
 // Owner's order (25-Nov-2026 evening): 1 broken wire, 2 Acumen record, 3 indication. The simulated wire is a separate
 // option ("sim"), ready for when the engineers carry the wires.
@@ -996,12 +1106,13 @@ export function makerMatches({ maker, d, construction, isoclass, core }) {
 export const makerSearchUrl = ({ maker, construction, d }) => "https://www.google.com/search?q=" + encodeURIComponent([maker, construction, d ? `${d} mm` : "", "wire rope minimum breaking force"].filter((x) => String(x || "").trim()).join(" "));
 
 // Calculator answers -> a new record (item 3: one flow; the calculator's answers start the record).
-const CALC_A_MAP = { calculated: A_ISO, [CALC_A_SOURCES[0]]: A_CERT, [CALC_A_SOURCES[1]]: A_MAKER };
+const CALC_A_MAP = { calculated: A_ISO, [CALC_A_SOURCES[0]]: A_CERT, [CALC_A_SOURCES[1]]: A_MAKER, [CALC_A_SOURCES[2]]: A_WRITTEN };
 const CALC_W_MAP = { "rope certificate": DMAX_SOURCES[1], "rope maker's own data": DMAX_SOURCES[1], "measured on a wire": DMAX_SOURCES[0] };
 export function recordFromCalc(inp, type = "site") {
   const r = { type, reasons: {}, ovr: {}, reach: 0, auto: {}, changes: {} };
   const set = (k, v) => { if (v != null && String(v).trim() !== "") r[k] = String(v).trim(); };
   set("dnom", inp.d); set("ckey", inp.ckey); set("construction", inp.construction); set("isoclass", inp.cls); set("core", inp.core); set("maker", inp.maker);
+  set("madeto", inp.madeto); set("annexh", inp.annexh); set("ropetype", inp.ropetype); set("outer", inp.outer); set("wires", inp.wires); set("seale", inp.seale); set("lay", inp.lay);
   set("asrc", CALC_A_MAP[inp.asrc]); if (A_TYPED.includes(r.asrc)) set("a", inp.a);
   if (inp.wsrc) { set("dmaxsrc", CALC_W_MAP[inp.wsrc]); set("dmax", inp.w); }
   if (inp.dmaxEst === "yes") r.dmax_est = "yes";
@@ -1016,14 +1127,14 @@ export function recordFromCalc(inp, type = "site") {
 }
 
 // inp: { d, ckey, construction, cls, core, maker, head, asrc, a, wsrc, w, dmaxEst, bf, bfMaker, bfMakerRef, grade, bfUsed,
-//        route, airIn, zero, addW, csFrom, csTo, csMv, sigEst }
+//        route, airIn, zero, addW, csFrom, csTo, csMv, sigEst, madeto, annexh, ropetype, outer, wires, seale, lay }
 export function calculator(inp) {
   const d = pos(num(inp.d)), head = inp.head || "", h = headOf(head);
   const warn = [];
   const W = (level, text, src) => warn.push({ level, text, src });
   const asrc = inp.asrc || "";
   const rec = { dnom: inp.d, ckey: inp.ckey, construction: inp.construction, isoclass: inp.cls, core: inp.core, h1_head: h ? head : "", dmaxsrc: "",
-    asrc: asrc === "calculated" ? A_ISO : asrc === CALC_A_SOURCES[0] ? A_CERT : asrc === CALC_A_SOURCES[1] ? A_MAKER : "",
+    asrc: CALC_A_MAP[asrc] || "", madeto: inp.madeto, annexh: inp.annexh, ropetype: inp.ropetype, outer: inp.outer, wires: inp.wires, seale: inp.seale, lay: inp.lay,
     a: inp.a, dmax: inp.wsrc ? inp.w : "", dmax_est: inp.dmaxEst, bf: inp.bf, bf_maker: inp.bfMaker, bf_maker_ref: inp.bfMakerRef, grade: inp.grade, bf_used: inp.bfUsed };
   const c = compute(rec);
   const out = { d, head, warn };
@@ -1034,6 +1145,7 @@ export function calculator(inp) {
 
   // 1. Two area boxes, each labelled by its source (item 8)
   if (!asrc) out.A = { value: null, label: aLabel(""), text: "Choose where A comes from: certificate, rope maker's own data, or calculated." };
+  else if (asrc === "calculated" && !c.isoOk) out.A = { value: null, label: aLabel(""), text: `A not known: ${noIsoWhy(inp.madeto)}. Take A from the certificate, the maker's data or written confirmation.`, src: RULING_D1 };
   else if (asrc === "calculated") {
     out.A = c.iso.ok
       ? { value: c.A, label: aLabel(A_ISO), estimated: true, text: `A = C × d² = ${c.iso.C.toFixed(3)} × ${d}² = ${r1(c.A)} mm² (Table ${c.iso.row.table}, ${c.iso.row.cls}, ${c.iso.col})`, src: ISO_SRC }
@@ -1102,10 +1214,11 @@ export function calculator(inp) {
   if (rn === 3) W("red", "LF set from an indication found by running the head: not tied to a known broken wire – a single broken wire may not be detected.", out.route.src);
 
   // 6. 6d and 30d, each in its own box (item 9)
-  out.len6 = d ? { l: c.l6, lf: c.lf.ok ? c.lf.l6 : null, text: `6 × ${d} mm = ${r1(c.l6, 3)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
-  out.len30 = d ? { l: c.l30, lf: c.lf.ok ? c.lf.l30 : null, text: `30 × ${d} mm = ${r1(c.l30, 2)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
-  out.lf = c.lf.ok ? { l6: c.lf.l6, l30: c.lf.l30, text: `${c.lf.route}. ${c.lf.working}`, src: c.lf.src }
-    : { l6: null, text: "Broken-wire limits need A and a documented outer wire diameter here; otherwise the record gives the ISO 4309 Table 3 / 4 limit by RCN (construction and lay)." };
+  out.len6 = d ? { l: c.l6, text: `6 × ${d} mm = ${r1(c.l6, 3)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
+  out.len30 = d ? { l: c.l30, text: `30 × ${d} mm = ${r1(c.l30, 2)} m`, src: "ISO 4309 Table C.1; site sheet" } : null;
+  // 8. Two boxes side by side, never merged (1.8.0 item 2). The record's LF limit is (a), or (b) when A or δmax is missing.
+  out.mrt = c.mrt; out.vis = c.vis;
+  out.lfFrom = c.mrt.ok ? "a" : c.vis.ok ? "b" : "";
 
   // 7. Breaking force - every figure with its source; the engineer confirms the one used (item 11). Advice only.
   out.bf = c.bf; out.bfFig = c.bfFig;

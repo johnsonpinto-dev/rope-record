@@ -109,7 +109,8 @@ const SCREENS = (r) => [
   { id: "rope", group: "Rope", title: "Rope data", accept: () => "Nominal and measured diameter from the certificate; two caliper readings at 90° to each other at the widest point; A and δmax with their source, or the RCN.|Owner's ruling D2 (24-Nov-2026); PRO-AIC-0608 B2, A3",
     fields: [
       F("dnom", "Nominal diameter d (certificate)", "num", { unit: "mm", req: true }),
-      F("d_cert", "Measured diameter on the certificate", "num", { unit: "mm", hint: "blank if the certificate gives none – kept on the phone and in the CSV" }),
+      F("d_cert", "Measured diameter on the certificate", "num", { unit: "mm", hint: "the as-made diameter; blank if the certificate gives none" }),
+      F("d_ref", K.DREF_LABEL, "num", { unit: "mm", hint: "optional – blank if not known; the change is then worked from the certificate's measured diameter (as-made, not d_ref)" }),
       F("da", "Reading 1 at the widest point", "num", { unit: "mm", req: true, group: "Caliper readings" }),
       F("db", "Reading 2 at 90° to reading 1", "num", { unit: "mm", req: true, group: "Caliper readings" }),
       F("ckey", "Construction (list)", "select", { opts: () => [...K.CONSTRUCTIONS.map((e) => ({ value: e.key, label: `${e.key} – class ${e.cls}` })), K.CONSTR_OTHER], hint: "pick it, or \"Other\" and type the certificate's words" }),
@@ -117,16 +118,17 @@ const SCREENS = (r) => [
       F("csrc", "Construction from", "radio", { opts: K.CONSTR_SOURCES, req: true }),
       F("annexh", "ISO 4309 Annex H construction (for the RCN)", "select", { opts: [...K.ANNEX_H_CHOICES, K.ANNEX_OTHER], req: true }),
       F("ropetype", "Rope type", "select", { opts: K.ROPE_TYPES, req: true, show: () => rec.annexh === K.ANNEX_OTHER }),
-      F("seale", "Seale outer strands, 19 wires or fewer?", "radio", { ...YN, show: () => rec.annexh === K.ANNEX_OTHER && rec.ropetype === K.ROPE_TYPES[0] }),
-      F("outer", "Outer strands (count)", "int", { req: () => rec.annexh === K.ANNEX_OTHER }),
-      F("wires", "Load-bearing wires per outer strand", "int", { hint: "no filler wires", req: () => rec.annexh === K.ANNEX_OTHER }),
+      F("seale", "Seale outer strands, 19 wires or fewer?", "radio", { ...YN, show: () => rec.annexh === K.ANNEX_OTHER && !!rec.ropetype }),
+      F("outer", "Number of outer strands", "int", { req: () => rec.annexh === K.ANNEX_OTHER }),
+      F("wires", "Load-bearing wires per outer strand", "int", { hint: "fillers left out", req: () => rec.annexh === K.ANNEX_OTHER }),
       F("core", "Core", "select", { opts: K.CORES, req: true }),
       F("lay", "Lay", "radio", { opts: K.LAYS, req: true }),
       F("runs", "How the rope runs", "radio", { opts: K.RUNS, req: true }),
       F("spool_from", "Spooling length from", "num", { unit: "m", show: () => rec.runs === K.RUNS[1] }),
       F("spool_to", "Spooling length to", "num", { unit: "m", show: () => rec.runs === K.RUNS[1] }),
-      F("asrc", "Source of A", "select", { opts: () => { const d = K.num(rec.dnom); return d != null && (d < 2 || d > 60) ? K.A_SOURCES.filter((x) => x !== K.A_ISO) : K.A_SOURCES; },
-        hint: () => `Kuzo's choices; leave blank when A is not known.${K.num(rec.dnom) > 60 ? " Over 60 mm: no ISO 2408 factor (2–60 mm only); Intron k gives an estimate for the air value only (A3)." : ""}` }),
+      F("madeto", "Rope made to (from the certificate)", "select", { opts: K.MADE_TO, hint: "the rope's own standard – decides whether an ISO 2408 factor may be used for A" }),
+      F("asrc", "Source of A", "select", { opts: () => { const d = K.num(rec.dnom); return (d != null && (d < 2 || d > 60)) || !K.isoAllowed(rec.madeto) ? K.A_SOURCES.filter((x) => x !== K.A_ISO) : K.A_SOURCES; },
+        hint: () => `In this order: rope certificate, maker's data, written confirmation; leave blank when A is not known.${!K.isoAllowed(rec.madeto) ? ` Made to ${rec.madeto}: no ISO 2408 factor – with none of these, A is not known and broken wires are judged on (b) (${K.RULING_D1}).` : ""}${K.num(rec.dnom) > 60 ? " Over 60 mm: no ISO 2408 factor (2–60 mm only); Intron k gives an estimate for the air value only (A3)." : ""}` }),
       F("a", "Metallic area A", "num", { unit: "mm²", req: () => K.A_TYPED.includes(rec.asrc), show: () => K.A_TYPED.includes(rec.asrc),
         hint: () => rec.asrc === K.A_MAKER ? `${K.ESTIMATED} – maker's data, not the rope certificate${rec.a_ref ? ": " + rec.a_ref : ""}` : "" }),
       F("isoclass", "ISO 2408 class (for the C and K factors)", "select", { opts: [...K.ISO_CLASS_OPTS, K.ISO_NONE], req: () => rec.asrc === K.A_ISO,
@@ -141,8 +143,10 @@ const SCREENS = (r) => [
       F("dmax", "Largest wire δmax", "num", { unit: "mm", req: () => rec.dmaxsrc && rec.dmaxsrc !== K.DMAX_SOURCES[2], show: () => rec.dmaxsrc && rec.dmaxsrc !== K.DMAX_SOURCES[2] }),
       F("dmax_est", `Show ${K.DMAX_EST_LABEL}?`, "radio", { opts: ["yes", ""], labels: ["Yes – information only", "No"], hint: "optional; never sets the LF limit" }),
     ],
-    top: () => { const c = K.compute(rec), b = c.bf;
+    top: () => { const c = K.compute(rec), b = c.bf, dd = c.dia;
       return (c.D ? `<div class="calc"><b>Measured diameter ${K.r1(c.D, 2)} mm</b><small>mean of ${c.da} and ${c.db} mm at the widest point – selects the head and liners</small><i class="src">PRO-AIC-0608 C2; owner's ruling D2</i></div>` : "")
+        + (dd ? `<div class="calc${dd.amber ? " amberbox" : ""}"><b>Diameter change: ${dd.base && dd.pct != null ? `${dd.kind === "increase" ? "+" : dd.kind === "decrease" ? "−" : ""}${K.r1(dd.pct, dd.kind === "decrease" ? 2 : 1)} % on the ${esc(dd.base.label)} ${dd.base.v} mm${dd.amber ? " – check (advice only)" : ""}` : "no d_ref or as-made diameter"}</b><small>${esc([dd.text, dd.nomText].filter(Boolean).join(" · "))}</small><i class="src">${esc(dd.src)}</i></div>` : "")
+        + pairHTML(c)
         + (b ? `<div class="calc"><b>Breaking-force check: ${b.ok ? `certificate ${K.r1(b.bf, 1)} kN vs Fmin ${K.r1(b.Fmin, 1)} kN` : "no check"}</b><small>${esc(b.ok ? `${b.amber ? "⚠ " + b.amber.text + " " : ""}${b.full} Advice only – nothing is changed.` : b.why)}</small><i class="src">${esc(K.BF_SRC)}</i></div>` : "")
         + (c.dEst ? `<div class="calc est"><b>${esc(K.DMAX_EST_LABEL)}: ${c.dEst.value != null ? `${c.dEst.value.toFixed(2)} mm – estimated` : "not given"}</b><small>${esc(c.dEst.value != null ? c.dEst.text : c.dEst.why)}</small>${c.dEst.src ? `<i class="src">${esc(c.dEst.src)}</i>` : ""}</div>` : ""); } },
   { id: "results", group: "Results", title: "Filled in for this rope", accept: () => "Check the working. An automatic value can be changed only with a reason, saved with the time.|Rope Record", results: true, fields: [] },
@@ -189,9 +193,17 @@ function input(f) {
 }
 const srcLine = (t) => { const [a, b] = t.split("|"); return `<p class="accept">${a}</p>${b ? `<i class="src">${esc(b)}</i>` : ""}`; };
 
+// 1.8.0 item 2: (a) MRT Table C.1 and (b) visible broken wires Table 3 / 4, side by side, never merged.
+function pairHTML(c) {
+  const m = c.mrt, v = c.vis;
+  const a = `<div class="calc pbox${m.ok ? "" : " none"}"><b>${esc(K.MRT_LABEL)}</b><b class="big2">${m.ok ? `${m.l6} / ${m.l30}` : "not given"}</b>${m.ok ? `<small class="clab">over 6d / over 30d${m.estimated ? ` – ${K.ESTIMATED}` : ""}</small>` : ""}<small>${esc(m.ok ? m.working : m.why)}</small><i class="src">${esc(m.src)}</i></div>`;
+  const b = `<div class="calc pbox${v.ok ? "" : " none"}"><b>${esc(K.VIS_LABEL)}</b>${v.ok ? `<small class="clab">${esc(K.VIS_SHEAVE)}</small>${v.sheave.map((x) => `<b class="big2">${x.lay ? esc(x.lay) + ": " : ""}${x.l6} / ${x.l30}</b>`).join("")}<small class="clab">${esc(K.VIS_DRUM)}</small><b class="big2">${v.drum.l6} / ${v.drum.l30}</b><small>over 6d / over 30d. RCN ${esc(v.rcnText)} (Table ${v.table}).${v.layNote ? " " + esc(v.layNote) + "." : ""}</small>` : `<b class="big2">not given</b><small>${esc(v.why)}</small>`}<p class="cnote">${esc(K.VIS_NOTE)}</p><i class="src">${esc(v.src)}</i></div>`;
+  return `<div class="pair">${a}${b}</div>`;
+}
+
 function resultsHTML(c) {
   const ovBtn = { "LF limit 6d / 30d": "lf" };
-  return `<table class="work">${c.working.map(([a, b, w, src]) => `<tr><th>${esc(a)}</th><td><b>${esc(b)}</b>${w ? `<small>${esc(w)}</small>` : ""}<i class="src">${esc(src)}</i>
+  return pairHTML(c) + `<table class="work">${c.working.map(([a, b, w, src]) => `<tr><th>${esc(a)}</th><td><b>${esc(b)}</b>${w ? `<small>${esc(w)}</small>` : ""}<i class="src">${esc(src)}</i>
     ${ovBtn[a] === "lf" && c.lf.ok ? `<button type="button" class="ovr" data-ovr="lf6">Change 6d</button> <button type="button" class="ovr" data-ovr="lf30">Change 30d</button>` : ""}</td></tr>`).join("")}</table>`;
 }
 
@@ -489,9 +501,8 @@ function about() {
   $("#where").textContent = "About";
   const P = K.PROCEDURE;
   $("#aboutBody").innerHTML = `<p><b>Rope Record Checklist ${esc(V.version)}</b> · ${esc(V.date)}</p>
-    ${P.confirmedFiled ? "" : `<p class="stop">Procedure copy not confirmed as filed.</p>`}
     <dl class="about"><dt>Procedure followed</dt><dd>${esc(P.doc)}<br><small>${esc(P.file)}<br>SHA-256 ${esc(P.sha256)}</small></dd>
-    <dt>LF threshold</dt><dd>Recorded as entered, not checked by Rope Record; Kuzo checks it (owner's ruling D5, 24-Nov-2026). Rule set held for reference: ${esc(K.LF_RULESETS[K.LF_RULESET].name)}</dd>
+    <dt>LF threshold</dt><dd>Recorded as entered, not checked by Rope Record; Kuzo checks it (owner's ruling D5, 24-Nov-2026). Rule set: ${esc(K.LF_RULESETS[K.LF_RULESET].name)}</dd>
     <dt>Kuzo link</dt><dd>Save and Share give the CSV and a .kuzo.json file (rope-record-schema-v1); "QR for Kuzo" shows the same record as QR codes.</dd>
     ${K.SOURCES.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl>
     <p class="note">Records stay on this phone. This is a site checklist, not a report. Files for Kuzo keep the name "Rope Record" (rope-record-schema-v1).</p>`;
@@ -519,7 +530,7 @@ addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = 
 $("#install").addEventListener("click", async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; $("#install").hidden = true; });
 addEventListener("appinstalled", () => { $("#install").hidden = true; });
 
-$("#ver").textContent = `Rope Record Checklist version ${V.version} · ${V.date}${K.PROCEDURE.confirmedFiled ? "" : " · procedure copy not confirmed as filed"}`;
+$("#ver").textContent = `Rope Record Checklist version ${V.version} · ${V.date}`;   // 1.8.0 item 6: no "copy" / "held" wording on screen
 records = load(STORE, []); if (!Array.isArray(records)) records = []; records = records.map(K.migrate);
 home();
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));

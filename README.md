@@ -6,6 +6,11 @@ working shown and mistakes stopped before the record is saved. **Site checklist 
 
 Open: https://johnsonpinto-dev.github.io/rope-record/
 
+**1.8.0 (27-Nov-2026, not published yet):** RCN in the calculator as in the record; two boxes side by side – (a) MRT, ISO 4309
+Table C.1 from A and δmax, and (b) visible broken wires, Table 3 / 4 by RCN (sheaves / single-layer drum and multi-layer drum
+cross-over zones); "Rope made to" – never an ISO 2408 factor on a rope not made to ISO 2408; optional reference diameter d_ref
+(ISO 4309 3.3) for the diameter change, advice only.
+
 **1.7.0: only what is mandated, each fact asked once.** The set-up calculator's answers start the record ("Start the site
 record" / "Start a reference-rope record"). The construction is picked from a list (ISO 2408 Tables D.1–D.18) or typed as
 on the certificate; the ISO 2408 class, core, Annex H construction and counts, head serial (equipment register), liner set

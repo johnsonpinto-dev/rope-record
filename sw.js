@@ -3,7 +3,7 @@
 // SW_VERSION: the release version, kept equal to version.js (dev/sw.test.mjs fails if they differ). It is here so that the
 // bytes of sw.js change with every release: iOS Safari updates a service worker only when sw.js itself changes, not when
 // only an imported script (version.js) changes (found 27-Nov-2026). Every release changes the version in BOTH files.
-const SW_VERSION = "1.7.0";
+const SW_VERSION = "1.8.0";
 importScripts("./version.js");
 // Cache name from SW_VERSION, not from version.js: the imported version.js can come from the browser's HTTP cache
 // (GitHub Pages max-age=600) and name the new cache after the old version (seen 27-Nov-2026). Owner's "yes", 27-Nov-2026.
