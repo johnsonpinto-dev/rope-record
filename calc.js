@@ -672,11 +672,10 @@ export function checks(rec, c = compute(rec)) {
     }
     if ((c.dmax == null || c.A == null) && m && m !== LF_METHODS[3] && m !== LF_METHODS[0] && m !== LF_CLEAN) A2("amber", "lfadd", "lfm", "δmax or A not available.", "LF is calibrated with added wires of known diameter; record the wire diameter and the one-wire signal.", "PRO-AIC-0608 A3, §9.2.2");
     // C6 closing check, E1
-    if (rec[p + "c6_done"] === "no") A2("amber", "c6", "c6_done", "closing check not recorded yet.", "After the recording: zero 0 ± 0.5 %, recorded length within 1 % of a known length.", "PRO-AIC-0608 C6");
+    if (rec[p + "c6_done"] === "no") A2("amber", "c6", "c6_done", "closing check not recorded yet.", "After the recording: zero 0 ± 0.5 % (the length check is done in Kuzo from the odometer).", "PRO-AIC-0608 C6");
     const cz = num(rec[p + "c6_zero"]);
     if (cz != null && Math.abs(cz) > 0.5) A2("red", "c6zero", "c6_zero", `closing zero ${cz} %.`, "0 ± 0.5 % – find the cause; correct with the software shift and record it, or repeat the recording.", "PRO-AIC-0608 C6");
-    const L = pos(num(rec[p + "c6_len"])), Lk = pos(num(rec[p + "c6_known"]));
-    if (L && Lk && Math.abs(L - Lk) / Lk > 0.01) A2("red", "c6len", "c6_len", `recorded length ${L} m vs known ${Lk} m (${r1(Math.abs(L - Lk) / Lk * 100, 2)} %).`, "Within 1 % – otherwise positions are written as approximate.", "PRO-AIC-0608 C6");
+    // owner 27-Nov-2026: the C6 length check (within 1 %) is Kuzo's - odometer length in the scan vs job.rope_length_m.
     // 1.7.0: most negative LMA is no longer asked - Kuzo reads it from the trace (E1) - no check.
   }
   if (rec.type === "reference") {

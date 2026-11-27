@@ -84,11 +84,12 @@ function headScreens(i) {
         F(p + "scanstep", "Scan step set on the basic unit (if read)", "num", { unit: "mm", hint: "optional – Kuzo compares it with the scan" }),
         ...(i === 1 ? [F("h2on", "Calibrate a second head on this rope?", "radio", { ...YN, req: true })] : [])],
       ),
-    S("c6", "C6", "Closing check (after the recording)", () => "Read the LMA again on the zero section: <b>0 ± 0.5 %</b>. Recorded length within <b>1 %</b> of a known length.|PRO-AIC-0608 C6",
+    S("c6", "C6", "Closing check (after the recording)", () => "Read the LMA again on the zero section: <b>0 ± 0.5 %</b>. Length within <b>1 %</b>: Kuzo compares the odometer length in the scan with the rope length on the Job screen (owner 27-Nov-2026).|PRO-AIC-0608 C6",
       [F(p + "c6_done", "Closing check done?", "radio", { opts: ["yes", "no"], labels: ["Yes", "Not yet – after the recording"], req: true }),
         F(p + "c6_zero", "Closing zero reads", "snum", { unit: "%", req: true, show: () => rec[p + "c6_done"] === "yes" }),
-        F(p + "c6_len", "Recorded length", "num", { unit: "m", req: true, show: () => rec[p + "c6_done"] === "yes" }),
-        F(p + "c6_known", "Known length", "num", { unit: "m", req: true, show: () => rec[p + "c6_done"] === "yes" })]),
+        // owner 27-Nov-2026: no recorded / known length here - the recorded length is the odometer's (in the scan), the
+        // actual length is the client's rope length on the Job screen. Old records keep c6_len / c6_known (not shown).
+      ]),
   ];
 }
 
@@ -103,7 +104,7 @@ const SCREENS = (r) => [
       F("date", "Test date", "date", { req: true }),
       F("engineer", "Engineer (MRT Level II)", "text", { req: true, hint: "filled in: last used on this phone" }),
       F("location", "Location", "text"),
-      F("length", "Rope length", "num", { unit: "m", hint: blank }),
+      F("length", "Rope length", "num", { unit: "m", hint: "actual length on the winch, when the client gives it – Kuzo checks the odometer length against it (C6); blank if not given" }),
     ] },
   { id: "rope", group: "Rope", title: "Rope data", accept: () => "Nominal and measured diameter from the certificate; two caliper readings at 90° to each other at the widest point; A and δmax with their source, or the RCN.|Owner's ruling D2 (24-Nov-2026); PRO-AIC-0608 B2, A3",
     fields: [
