@@ -4,6 +4,7 @@
  "makers": [
   "Kiswire"
  ],
+ "estimated": "A figure from this file is the maker's published data, not the rope's certificate: when it is used it is labelled ESTIMATED with this source (owner 27-Nov-2026).",
  "documents": [
   {
    "maker": "Kiswire",
@@ -16,12 +17,59 @@
     23
    ],
    "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "pages": [
+    9
+   ],
+   "date_read": "27-Nov-2026"
   }
  ],
  "needed": [
-  "DSR – rope catalogue (none found in the office files, 27-Nov-2026); first product wanted: DSR PowerFlex 35, 26 mm",
-  "Kiswire – compacted and Hyrope crane-rope catalogues (held in the office) not entered yet",
-  "Every maker – the metallic area A (Kiswire's catalogue gives none)"
+  {
+   "maker": "Pfeifer",
+   "held": "PFEIFER 'Wire ropes – technical information' 03/2018 (general information, no product figures)",
+   "need": "The PFEIFER product data sheets / catalogue for the ropes on our clients' cranes (e.g. P135, P395): for each rope and diameter – construction, core, nominal metallic area or fill factor, minimum breaking force and grade, outer wire diameter if given; with the document date."
+  },
+  {
+   "maker": "Kiswire",
+   "held": "General purpose ropes (pp. 18, 21, 23 entered); hyrope crane ropes (p. 9 Hylift 16 entered); compacted / swaged ropes (not entered yet)",
+   "need": "The data sheet for 'Hylift K16S' – the SC-45 certificate (Kiswire, 20-Jul-2022) names Hylift K16S, 19 mm, 2160, specified breaking load 361.9 kN; the hyrope catalogue held names 'Hylift 16' and gives 353.2 kN at 19 mm / 2160. Which document covers K16S, with its date."
+  },
+  {
+   "maker": "DSR",
+   "held": "nothing",
+   "need": "DSR crane-rope catalogue / product data sheets (first: PowerFlex 35, 26 mm)."
+  },
+  {
+   "maker": "Casar",
+   "held": "R. Verreet, 'Which rope for my crane?' (Casar, 1995) – a guide, no product figures",
+   "need": "Casar special wire ropes product catalogue / data sheets (Starlift, Eurolift, Turbolift etc. – whichever are on client cranes)."
+  },
+  {
+   "maker": "Brunton Shaw",
+   "held": "only client mill certificates (job folders) – not the maker's published data",
+   "need": "Brunton Shaw crane-rope catalogue / product data sheets."
+  },
+  {
+   "maker": "Bridon",
+   "held": "only a client certificate of conformance – not the maker's published data",
+   "need": "Bridon(-Bekaert) crane-rope catalogue / product data sheets (Dyform, Dyform 18 etc.)."
+  },
+  {
+   "maker": "Chinese makers",
+   "held": "nothing yet",
+   "need": "Names from the owner; then each maker's catalogue / data sheets."
+  },
+  {
+   "maker": "Every maker",
+   "held": "",
+   "need": "The metallic area A or the fill factor (Kiswire general purpose catalogue gives neither)."
+  }
  ],
  "entries": [
   {
@@ -5094,6 +5142,1084 @@
    "file": "Kiswire_General_Purpose_Ropes.pdf",
    "sha256": "189737ee060c9173264a338f686af70099ca23dd32dabad3d3b3c951df0b5422",
    "page": 23,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 10,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 58.1,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 10² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 91.8,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 10,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 58.1,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 10² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 97.9,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 12,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 83.7,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 12² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 132.2,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 12,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 83.7,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 12² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 141,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 13,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 98.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 13² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 155.1,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 13,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 98.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 13² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 165.5,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 14,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 113.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 14² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 179.9,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 14,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 113.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 14² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 192,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 15,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 130.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 15² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 206.5,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 15,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 130.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 15² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 220.4,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 16,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 148.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 16² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 235,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 16,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 148.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 16² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 250.7,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 18,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 188.3,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 18² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 297.4,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 18,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 188.3,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 18² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 317.3,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 19,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 209.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 19² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 331,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 19,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 209.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 19² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 353.2,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 20,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 232.5,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 20² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 366.8,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 20,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 232.5,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 20² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 391.4,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 22,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 281.3,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 22² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 443.8,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 22,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 281.3,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 22² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 473.6,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 24,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 334.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 24² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 528.2,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 24,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 334.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 24² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 563.6,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 25,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 363.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 25² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 573.1,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 25,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 363.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 25² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 611.5,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 26,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 392.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 26² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 619.9,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 26,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 392.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 26² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 661.4,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 27,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 423.7,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 27² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 668.5,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 27,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 423.7,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 27² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 713.3,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 28,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 455.7,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 28² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 718.9,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 28,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 455.7,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 28² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 767.1,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 29,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 488.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 29² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 770.4,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 29,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 488.8,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 29² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 822.1,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 30,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 523.1,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 30² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 824.4,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 30,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 523.1,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 30² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 879.7,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 31,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 558.5,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 31² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 880.3,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 31,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 558.5,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 31² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 939.4,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 32,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 595.1,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 32² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 938,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 32,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 595.1,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 32² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1000.9,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 33,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 632.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 33² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 997.6,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 33,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 632.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 33² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1064.5,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 34,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 671.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 34² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1058.9,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 34,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 671.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 34² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1130,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 35,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 712,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 35² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1122.1,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 35,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 712,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 35² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1197.4,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 36,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 753.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 36² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1187.2,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 36,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 753.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 36² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1266.8,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 38,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 839.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 38² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1322.8,
+   "grade": "1960 N/mm²",
+   "grade_n_mm2": 1960,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 38,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 839.2,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 38² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1411.5,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
+   "date_read": "27-Nov-2026"
+  },
+  {
+   "maker": "Kiswire",
+   "product": "Hylift 16",
+   "d": 40,
+   "construction": "Hylift 16 – rotation-resistant, compacted outer and inner strands; 245 wires, 112 load-bearing wires in the outer strands (p. 9)",
+   "class": null,
+   "core": null,
+   "match": [
+    "hylift"
+   ],
+   "A_mm2": 929.9,
+   "A_basis": "average fill factor 0.74 (p. 9) × π × 40² ÷ 4 (fill factor: EN 12385-2 3.10.1)",
+   "MBF_kN": 1564,
+   "grade": "2160 N/mm²",
+   "grade_n_mm2": 2160,
+   "note": "Discard (p. 9): 5 broken wires over 6d, 10 over 30d (Lang's lay).",
+   "document": "Kiswire – hyrope, specialised crane ropes (catalogue)",
+   "file": "Kiswire_Hyrope_Specialised_Crane_Ropes.pdf",
+   "sha256": "cec4ad04e902149399ee0f01b187202596afb354b10d63fb79bb5a681d08952c",
+   "page": 9,
    "date_read": "27-Nov-2026"
   }
  ]

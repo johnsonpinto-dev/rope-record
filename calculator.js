@@ -8,7 +8,7 @@ import * as K from "./calc.js";
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const inp = { d: "", ckey: "", construction: "", cls: "", core: "", maker: "", head: "", asrc: "", a: "", wsrc: "", w: "", dmaxEst: "",
-  bf: "", bfMaker: "", bfMakerRef: "", grade: "", bfUsed: "", route: "", airIn: "", zero: "", addW: "", csFrom: "", csTo: "", csMv: "", sigEst: "" };
+  aRef: "", bf: "", bfMaker: "", bfMakerRef: "", grade: "", bfUsed: "", route: "", airIn: "", zero: "", addW: "", csFrom: "", csTo: "", csMv: "", sigEst: "" };
 const auto = {};          // values filled in from the construction (rule 1): kept while the engineer has not changed them
 let notThis = "";          // "Not this rope": the maker card stays closed for this maker / d / construction
 
@@ -59,7 +59,7 @@ function inputs(r) {
   ${num("bf", "Breaking force – rope certificate", "kN")}
   ${num("bfMaker", "Breaking force – maker's data / manual", "kN", inp.bfMakerRef ? `from ${inp.bfMakerRef}` : "")}
   ${num("grade", "Rope grade", "N/mm²", "for the ISO 2408 figure, e.g. 1770, 1960, 2160")}
-  ${bfu.length ? radio("bfUsed", "Figure used (engineer confirms)", bfu.map((s) => `${s} – ${K.r1(r.bfFig.figs.find((f) => f.source === s).kN, 1)} kN`), bfu) : ""}</div>`;
+  ${bfu.length ? radio("bfUsed", "Figure used (engineer confirms)", bfu.map((s) => { const f = r.bfFig.figs.find((x) => x.source === s); return `${f.estimated ? K.ESTIMATED + " – " : ""}${s} – ${K.r1(f.kN, 1)} kN`; }), bfu) : ""}</div>`;
 }
 
 function makerCard(r) {
@@ -69,9 +69,9 @@ function makerCard(r) {
   if (notThis === key || !r.makers.length) return `<div class="mcard none"><small>${notThis === key ? "Not this rope – maker's figures not used." : "No maker's figures held on this phone for this maker, diameter and construction – take them from the certificate or ask the office."}</small>${search}</div>`;
   const e0 = r.makers[0];
   return `<div class="mcard"><b>Maker's figures held: ${esc(e0.maker)} ${esc(e0.d)} mm</b>
-    <small>Suggestion only – the engineer accepts or rejects it. A: ${e0.A_mm2 != null ? esc(e0.A_mm2) + " mm²" : "not given by the maker"}.</small>
+    <small>Suggestion only – the engineer accepts or rejects it. A figure used from here is labelled ${K.ESTIMATED} (not the rope's certificate). A: ${e0.A_mm2 != null ? `${esc(e0.A_mm2)} mm² (${esc(e0.A_basis || "maker")})` : "not given by the maker"}.</small>
     ${[...new Set(r.makers.map((e) => `${e.product}|${e.page}`))].map((g) => { const rows = r.makers.map((e, i) => [e, i]).filter(([e]) => `${e.product}|${e.page}` === g), e1 = rows[0][0];
-      return `<div class="mgrp"><b>${esc(e1.product)}</b><small>${esc(e1.class ? "ISO 2408 class " + e1.class : e1.construction)} · ${esc(e1.document)}, p. ${esc(e1.page)}, read ${esc(e1.date_read)}</small>
+      return `<div class="mgrp"><b>${esc(e1.product)}</b><small>${esc(e1.class ? "ISO 2408 class " + e1.class : e1.construction)} · ${esc(e1.document)}, p. ${esc(e1.page)}, read ${esc(e1.date_read)}${e1.note ? " · " + esc(e1.note) : ""}</small>
       <table class="mtab">${rows.map(([e, i]) => `<tr><td>${esc(e.grade)}</td><td><b>${esc(K.r1(e.MBF_kN, 1))} kN</b></td><td><button type="button" class="ovr" data-use="${i}">Use these figures</button></td></tr>`).join("")}</table></div>`; }).join("")}
     <div class="row"><button type="button" class="ovr" data-notthis="1">Not this rope</button>${search}</div></div>`;
 }
@@ -95,14 +95,14 @@ function results(r) {
   }
   route += "</div>";
   const bf = r.bf, ff = r.bfFig;
-  const bfLines = ff.figs.length ? ff.figs.map((f) => `${f.source}: ${K.r1(f.kN, 1)} kN${ff.used === f ? " – USED" : ""}${f.working ? ` (${f.working})` : f.ref ? ` (${f.ref})` : ""}`).join(" · ") : "";
-  const bfBox = res(7, "Breaking force – by source", ff.used ? `${K.r1(ff.used.kN, 1)} kN – ${ff.used.source}` : "",
+  const bfLines = ff.figs.length ? ff.figs.map((f) => `${f.estimated ? K.ESTIMATED + " – " : ""}${f.source}: ${K.r1(f.kN, 1)} kN${ff.used === f ? " – USED" : ""}${f.working ? ` (${f.working})` : f.ref ? ` (${f.ref})` : ""}`).join(" · ") : "";
+  const bfBox = res(7, "Breaking force – by source", ff.used ? `${K.r1(ff.used.kN, 1)} kN – ${ff.used.estimated ? K.ESTIMATED + " – " : ""}${ff.used.source}` : "",
     `${bfLines || "Enter the certificate or maker's figure, and the grade for the ISO 2408 figure."}${!ff.iso.value && (ff.cert || ff.maker || num0(inp.grade)) ? ` ISO 2408: ${ff.iso.why}` : ""}${bf && bf.ok ? ` Check: ${bf.amber ? "⚠ " + bf.amber.text + " " : ""}${bf.full}` : bf && !bf.ok && ff.cert ? ` ${bf.why}` : ""} Advice only – nothing is changed by the app.`,
     K.BF_SRC, bf && bf.amber ? "bfamber" : ff.figs.length ? "" : "none");
   const dEst = r.dEst ? res("3b", K.DMAX_EST_LABEL, r.dEst.value != null ? `${r.dEst.value.toFixed(2)} mm – estimated` : "", r.dEst.value != null ? r.dEst.text : r.dEst.why, r.dEst.src || "", "estbox") : "";
   const len = (n, title, x) => res(n, title, x ? `${K.r1(x.l, n === "6a" ? 3 : 2)} m${x.lf != null ? ` – LF limit ${x.lf} wires` : ""}` : "", x ? x.text : "Needs the nominal diameter.", x && x.src);
   return [
-    res("1a", r.A.label, r.A.value != null ? `${K.r1(r.A.value)} mm²` : "", r.A.text, r.A.src),
+    res("1a", r.A.label, r.A.value != null ? `${K.r1(r.A.value)} mm²${r.A.estimated ? " – " + K.ESTIMATED : ""}` : "", r.A.text, r.A.src, r.A.estimated ? "estlab" : ""),
     res("1b", r.S.label, r.S.value != null ? `${K.r1(r.S.value, 0)} mm²` : "", r.S.text, r.S.src, r.A.value == null ? "" : "sub2"),
     airBox,
     res(3, "One outer wire as a percentage of A", r.wire.value != null ? `${K.r1(r.wire.value, 2)} % of A` : "", r.wire.text, r.wire.src, r.wire.value == null ? "none" : ""),
@@ -168,7 +168,8 @@ $("#calc").addEventListener("input", (e) => {
 $("#calc").addEventListener("focusout", (e) => { if (e.target.dataset && e.target.dataset.k && e.target.type === "text" && $("#cIn").contains(e.target)) setTimeout(() => { if (!$("#cIn").contains(document.activeElement)) draw(); }, 0); });
 $("#calc").addEventListener("click", (e) => {
   const u = e.target.closest("[data-use]");
-  if (u) { const m = K.calculator(inp).makers[+u.dataset.use]; if (m) { inp.bfMaker = String(m.MBF_kN); inp.bfMakerRef = `${m.maker} ${m.product}, ${m.d} mm, ${m.grade}: ${m.document}, p. ${m.page}, read ${m.date_read}`; if (m.A_mm2 != null) { inp.asrc = K.CALC_A_SOURCES[1]; inp.a = String(m.A_mm2); } draw(); } return; }
+  if (u) { const m = K.calculator(inp).makers[+u.dataset.use]; if (m) { inp.bfMaker = String(m.MBF_kN); inp.bfMakerRef = `${m.maker} ${m.product}, ${m.d} mm, ${m.grade}: ${m.document}, p. ${m.page}, read ${m.date_read}`; if (m.A_mm2 != null) { inp.asrc = K.CALC_A_SOURCES[1]; inp.a = String(m.A_mm2); inp.aRef = `${m.maker} ${m.product}, ${m.d} mm: ${m.A_basis || "metallic area"}; ${m.document}, p. ${m.page}, read ${m.date_read}`; }
+    if (m.grade_n_mm2 && !inp.grade) inp.grade = String(m.grade_n_mm2); draw(); } return; }
   if (e.target.closest("[data-notthis]")) { notThis = `${inp.maker}|${inp.d}|${inp.construction}|${inp.cls}`; draw(); return; }
   const s = e.target.closest("[data-start]");
   if (s) document.dispatchEvent(new CustomEvent("rr:start", { detail: K.recordFromCalc(inp, s.dataset.start) }));

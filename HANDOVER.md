@@ -105,6 +105,11 @@ Kuzo changes in the version after 0.2.13). Full findings, screenshots and the bo
 - Tests: 1.7.0 test 110 checks; calc / calculator / bf / export / sw pass (old assertions changed to 1.7.0 and named);
   cdp-check and qr-screen-check pass in real Chrome; update 1.6.0 → 1.7.0 passes, records byte for byte unchanged.
 - Fault found and fixed: the QR screen / record could open under the calculator.
+- Maker data first batch (owner 27-Nov-2026, same commit series, not pushed): Kiswire hyrope p. 9 "Hylift 16" entered
+  (49 rows, A from the fill factor 0.74). Pfeifer, Casar, DSR, Brunton Shaw and Bridon have no published product data on Drive.
+  makers.json "needed" lists the documents to get. ESTIMATED labels: A (maker's data / ISO 2408) and any breaking force not from
+  the rope certificate, with the source named, on screen and in the .kuzo.json. SC-45 certificate (Hylift K16S 19 mm,
+  361.9 kN) differs from the catalogue's Hylift 16 (353.2 kN). Findings §8.
 - iPhone home-screen name: stays "Rope Record" until the icon is added again – share all records BEFORE removing the old
   icon (steps in the findings §5).
 

@@ -175,3 +175,4 @@ b.thr { display: block; font-size: 20px; color: var(--navy); margin: 4px 0 8px; 
 .mtab td { vertical-align: middle; padding: 4px; }
 .mtab td:last-child { text-align: right; }
 .mtab button.ovr { margin: 0; }
+.cres.estlab > b { color: var(--warn); }

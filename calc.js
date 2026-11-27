@@ -280,6 +280,11 @@ export const CLEAN_TEXT = "Only where there is no reference rope, no known broke
 // Breaking force (1.7.0 item 11): every figure labelled by its source; the engineer confirms which is used. Not mandatory.
 export const BF_CERT = "rope certificate", BF_MAKER = "maker's data / manual", BF_ISO = "calculated from ISO 2408";
 export const BF_SOURCES = [BF_CERT, BF_MAKER, BF_ISO];
+// Owner 27-Nov-2026: where the client gives no maker's certificate, the figures used are labelled ESTIMATED with their
+// source named (report wording later). Here: any breaking force or metallic area not from the rope certificate.
+export const ESTIMATED = "ESTIMATED";
+export const aEstimated = (asrc) => asrc === A_MAKER || asrc === A_ISO;
+export const sourceLabel = (estimated, source, ref) => `${estimated ? ESTIMATED + " – " : ""}${source}${ref ? `: ${ref}` : ""}`;
 export const YESNO = ["yes", "no"];
 export const ACUMEN = "Acumen criterion, derived from ISO 4309 (R08)";
 
@@ -304,7 +309,7 @@ export const FIELDS = [
   "counted", "checked", "notes",
   // 1.7.0 (added at the end): construction picked from the list, rope maker, maker's breaking force and where it came
   // from, the breaking force used, the optional estimated δmax.
-  "ckey", "maker", "bf_maker", "bf_maker_ref", "bf_used", "dmax_est",
+  "ckey", "maker", "bf_maker", "bf_maker_ref", "bf_used", "dmax_est", "a_ref",
 ];
 export const SECTIONS = ["A", "B", "C"];
 // Automatic values the engineer may override (only with a reason; saved with the time).
@@ -414,7 +419,8 @@ export function fminFor({ d, isoclass, core, grade }) {
 export function bfFigures(rec) {
   const cert = pos(num(rec.bf)), maker = pos(num(rec.bf_maker)), iso = fminFor({ d: rec.dnom, isoclass: rec.isoclass, core: rec.core, grade: rec.grade });
   const figs = [cert != null && { source: BF_CERT, kN: cert }, maker != null && { source: BF_MAKER, kN: maker, ref: String(rec.bf_maker_ref || "").trim() || null },
-    iso.value != null && { source: BF_ISO, kN: Math.round(iso.value * 10) / 10, working: iso.text }].filter(Boolean);
+    iso.value != null && { source: BF_ISO, kN: Math.round(iso.value * 10) / 10, working: iso.text }].filter(Boolean)
+    .map((f) => ({ ...f, estimated: f.source !== BF_CERT, label: sourceLabel(f.source !== BF_CERT, f.source, f.ref || (f.working ? "ISO 2408 Annex C" : "")) }));
   return { cert, maker, iso, figs, used: figs.find((f) => f.source === rec.bf_used) || null };
 }
 
@@ -540,7 +546,7 @@ export function compute(rec) {
   });
   c.working = [
     ["Measured diameter (mean of the two readings)", D ? `${r1(D, 2)} mm` : "–", da && db ? `(${da} + ${db}) ÷ 2, two readings at 90° at the widest point${c.dcert ? `; certificate: ${c.dcert} mm` : ""}` : "", "PRO-AIC-0608 B2, C2; owner's ruling D2 (24-Nov-2026)"],
-    [aLabel(Asrc), A != null ? `${r1(A)} mm²` : "not known", A != null ? `source: ${Asrc}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
+    [aLabel(Asrc), A != null ? `${r1(A)} mm²${aEstimated(Asrc) ? " – " + ESTIMATED : ""}` : "not known", A != null ? `source: ${Asrc}${String(rec.a_ref || "").trim() && Asrc === A_MAKER ? ` (${String(rec.a_ref).trim()})` : ""}${Aestimate ? ` – A = C × d² = ${iso.C.toFixed(3)} × ${dn}² (Table ${iso.row.table}, ${iso.row.cls}, ${iso.col}); LF limits marked 'estimate'` : ""}` : iso.ok ? "" : iso.why, "PRO-AIC-0608 A3; ISO 2408 Annex C (p. 18)"],
     [S_LABEL, S ? `${r1(S, 0)} mm²` : "–", S ? `S = K × π × d² ÷ 4 = ${k} × π × ${dn}² ÷ 4 (K: ${rec.core}). Used only to choose the air value / route 3 S when A is not known; not reported and no limit is calculated from it` : "needs nominal d and core", "PRO-AIC-0608 A3; manual v1.3 2.4.2 (p. 27)"],
     ["One-wire area", wireArea ? `${r1(wireArea, 2)} mm²` : "–", wireArea ? `π × δmax² ÷ 4 = π × ${dmax}² ÷ 4` : "δmax not available", "PRO-AIC-0608 A3"],
     ["Single-wire share", c.share ? `${r1(c.share, 2)} % of A` : "–", c.share ? "(π × δmax² ÷ 4) ÷ A × 100, compared with the head's LF sensitivity" : "needs A and δmax", "PRO-AIC-0608 A3"],
@@ -552,7 +558,7 @@ export function compute(rec) {
     ["LF limit 6d / 30d", c.lf.ok ? `${c.lf.l6} / ${c.lf.l30} wires${c.lf.drum6 != null ? ` (multi-layer drum ${c.lf.drum6} / ${c.lf.drum30})` : ""}${ovr(rec, "lf6") != null || ovr(rec, "lf30") != null ? " (overridden)" : ""}` : "not calculated", c.lf.ok ? `${c.lf.route}. ${c.lf.working}` : c.lf.why, c.lf.src],
   ];
   if (c.dEst) c.working.push([DMAX_EST_LABEL, c.dEst.value != null ? `${c.dEst.value.toFixed(2)} mm (estimated)` : "not given", c.dEst.value != null ? c.dEst.text : c.dEst.why, c.dEst.src || "EN 12385-4:2002"]);
-  for (const f of c.bfFig.figs) c.working.push([`Breaking force – ${f.source}`, `${r1(f.kN, 1)} kN${c.bfFig.used === f ? " – used" : ""}`, f.working || f.ref || "", f.source === BF_ISO ? BF_SRC : f.source]);
+  for (const f of c.bfFig.figs) c.working.push([`Breaking force – ${f.source}`, `${r1(f.kN, 1)} kN${f.estimated ? " – " + ESTIMATED : ""}${c.bfFig.used === f ? " – used" : ""}`, f.working || f.ref || "", f.source === BF_ISO ? BF_SRC : f.source]);
   if (c.bf) c.working.push(["Breaking-force check (ISO 2408)", c.bf.ok ? `Fmin ${r1(c.bf.Fmin, 1)} kN – certificate ${r1(c.bf.bf, 1)} kN, ${aboveBelow(c.bf.pct)}` : "no check",
     c.bf.ok ? `${c.bf.full} Advice only – nothing is changed.` : c.bf.why, BF_SRC]);
   for (const hc of c.heads) if (hc.h) {
@@ -824,13 +830,16 @@ export function kuzoRecord(rec, appVersion) {
       metallic_area_mm2: c.A != null ? c.A : null,
       metallic_area_source: c.A != null ? (KZ_A_SRC[rec.asrc] || "not known") : "not known",
       dmax_mm: c.dmax ?? null, dmax_source: KZ_DMAX_SRC[rec.dmaxsrc] || "not available",
+      // owner 27-Nov-2026: not from the rope certificate -> ESTIMATED, with the source named (new keys, schema v1 unchanged)
+      ...(c.A != null ? { metallic_area_estimated: aEstimated(rec.asrc), metallic_area_label: sourceLabel(aEstimated(rec.asrc), rec.asrc, rec.asrc === A_MAKER ? KZ_TXT(rec.a_ref) : rec.asrc === A_ISO && c.iso.ok ? `ISO 2408 Table ${c.iso.row.table}, ${c.iso.row.cls}, ${c.iso.col} = ${c.iso.C.toFixed(3)}` : "") } : {}),
       // rule 28: the construction note - an optional key (schema v1 unchanged in version; older files have no such key)
       ...(String(rec.class_note ?? "").trim() ? { class_note: String(rec.class_note).trim() } : {}),
       // 1.7.0 new keys (only when entered, so older files keep their shape): rope maker; every breaking-force figure with
       // its source label and the one the engineer confirms (item 11); the estimated δmax, never used for the limit (item 12).
       ...(KZ_TXT(rec.maker) ? { maker: KZ_TXT(rec.maker) } : {}),
-      ...(c.bfFig.figs.length ? { breaking_force_figures: c.bfFig.figs.map((f) => ({ source: f.source, kN: f.kN, ...(f.ref ? { reference: f.ref } : {}), ...(f.working ? { working: f.working } : {}) })),
+      ...(c.bfFig.figs.length ? { breaking_force_figures: c.bfFig.figs.map((f) => ({ source: f.source, kN: f.kN, estimated: f.estimated, label: f.label, ...(f.ref ? { reference: f.ref } : {}), ...(f.working ? { working: f.working } : {}) })),
         breaking_force_kn: c.bfFig.used ? c.bfFig.used.kN : null, breaking_force_source: c.bfFig.used ? c.bfFig.used.source : null,
+        breaking_force_estimated: c.bfFig.used ? c.bfFig.used.estimated : null, breaking_force_label: c.bfFig.used ? c.bfFig.used.label : null,
         rope_grade_n_mm2: KZ_NUM(rec.grade) } : {}),
       ...(c.dEst && c.dEst.value != null ? { dmax_estimated_mm: c.dEst.value, dmax_estimated_source: `${DMAX_EST_LABEL}: ${c.dEst.src} – estimated, never used for the LF limit` } : {}),
     },
@@ -980,8 +989,9 @@ const family = (t) => { const m = norm(t).match(/^(\d+x\d+)/); return m ? m[1] :
 export function makerMatches({ maker, d, construction, isoclass, core }) {
   const M = String(maker || "").trim().toLowerCase(), D = pos(num(d)), fam = family(construction);
   if (!M || !D) return [];
+  const nc = norm(construction).replace(/[^a-z0-9]/g, "");
   return MAKERS.entries.filter((e) => e.maker.toLowerCase() === M && e.d === D && (!core || !e.core || e.core === core)
-    && (e.class ? e.class === isoclass : !!fam && family(e.construction) === fam));
+    && ((e.match || []).some((t) => nc.includes(t)) || (e.class ? e.class === isoclass : !!fam && family(e.construction) === fam)));
 }
 // "Search the maker's site": a plain link that opens the phone's browser; the app reads nothing from it.
 export const makerSearchUrl = ({ maker, construction, d }) => "https://www.google.com/search?q=" + encodeURIComponent([maker, construction, d ? `${d} mm` : "", "wire rope minimum breaking force"].filter((x) => String(x || "").trim()).join(" "));
@@ -996,7 +1006,7 @@ export function recordFromCalc(inp, type = "site") {
   set("asrc", CALC_A_MAP[inp.asrc]); if (A_TYPED.includes(r.asrc)) set("a", inp.a);
   if (inp.wsrc) { set("dmaxsrc", CALC_W_MAP[inp.wsrc]); set("dmax", inp.w); }
   if (inp.dmaxEst === "yes") r.dmax_est = "yes";
-  set("bf", inp.bf); set("bf_maker", inp.bfMaker); set("bf_maker_ref", inp.bfMakerRef); set("grade", inp.grade); set("bf_used", inp.bfUsed);
+  set("a_ref", inp.aRef); set("bf", inp.bf); set("bf_maker", inp.bfMaker); set("bf_maker_ref", inp.bfMakerRef); set("grade", inp.grade); set("bf_used", inp.bfUsed);
   if (headOf(inp.head)) r.h1_head = inp.head;
   if (num(inp.airIn) != null) { r.h1_route = LMA_ROUTES[1]; set("h1_air", inp.airIn); set("h1_r2_zero", inp.zero); }
   const rt = inp.route === "sim" ? "sim" : Number(inp.route) || 0;
@@ -1027,12 +1037,12 @@ export function calculator(inp) {
   if (!asrc) out.A = { value: null, label: aLabel(""), text: "Choose where A comes from: certificate, rope maker's own data, or calculated." };
   else if (asrc === "calculated") {
     out.A = c.iso.ok
-      ? { value: c.A, label: aLabel(A_ISO), text: `A = C × d² = ${c.iso.C.toFixed(3)} × ${d}² = ${r1(c.A)} mm² (Table ${c.iso.row.table}, ${c.iso.row.cls}, ${c.iso.col})`, src: ISO_SRC }
+      ? { value: c.A, label: aLabel(A_ISO), estimated: true, text: `A = C × d² = ${c.iso.C.toFixed(3)} × ${d}² = ${r1(c.A)} mm² (Table ${c.iso.row.table}, ${c.iso.row.cls}, ${c.iso.col})`, src: ISO_SRC }
       : { value: null, label: aLabel(A_ISO), text: `A cannot be calculated: ${c.iso.why}. Take A from the certificate or the rope maker.`, src: ISO_SRC };
     if (c.iso.ok && inp.core === CORES[2] && c.iso.row.cls === "6 × 7") W("amber", "6 × 7 with wire strand core: EN 12385-4:2002 Table B.1 gives C3 = 0.432, ISO 2408 gives 0.441. Take A from the certificate or the rope maker where possible.", "EN 12385-4:2002 Table B.1 (p. 23); ISO 2408:2017 Table C.1 (p. 18)");
     if (c.iso.ok && inp.core === CORES[2] && c.iso.row.cls === "8 × 7") W("red", "8 × 7 with wire strand core: the standards disagree – EN 12385-4:2002 Table 6 gives C3 = 0.379, ISO 2408 gives 0.520. The calculated area is NOT reliable. Use the certificate or the rope maker.", "EN 12385-4:2002 Table 6 (p. 10); ISO 2408:2017 Table C.1 (p. 18)");
   } else {
-    out.A = c.A != null ? { value: c.A, label: aLabel(asrc), text: `A = ${r1(c.A)} mm², as given`, src: asrc } : { value: null, label: aLabel(asrc), text: `Type A from the ${asrc}.` };
+    out.A = c.A != null ? { value: c.A, label: aLabel(asrc), estimated: rec.asrc === A_MAKER, text: `A = ${r1(c.A)} mm², as given${inp.aRef && rec.asrc === A_MAKER ? ` – ${inp.aRef}` : ""}`, src: asrc } : { value: null, label: aLabel(asrc), text: `Type A from the ${asrc}.` };
     if (c.A != null && d && c.A >= PI * d * d / 4) W("red", `A ${r1(c.A)} mm² is not less than the circle area π × d² ÷ 4 = ${r1(PI * d * d / 4)} mm² – the circle area is never A.`, "PRO-AIC-0608 A3, §9.2.1");
   }
   const A = out.A.value;
